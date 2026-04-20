@@ -5,16 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Répertoires Sax 🎷">
+<meta name="apple-mobile-web-app-title" content="Répertoires Sax">
 <meta name="theme-color" content="#090c16">
-<title>Répertoires Pédagogiques — Saxophone 🎷</title>
+<title>Répertoires Pédagogiques — Saxophone</title>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-/* ── FIREBASE CONFIG (personnalisez ces valeurs) ── */
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyATeUW3Jk2pzggUoNRKUDL1cOaatpr4AKs",
   authDomain: "repertoires-pedagogiques.firebaseapp.com",
@@ -24,11 +22,12 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "693778494651",
   appId: "1:693778494651:web:ee9c27cf4561a61819659e"
 };
-/* ──────────────────────────────────────────────── */
 </script>
 
 <script>
-(function(){try{var t=localStorage.getItem('rep_theme_v1');if(t==='light')document.documentElement.classList.add('light');}catch(e){}})();
+(function(){
+  try{ if(localStorage.getItem('rep_theme_v1')==='light') document.documentElement.classList.add('light'); }catch(e){}
+})();
 </script>
 
 <style>
@@ -37,31 +36,26 @@ const FIREBASE_CONFIG = {
 ══════════════════════════════════════════════════ */
 :root {
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'SF Mono', 'Fira Code', monospace;
-  --br-sm: 4px; --br-md: 8px; --br-lg: 12px;
+  --font-mono: 'SF Mono','Fira Code', monospace;
+  --br-sm:4px; --br-md:8px; --br-lg:12px;
 
-  /* DARK (défaut) */
-  --body-bg:    #090c16;
-  --bg2:        #0f1420;
-  --bg3:        #161c2e;
-  --bd1:        rgba(55,138,221,0.18);
-  --bd2:        rgba(55,138,221,0.38);
-  --ct1:        #e8eaf0;
-  --ct2:        #8a9ab8;
-  --ct3:        #4a5a78;
-  --accent:     #378ADD;
-  --acglow:     rgba(55,138,221,0.28);
-  --accent2:    #EF9F27;
-  --success:    #34d399;
-  --tab-bg:     rgba(255,255,255,0.04);
-  --tab-act:    rgba(55,138,221,0.14);
-  --input-bg:   rgba(22,28,46,0.85);
-  --modal-bg:   rgba(9,12,22,0.97);
+  --body-bg:  #090c16;
+  --bg2:      #0f1420;
+  --bd1:      rgba(55,138,221,0.18);
+  --bd2:      rgba(55,138,221,0.38);
+  --ct1:      #e8eaf0;
+  --ct2:      #8a9ab8;
+  --ct3:      #4a5a78;
+  --accent:   #378ADD;
+  --acglow:   rgba(55,138,221,0.28);
+  --tab-bg:   rgba(255,255,255,0.04);
+  --tab-act:  rgba(55,138,221,0.14);
+  --input-bg: rgba(22,28,46,0.85);
+  --modal-bg: rgba(9,12,22,0.97);
 }
 html.light {
   --body-bg:  #eaeef8;
   --bg2:      #ffffff;
-  --bg3:      #f0f4fb;
   --bd1:      rgba(58,78,112,0.18);
   --bd2:      rgba(58,78,112,0.38);
   --ct1:      #18243c;
@@ -69,15 +63,13 @@ html.light {
   --ct3:      #6a7e9a;
   --accent:   #1558a8;
   --acglow:   rgba(21,88,168,0.22);
-  --accent2:  #8a5e00;
   --tab-bg:   rgba(0,0,0,0.04);
   --tab-act:  rgba(21,88,168,0.1);
   --input-bg: rgba(255,255,255,0.88);
   --modal-bg: rgba(248,250,255,0.98);
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
 body {
   background: var(--body-bg);
@@ -87,475 +79,432 @@ body {
   overflow-x: hidden;
 }
 
-/* ══════════════════════════════════════════════════
-   FOND RADIAL + ÉTOILES
-══════════════════════════════════════════════════ */
-.scene-bg {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: radial-gradient(ellipse 90% 70% at 50% 25%, #0d1635 0%, #060914 60%, #030710 100%);
-  transition: background 0.4s;
+/* Fond dégradé simple */
+body::before {
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background: radial-gradient(ellipse 100% 60% at 50% 0%, #0d1a3a 0%, var(--body-bg) 70%);
 }
-html.light .scene-bg {
-  background: radial-gradient(ellipse 90% 70% at 50% 25%, #dae6ff 0%, #edf2ff 55%, #e4eaf8 100%);
+html.light body::before {
+  background: radial-gradient(ellipse 100% 60% at 50% 0%, #d6e4ff 0%, var(--body-bg) 70%);
 }
-#stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-html.light #stars { opacity: 0; }
 
 /* ══════════════════════════════════════════════════
-   HUD COINS + LABELS
-══════════════════════════════════════════════════ */
-.hud-corner {
-  position: fixed; width: 22px; height: 22px;
-  z-index: 50; pointer-events: none;
-}
-.hud-corner.tl { top:12px; left:12px;  border-top:1.5px solid rgba(55,138,221,.5); border-left:1.5px solid rgba(55,138,221,.5); }
-.hud-corner.tr { top:12px; right:12px; border-top:1.5px solid rgba(55,138,221,.5); border-right:1.5px solid rgba(55,138,221,.5); }
-.hud-corner.bl { bottom:12px; left:12px;  border-bottom:1.5px solid rgba(55,138,221,.5); border-left:1.5px solid rgba(55,138,221,.5); }
-.hud-corner.br { bottom:12px; right:12px; border-bottom:1.5px solid rgba(55,138,221,.5); border-right:1.5px solid rgba(55,138,221,.5); }
-html.light .hud-corner { border-color: rgba(21,88,168,.35) !important; }
-.hud-lbl {
-  position: fixed; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
-  color: rgba(55,138,221,.38); font-family: var(--font-mono);
-  pointer-events: none; z-index: 50; white-space: nowrap;
-}
-html.light .hud-lbl { color: rgba(21,88,168,.32); }
-.hud-lbl.top { top:10px; left:50%; transform:translateX(-50%); }
-.hud-lbl.bot { bottom:10px; right:14px; }
-
-/* ══════════════════════════════════════════════════
-   LAYOUT PRINCIPAL
+   LAYOUT
 ══════════════════════════════════════════════════ */
 .app {
-  position: relative; z-index: 1;
-  max-width: 760px; margin: 0 auto;
-  padding: 0 18px 80px;
-  display: flex; flex-direction: column; align-items: center;
+  position:relative; z-index:1;
+  max-width:720px; margin:0 auto;
+  padding:0 18px 80px;
+  display:flex; flex-direction:column; align-items:center;
 }
 
 /* ══════════════════════════════════════════════════
    EN-TÊTE
 ══════════════════════════════════════════════════ */
 .app-header {
-  width: 100%;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 30px 0 18px;
+  width:100%; display:flex; align-items:center;
+  justify-content:space-between; padding:20px 0 14px;
 }
 .header-left .eyebrow {
-  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
-  color: var(--ct3); font-family: var(--font-mono); margin-bottom: 5px;
+  font-size:9px; letter-spacing:2.5px; text-transform:uppercase;
+  color:var(--ct3); font-family:var(--font-mono); margin-bottom:4px;
 }
 .header-left .title {
-  font-size: 20px; font-weight: 700; color: var(--ct1); line-height: 1.15;
-  letter-spacing: -0.3px;
+  font-size:19px; font-weight:700; color:var(--ct1); line-height:1.15;
+  letter-spacing:-0.3px;
 }
 .header-left .subtitle {
-  font-size: 11px; color: var(--accent); font-family: var(--font-mono);
-  margin-top: 3px; opacity: 0.85;
+  font-size:11px; color:var(--accent); font-family:var(--font-mono);
+  margin-top:2px; opacity:.85;
 }
-.header-right { display: flex; gap: 8px; align-items: center; }
+.header-right { display:flex; gap:8px; align-items:center; }
 
 .icon-btn {
-  width: 34px; height: 34px; border-radius: 50%;
-  border: 0.5px solid var(--bd1); background: var(--tab-bg);
-  color: var(--ct2); cursor: pointer; display: flex;
-  align-items: center; justify-content: center; font-size: 15px;
-  transition: all .18s; backdrop-filter: blur(6px);
+  width:34px; height:34px; border-radius:50%;
+  border:0.5px solid var(--bd1); background:var(--tab-bg);
+  color:var(--ct2); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .18s; backdrop-filter:blur(6px); flex-shrink:0;
 }
-.icon-btn:hover { border-color: var(--bd2); color: var(--ct1); background: var(--tab-act); }
+.icon-btn:hover { border-color:var(--bd2); color:var(--ct1); background:var(--tab-act); }
+.icon-btn svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.8; }
 
 /* ══════════════════════════════════════════════════
-   ONGLETS CYCLE + BARRE DE RECHERCHE
+   ONGLETS + RECHERCHE
 ══════════════════════════════════════════════════ */
-.controls { width: 100%; margin-bottom: 16px; }
-
-.cycle-tabs {
-  display: flex; gap: 6px; margin-bottom: 11px;
-}
+.controls { width:100%; margin-bottom:10px; }
+.cycle-tabs { display:flex; gap:6px; margin-bottom:10px; }
 .cycle-tab {
-  flex: 1; text-align: center; font-size: 12px; font-weight: 500;
-  padding: 8px 10px; border-radius: 99px;
-  border: 0.5px solid var(--bd1); background: var(--tab-bg);
-  color: var(--ct2); cursor: pointer; transition: all .2s;
-  letter-spacing: 0.2px; white-space: nowrap;
+  flex:1; text-align:center; font-size:12px; font-weight:500;
+  padding:7px 8px; border-radius:99px;
+  border:0.5px solid var(--bd1); background:var(--tab-bg);
+  color:var(--ct2); cursor:pointer; transition:all .2s; white-space:nowrap;
 }
-.cycle-tab:hover { border-color: var(--bd2); color: var(--ct1); }
+.cycle-tab:hover { border-color:var(--bd2); color:var(--ct1); }
 .cycle-tab.active {
-  background: var(--tab-act); color: var(--accent);
-  border-color: var(--accent);
-  box-shadow: 0 0 14px var(--acglow);
+  background:var(--tab-act); color:var(--accent);
+  border-color:var(--accent); box-shadow:0 0 12px var(--acglow);
 }
-
-.search-wrap { position: relative; }
+.search-wrap { position:relative; }
 .search-icon {
-  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
-  color: var(--ct3); font-size: 13px; pointer-events: none;
+  position:absolute; left:12px; top:50%; transform:translateY(-50%);
+  color:var(--ct3); font-size:13px; pointer-events:none;
 }
 .search-input {
-  width: 100%; padding: 9px 14px 9px 36px;
-  border: 0.5px solid var(--bd1); border-radius: 99px;
-  background: var(--input-bg); color: var(--ct1);
-  font-size: 13px; font-family: var(--font-sans);
-  outline: none; transition: all .2s; backdrop-filter: blur(10px);
+  width:100%; padding:8px 14px 8px 35px;
+  border:0.5px solid var(--bd1); border-radius:99px;
+  background:var(--input-bg); color:var(--ct1);
+  font-size:13px; font-family:var(--font-sans);
+  outline:none; transition:all .2s; backdrop-filter:blur(10px);
 }
-.search-input::placeholder { color: var(--ct3); }
-.search-input:focus { border-color: var(--bd2); box-shadow: 0 0 0 3px var(--acglow); }
+.search-input::placeholder { color:var(--ct3); }
+.search-input:focus { border-color:var(--bd2); box-shadow:0 0 0 3px var(--acglow); }
 
 /* ══════════════════════════════════════════════════
    COMPTEUR
 ══════════════════════════════════════════════════ */
 .count-badge {
-  font-size: 9.5px; color: var(--ct3); font-family: var(--font-mono);
-  letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px;
-  text-align: center;
+  font-size:9px; color:var(--ct3); font-family:var(--font-mono);
+  letter-spacing:1.5px; text-transform:uppercase; margin-bottom:4px;
+  text-align:center;
 }
 
 /* ══════════════════════════════════════════════════
-   SCÈNE CAROUSEL 3D
+   CAROUSEL 3D
 ══════════════════════════════════════════════════ */
-.carousel-wrap {
-  width: 100%; position: relative; margin-bottom: 6px;
-}
-.carousel-scene {
-  width: 100%; height: 300px;
-  perspective: 1100px;
-  position: relative; overflow: visible;
-}
-.carousel-ring {
-  position: absolute; width: 100%; height: 100%;
-  transform-style: preserve-3d;
-  transition: transform .78s cubic-bezier(.25,.46,.45,.94);
-  top: 0; left: 0;
-}
-.carousel-item {
-  position: absolute; top: 50%; left: 50%;
-  cursor: pointer; transform-style: preserve-3d;
-}
-.carousel-item:not(.active) .bk-wrap { opacity: .52; filter: brightness(.68) saturate(.8); }
-.carousel-item.active .bk-wrap { opacity: 1; }
+.carousel-wrap { width:100%; position:relative; margin-bottom:4px; }
 
-/* Flèches de navigation */
-.arr {
-  position: absolute; top: 50%; transform: translateY(-50%);
-  width: 38px; height: 38px; border-radius: 50%;
-  border: 0.5px solid var(--bd2); background: rgba(9,12,22,.72);
-  color: var(--ct2); cursor: pointer; display: flex;
-  align-items: center; justify-content: center; font-size: 18px;
-  transition: all .2s; z-index: 10; backdrop-filter: blur(10px);
-  user-select: none;
+.carousel-scene {
+  width:100%; height:260px;
+  perspective:1200px;
+  position:relative; overflow:visible;
 }
-.arr:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 14px var(--acglow); }
-html.light .arr { background: rgba(240,244,251,.82); }
-.arr.left { left: -2px; }
-.arr.right { right: -2px; }
+
+.carousel-ring {
+  position:absolute; width:100%; height:100%;
+  transform-style:preserve-3d;
+  transition:transform .75s cubic-bezier(.25,.46,.45,.94);
+  top:0; left:0;
+}
+
+.carousel-item {
+  position:absolute; top:50%; left:50%;
+  cursor:pointer; transform-style:preserve-3d;
+}
+
+/* Items inactifs : assombris */
+.carousel-item:not(.active) .bk-wrap { opacity:.45; filter:brightness(.6) saturate(.7); }
+.carousel-item.active .bk-wrap { opacity:1; }
+
+/* Flèches */
+.arr {
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:36px; height:36px; border-radius:50%;
+  border:0.5px solid var(--bd2); background:rgba(9,12,22,.75);
+  color:var(--ct2); cursor:pointer; display:flex;
+  align-items:center; justify-content:center; font-size:17px;
+  transition:all .2s; z-index:10; backdrop-filter:blur(10px); user-select:none;
+}
+.arr:hover { border-color:var(--accent); color:var(--accent); box-shadow:0 0 12px var(--acglow); }
+html.light .arr { background:rgba(240,244,251,.85); }
+.arr.left  { left:-4px; }
+.arr.right { right:-4px; }
 
 /* ══════════════════════════════════════════════════
-   LIVRE 3D CSS
+   LIVRE 3D
 ══════════════════════════════════════════════════ */
 .bk-wrap {
-  display: flex; position: relative;
-  transform: translateX(-50%) translateY(-50%);
-  transition: filter .4s, opacity .4s;
+  display:flex; position:relative;
+  /* centrage : le coin haut-gauche du livre est à 50%/50% de l'item, on décale */
+  transform:translateX(-50%) translateY(-50%);
+  transition:filter .4s, opacity .4s;
 }
 
-/* Halo lumineux sous le livre actif */
+/* Halo sous le livre actif */
 .bk-glow {
-  position: absolute; bottom: -18px; left: 50%;
-  transform: translateX(-50%);
-  width: 80%; height: 18px;
-  border-radius: 50%;
-  background: var(--acglow);
-  filter: blur(10px);
-  opacity: 0;
-  transition: opacity .4s;
-  pointer-events: none;
+  position:absolute; bottom:-16px; left:50%; transform:translateX(-50%);
+  width:80%; height:16px; border-radius:50%;
+  background:var(--acglow); filter:blur(10px);
+  opacity:0; transition:opacity .4s; pointer-events:none;
 }
-.carousel-item.active .bk-glow { opacity: 1; }
+.carousel-item.active .bk-glow { opacity:1; }
 
-/* La tranche (spine) */
+/* Tranche */
 .bk-spine {
-  width: 18px; height: 170px;
-  border-radius: 3px 0 0 3px;
-  flex-shrink: 0; position: relative; overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
+  width:16px; height:176px;
+  border-radius:3px 0 0 3px;
+  flex-shrink:0; position:relative; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
 }
 .bk-spine::after {
-  content: ''; position: absolute; right: 0; top: 0;
-  width: 3px; height: 100%;
-  background: rgba(0,0,0,.32);
+  content:''; position:absolute; right:0; top:0;
+  width:2px; height:100%; background:rgba(0,0,0,.35);
 }
 .bk-spine-txt {
-  writing-mode: vertical-rl; transform: rotate(180deg);
-  font-size: 7.5px; color: rgba(255,255,255,.48);
-  font-family: var(--font-mono); letter-spacing: 1.2px;
-  text-transform: uppercase; white-space: nowrap;
-  overflow: hidden; max-height: 140px; text-overflow: ellipsis;
+  writing-mode:vertical-rl; transform:rotate(180deg);
+  font-size:7px; color:rgba(255,255,255,.45); font-family:var(--font-mono);
+  letter-spacing:1px; text-transform:uppercase; white-space:nowrap;
+  overflow:hidden; max-height:140px; text-overflow:ellipsis;
 }
 
-/* Couverture */
+/* Couverture principale */
 .bk-face {
-  width: 116px; height: 170px;
-  border-radius: 0 5px 5px 0;
-  padding: 14px 12px;
-  display: flex; flex-direction: column;
-  position: relative; overflow: hidden;
-  box-shadow: 3px 0 0 rgba(255,255,255,.06), 6px 10px 32px rgba(0,0,0,.65);
+  width:120px; height:176px;
+  border-radius:0 4px 4px 0;
+  position:relative; overflow:hidden;
+  box-shadow:4px 8px 28px rgba(0,0,0,.7), 1px 0 0 rgba(255,255,255,.08);
 }
-/* Reflet haut */
+
+/* Image de couverture */
+.bk-cover-img {
+  width:100%; height:100%;
+  object-fit:cover; object-position:center;
+  display:block;
+  border-radius:0 4px 4px 0;
+}
+
+/* Fallback gradient (masqué si image chargée) */
+.bk-cover-fallback {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  padding:13px 11px;
+  border-radius:0 4px 4px 0;
+}
+.bk-cover-fallback.hidden { display:none; }
+
+/* Reflet sur couverture */
 .bk-face::before {
-  content: ''; position: absolute; top: 0; left: 0;
-  width: 100%; height: 44%;
-  background: linear-gradient(155deg, rgba(255,255,255,.12) 0%, transparent 65%);
-  pointer-events: none;
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background:linear-gradient(150deg, rgba(255,255,255,.13) 0%, transparent 50%);
+  border-radius:0 4px 4px 0;
 }
-/* Tranche droite (pages) */
+/* Tranche pages droite */
 .bk-face::after {
-  content: ''; position: absolute; right: 0; top: 0;
-  width: 5px; height: 100%;
-  background: linear-gradient(to right, rgba(0,0,0,.08), rgba(255,255,255,.14) 40%, rgba(200,200,200,.07));
-  border-radius: 0 5px 5px 0;
+  content:''; position:absolute; right:0; top:0; z-index:2;
+  width:5px; height:100%;
+  background:linear-gradient(to right,rgba(0,0,0,.05),rgba(255,255,255,.12) 40%,rgba(200,200,200,.05));
+  border-radius:0 4px 4px 0;
 }
+
 /* Pages du dessus */
 .bk-top-pages {
-  position: absolute; width: 114px; height: 8px;
-  top: -7px; left: 18px;
-  background: repeating-linear-gradient(to right,#ccc 0px,#d8d8d8 1px,#f5f5f5 2px,#eee 3px);
-  border-radius: 1px 4px 0 0;
-  box-shadow: 0 -2px 4px rgba(0,0,0,.22);
+  position:absolute; width:118px; height:7px;
+  top:-6px; left:16px;
+  background:repeating-linear-gradient(to right,#bbb 0,#d0d0d0 1px,#f0f0f0 2px,#e0e0e0 3px);
+  border-radius:1px 4px 0 0; box-shadow:0 -2px 4px rgba(0,0,0,.25);
 }
 
-.bk-emoji { font-size: 22px; margin-bottom: 9px; line-height: 1; }
+.bk-emoji { font-size:20px; margin-bottom:7px; line-height:1; }
 .bk-titre {
-  font-size: 10px; font-weight: 600; color: rgba(255,255,255,.94);
-  line-height: 1.38; flex: 1; overflow: hidden;
-  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+  font-size:9.5px; font-weight:600; color:rgba(255,255,255,.95);
+  line-height:1.38; flex:1; overflow:hidden;
+  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical;
 }
 .bk-auteur {
-  font-size: 8.5px; color: rgba(255,255,255,.52);
-  margin-top: 7px; font-style: italic;
-  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font-size:8px; color:rgba(255,255,255,.5); margin-top:6px;
+  font-style:italic; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
 }
 .bk-annee {
-  font-size: 8px; color: rgba(255,255,255,.3);
-  font-family: var(--font-mono); margin-top: 3px;
+  font-size:7.5px; color:rgba(255,255,255,.28);
+  font-family:var(--font-mono); margin-top:3px;
 }
 
-/* Illusion 3D de l'objet livre */
+/* ──────────────────────────────────────────────
+   Rotation 3D du livre
+   • Inactifs : angle de côté pour l'effet carrousel
+   • Actif    : de face, légèrement surélevé
+────────────────────────────────────────────── */
 .bk-3d {
-  display: flex; position: relative;
-  transform: perspective(520px) rotateY(-19deg) rotateX(3deg);
-  transition: transform .38s cubic-bezier(.25,.46,.45,.94);
+  display:flex; position:relative;
+  transform:perspective(600px) rotateY(-22deg) rotateX(2deg);
+  transition:transform .5s cubic-bezier(.25,.46,.45,.94);
 }
+
+/* Le livre actif est parfaitement de face */
+.carousel-item.active .bk-3d {
+  transform:perspective(900px) rotateY(0deg) rotateX(0deg) translateY(-6px) scale(1.06);
+}
+/* Hover sur le livre actif = léger tilt */
 .carousel-item.active .bk-3d:hover {
-  transform: perspective(520px) rotateY(-28deg) rotateX(5deg) translateY(-5px);
+  transform:perspective(900px) rotateY(-8deg) rotateX(3deg) translateY(-8px) scale(1.07);
 }
 
 /* ══════════════════════════════════════════════════
    POINTS DE NAVIGATION
 ══════════════════════════════════════════════════ */
-.nav-dots {
-  display: flex; gap: 5px; justify-content: center;
-  align-items: center; margin-bottom: 10px;
-}
+.nav-dots { display:flex; gap:5px; justify-content:center; align-items:center; margin-bottom:8px; }
 .nav-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--bd1); cursor: pointer;
-  transition: all .3s;
+  width:5px; height:5px; border-radius:50%;
+  background:var(--bd1); cursor:pointer; transition:all .3s;
 }
 .nav-dot.active {
-  background: var(--accent); width: 16px; border-radius: 99px;
-  box-shadow: 0 0 6px var(--acglow);
+  background:var(--accent); width:16px; border-radius:99px;
+  box-shadow:0 0 6px var(--acglow);
 }
 
 /* ══════════════════════════════════════════════════
-   CARTE INFO (partition sélectionnée)
+   CARTE INFO
 ══════════════════════════════════════════════════ */
 .info-card {
-  width: 100%; max-width: 440px; text-align: center;
-  padding: 10px 0 20px; transition: opacity .3s;
+  width:100%; max-width:440px; text-align:center;
+  padding:8px 0 18px; transition:opacity .3s;
 }
 .info-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
-  font-family: var(--font-mono); padding: 3px 11px;
-  border-radius: 99px; border: 0.5px solid var(--bd2);
-  background: var(--tab-act); color: var(--accent); margin-bottom: 9px;
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
+  font-family:var(--font-mono); padding:3px 11px;
+  border-radius:99px; border:0.5px solid var(--bd2);
+  background:var(--tab-act); color:var(--accent); margin-bottom:8px;
 }
-.info-title { font-size: 16px; font-weight: 600; color: var(--ct1); margin-bottom: 4px; line-height: 1.3; }
-.info-author { font-size: 12px; color: var(--ct2); font-style: italic; margin-bottom: 6px; }
+.info-title { font-size:15px; font-weight:600; color:var(--ct1); margin-bottom:4px; line-height:1.3; }
+.info-author { font-size:12px; color:var(--ct2); font-style:italic; margin-bottom:5px; }
 .info-meta {
-  display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
-  font-size: 10px; color: var(--ct3); font-family: var(--font-mono);
+  display:flex; flex-wrap:wrap; justify-content:center; gap:10px;
+  font-size:10px; color:var(--ct3); font-family:var(--font-mono);
 }
-.info-meta span { display: flex; align-items: center; gap: 3px; }
+.info-meta span { display:flex; align-items:center; gap:3px; }
 .info-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  margin-top: 14px; padding: 8px 20px; border-radius: 99px;
-  border: 0.5px solid var(--bd2); background: var(--tab-act);
-  color: var(--accent); font-size: 11px; cursor: pointer;
-  transition: all .2s; font-family: var(--font-sans);
+  display:inline-flex; align-items:center; gap:6px;
+  margin-top:12px; padding:7px 18px; border-radius:99px;
+  border:0.5px solid var(--bd2); background:var(--tab-act);
+  color:var(--accent); font-size:11px; cursor:pointer;
+  transition:all .2s; font-family:var(--font-sans);
 }
-.info-btn:hover { background: var(--accent); color: #fff; box-shadow: 0 0 18px var(--acglow); border-color: var(--accent); }
+.info-btn:hover { background:var(--accent); color:#fff; box-shadow:0 0 16px var(--acglow); border-color:var(--accent); }
 
 /* ══════════════════════════════════════════════════
    ÉTAT VIDE
 ══════════════════════════════════════════════════ */
-.empty {
-  text-align: center; padding: 60px 20px;
-  color: var(--ct3); display: none;
-}
-.empty.on { display: block; }
-.empty-icon { font-size: 44px; margin-bottom: 14px; }
-.empty-txt { font-size: 13px; }
+.empty { text-align:center; padding:50px 20px; color:var(--ct3); display:none; }
+.empty.on { display:block; }
+.empty-icon { font-size:40px; margin-bottom:12px; }
+.empty-txt { font-size:13px; }
 
 /* ══════════════════════════════════════════════════
    MODAL FICHE DÉTAILLÉE
 ══════════════════════════════════════════════════ */
 .modal-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.75); z-index: 200;
-  align-items: center; justify-content: center;
-  padding: 1rem; backdrop-filter: blur(5px);
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,.78); z-index:200;
+  align-items:center; justify-content:center;
+  padding:1rem; backdrop-filter:blur(6px);
 }
-.modal-overlay.open { display: flex; }
-
+.modal-overlay.open { display:flex; }
 .modal-box {
-  background: var(--modal-bg);
-  border: 0.5px solid var(--bd2); border-radius: 18px;
-  padding: 26px 24px; width: min(500px,100%);
-  max-height: 90vh; overflow-y: auto;
-  box-shadow: 0 24px 70px rgba(0,0,0,.55), 0 0 50px var(--acglow);
-  animation: modalIn .32s cubic-bezier(.34,1.56,.64,1) both;
+  background:var(--modal-bg); border:0.5px solid var(--bd2);
+  border-radius:18px; padding:24px 22px; width:min(500px,100%);
+  max-height:90vh; overflow-y:auto;
+  box-shadow:0 24px 70px rgba(0,0,0,.55),0 0 50px var(--acglow);
+  animation:modalIn .3s cubic-bezier(.34,1.56,.64,1) both;
 }
-@keyframes modalIn { from{opacity:0;transform:scale(.9) translateY(16px)} to{opacity:1;transform:none} }
+@keyframes modalIn { from{opacity:0;transform:scale(.92) translateY(14px)} to{opacity:1;transform:none} }
 
-.modal-header {
-  display: flex; align-items: flex-start; gap: 18px;
-  margin-bottom: 20px; padding-bottom: 18px;
-  border-bottom: 0.5px solid var(--bd1);
-}
-.modal-book-mini { flex-shrink: 0; }
-.modal-info { flex: 1; }
-.modal-badge {
-  display: inline-block; font-size: 9px; letter-spacing: 1.5px;
-  text-transform: uppercase; font-family: var(--font-mono);
-  padding: 2px 9px; border-radius: 99px;
-  border: 0.5px solid var(--bd2); background: var(--tab-act);
-  color: var(--accent); margin-bottom: 8px;
-}
-.modal-title { font-size: 15px; font-weight: 600; color: var(--ct1); margin-bottom: 4px; line-height: 1.3; }
-.modal-author { font-size: 12px; color: var(--ct2); font-style: italic; }
-
-.modal-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 9px; margin-bottom: 18px;
-}
-.modal-field {
-  background: var(--tab-bg); border: 0.5px solid var(--bd1);
-  border-radius: 9px; padding: 10px 12px;
-}
-.modal-field-lbl {
-  font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--ct3); font-family: var(--font-mono); margin-bottom: 4px;
-}
-.modal-field-val { font-size: 12px; color: var(--ct1); }
-
-.modal-desc { font-size: 12px; color: var(--ct2); line-height: 1.75; margin-bottom: 20px; }
-
-.modal-close {
-  width: 100%; padding: 10px; border-radius: 99px;
-  border: 0.5px solid var(--bd1); background: none;
-  color: var(--ct2); font-size: 12px; cursor: pointer;
-  transition: all .2s; font-family: var(--font-sans);
-}
-.modal-close:hover { border-color: var(--bd2); color: var(--ct1); background: var(--tab-act); }
+.modal-header { display:flex; align-items:flex-start; gap:16px; margin-bottom:18px; padding-bottom:16px; border-bottom:0.5px solid var(--bd1); }
+.modal-book-mini { flex-shrink:0; }
+.modal-info { flex:1; }
+.modal-badge { display:inline-block; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; font-family:var(--font-mono); padding:2px 9px; border-radius:99px; border:0.5px solid var(--bd2); background:var(--tab-act); color:var(--accent); margin-bottom:7px; }
+.modal-title { font-size:14px; font-weight:600; color:var(--ct1); margin-bottom:3px; line-height:1.3; }
+.modal-author { font-size:12px; color:var(--ct2); font-style:italic; }
+.modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
+.modal-field { background:var(--tab-bg); border:0.5px solid var(--bd1); border-radius:9px; padding:9px 11px; }
+.modal-field-lbl { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ct3); font-family:var(--font-mono); margin-bottom:3px; }
+.modal-field-val { font-size:12px; color:var(--ct1); }
+.modal-desc { font-size:12px; color:var(--ct2); line-height:1.75; margin-bottom:18px; }
+.modal-close { width:100%; padding:9px; border-radius:99px; border:0.5px solid var(--bd1); background:none; color:var(--ct2); font-size:12px; cursor:pointer; transition:all .2s; font-family:var(--font-sans); }
+.modal-close:hover { border-color:var(--bd2); color:var(--ct1); background:var(--tab-act); }
 
 /* ══════════════════════════════════════════════════
-   MODAL AJOUT PARTITION
+   MODAL AJOUT
 ══════════════════════════════════════════════════ */
-.add-modal-box { max-width: 420px; }
+.add-modal-box { max-width:420px; }
 .add-modal-box input, .add-modal-box select, .add-modal-box textarea {
-  width: 100%; padding: 9px 11px;
-  border: 0.5px solid var(--bd1); border-radius: var(--br-md);
-  background: var(--input-bg); color: var(--ct1);
-  font-size: 12px; font-family: var(--font-sans);
-  margin-bottom: 10px; outline: none; transition: border .2s;
+  width:100%; padding:8px 11px; border:0.5px solid var(--bd1); border-radius:var(--br-md);
+  background:var(--input-bg); color:var(--ct1); font-size:12px;
+  font-family:var(--font-sans); margin-bottom:9px; outline:none; transition:border .2s;
+  -webkit-appearance:none;
 }
-.add-modal-box input:focus, .add-modal-box select:focus, .add-modal-box textarea:focus {
-  border-color: var(--bd2); box-shadow: 0 0 0 2px var(--acglow);
-}
-.add-modal-box select option { background: #0f1420; color: #e8eaf0; }
-html.light .add-modal-box select option { background: #fff; color: #18243c; }
-.add-modal-box textarea { resize: vertical; min-height: 76px; line-height: 1.55; }
-.field-lbl { font-size: 10px; color: var(--ct3); margin-bottom: 3px; font-family: var(--font-mono); letter-spacing: 0.5px; }
-.add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
-.modal-footer { display: flex; gap: 8px; margin-top: 6px; }
-.modal-footer button { flex: 1; padding: 10px; border-radius: 99px; font-size: 12px; cursor: pointer; font-family: var(--font-sans); transition: all .2s; border: 0.5px solid; }
-.btn-cancel { background: none; color: var(--ct2); border-color: var(--bd1); }
-.btn-cancel:hover { background: var(--tab-bg); color: var(--ct1); border-color: var(--bd2); }
-.btn-save { background: var(--tab-act); color: var(--accent); border-color: var(--accent); }
-.btn-save:hover { background: var(--accent); color: #fff; box-shadow: 0 0 14px var(--acglow); }
-.modal-h3 { font-size: 14px; font-weight: 600; color: var(--ct1); margin-bottom: 16px; }
+.add-modal-box input:focus, .add-modal-box select:focus, .add-modal-box textarea:focus { border-color:var(--bd2); box-shadow:0 0 0 2px var(--acglow); }
+.add-modal-box select option { background:#0f1420; color:#e8eaf0; }
+html.light .add-modal-box select option { background:#fff; color:#18243c; }
+.add-modal-box textarea { resize:vertical; min-height:72px; line-height:1.55; }
+.field-lbl { font-size:10px; color:var(--ct3); margin-bottom:3px; font-family:var(--font-mono); }
+.add-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
+.modal-footer { display:flex; gap:8px; margin-top:4px; }
+.modal-footer button { flex:1; padding:9px; border-radius:99px; font-size:12px; cursor:pointer; font-family:var(--font-sans); transition:all .2s; border:0.5px solid; }
+.btn-cancel { background:none; color:var(--ct2); border-color:var(--bd1); }
+.btn-cancel:hover { background:var(--tab-bg); color:var(--ct1); border-color:var(--bd2); }
+.btn-save { background:var(--tab-act); color:var(--accent); border-color:var(--accent); }
+.btn-save:hover { background:var(--accent); color:#fff; box-shadow:0 0 12px var(--acglow); }
+.modal-h3 { font-size:14px; font-weight:600; color:var(--ct1); margin-bottom:14px; }
 
 /* ══════════════════════════════════════════════════
    TOAST
 ══════════════════════════════════════════════════ */
 .toast {
-  position: fixed; bottom: 24px; left: 50%; z-index: 300;
-  transform: translateX(-50%) translateY(80px);
-  background: rgba(15,20,32,.95); border: 0.5px solid var(--bd2);
-  border-radius: 99px; padding: 9px 22px;
-  font-size: 12px; color: var(--ct1);
-  backdrop-filter: blur(14px); box-shadow: 0 4px 22px rgba(0,0,0,.4);
-  transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .35s;
-  opacity: 0; pointer-events: none; white-space: nowrap;
+  position:fixed; bottom:24px; left:50%; z-index:300;
+  transform:translateX(-50%) translateY(80px);
+  background:rgba(12,17,30,.96); border:0.5px solid var(--bd2);
+  border-radius:99px; padding:9px 22px;
+  font-size:12px; color:var(--ct1); backdrop-filter:blur(14px);
+  box-shadow:0 4px 22px rgba(0,0,0,.4);
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1), opacity .32s;
+  opacity:0; pointer-events:none; white-space:nowrap;
 }
-html.light .toast { background: rgba(255,255,255,.95); }
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+html.light .toast { background:rgba(255,255,255,.97); }
+.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 
 /* ══════════════════════════════════════════════════
    SCROLLBAR
 ══════════════════════════════════════════════════ */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bd1); border-radius: 99px; }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--bd1); border-radius:99px; }
 
 /* ══════════════════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════════════════ */
-@media (max-width: 520px) {
-  .cycle-tab { font-size: 11px; padding: 7px 6px; }
-  .header-left .title { font-size: 16px; }
-  .arr { width: 32px; height: 32px; font-size: 15px; }
+@media (max-width:520px) {
+  .cycle-tab { font-size:11px; padding:6px 5px; }
+  .header-left .title { font-size:16px; }
+  .arr { width:30px; height:30px; font-size:15px; }
+  .carousel-scene { height:230px; }
 }
 </style>
 </head>
 <body>
 
-<!-- Fond + étoiles -->
-<div class="scene-bg"></div>
-<canvas id="stars"></canvas>
-
-<!-- HUD coins -->
-<div class="hud-corner tl"></div>
-<div class="hud-corner tr"></div>
-<div class="hud-corner bl"></div>
-<div class="hud-corner br"></div>
-<div class="hud-lbl top">RÉPERTOIRES PÉDAGOGIQUES · SAX</div>
-<div class="hud-lbl bot">DE Saxophone</div>
-
-<!-- ══════════ APP ══════════ -->
 <div class="app">
 
   <!-- En-tête -->
   <header class="app-header">
     <div class="header-left">
-      <div class="eyebrow">Diplôme d'État · Saxophone </div>
+      <div class="eyebrow">Diplôme d'État · Saxophone</div>
       <div class="title">Répertoires Pédagogiques</div>
       <div class="subtitle">Bibliothèque de partitions</div>
     </div>
     <div class="header-right">
-      <button class="icon-btn" id="theme-btn" title="Thème">🌙</button>
-      <button class="icon-btn" id="add-btn" title="Ajouter une partition">＋</button>
+      <!-- Bouton thème : SVG lune ou soleil selon mode -->
+      <button class="icon-btn" id="theme-btn" title="Thème">
+        <svg id="icon-moon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg id="icon-sun" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="add-btn" title="Ajouter une partition">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -605,7 +554,7 @@ html.light .toast { background: rgba(255,255,255,.95); }
 
 </div>
 
-<!-- ══════════ MODAL FICHE DÉTAILLÉE ══════════ -->
+<!-- Modal fiche détaillée -->
 <div class="modal-overlay" id="modal-detail">
   <div class="modal-box">
     <div class="modal-header">
@@ -622,29 +571,19 @@ html.light .toast { background: rgba(255,255,255,.95); }
   </div>
 </div>
 
-<!-- ══════════ MODAL AJOUT ══════════ -->
+<!-- Modal ajout -->
 <div class="modal-overlay" id="modal-add">
   <div class="modal-box add-modal-box">
-    <div class="modal-h3">📚 Ajouter une partition</div>
+    <div class="modal-h3">Ajouter une partition</div>
     <div class="field-lbl">Titre *</div>
     <input type="text" id="add-titre" placeholder="50 Études Faciles…" maxlength="120">
     <div class="add-grid">
-      <div>
-        <div class="field-lbl">Auteur *</div>
-        <input type="text" id="add-auteur" placeholder="Guy Lacour" maxlength="80">
-      </div>
-      <div>
-        <div class="field-lbl">Éditeur</div>
-        <input type="text" id="add-editeur" placeholder="Billaudot" maxlength="60">
-      </div>
+      <div><div class="field-lbl">Auteur *</div><input type="text" id="add-auteur" placeholder="Guy Lacour" maxlength="80"></div>
+      <div><div class="field-lbl">Éditeur</div><input type="text" id="add-editeur" placeholder="Billaudot" maxlength="60"></div>
     </div>
     <div class="add-grid">
-      <div>
-        <div class="field-lbl">Année</div>
-        <input type="number" id="add-annee" placeholder="1974" min="1840" max="2099">
-      </div>
-      <div>
-        <div class="field-lbl">Cycle *</div>
+      <div><div class="field-lbl">Année</div><input type="number" id="add-annee" placeholder="1974" min="1840" max="2099"></div>
+      <div><div class="field-lbl">Cycle *</div>
         <select id="add-cycle">
           <option value="1">Cycle 1</option>
           <option value="2">Cycle 2</option>
@@ -653,17 +592,11 @@ html.light .toast { background: rgba(255,255,255,.95); }
       </div>
     </div>
     <div class="add-grid">
-      <div>
-        <div class="field-lbl">Niveau</div>
-        <input type="text" id="add-niveau" placeholder="Débutant" maxlength="40">
-      </div>
-      <div>
-        <div class="field-lbl">Genre</div>
-        <input type="text" id="add-genre" placeholder="Études / Sonate…" maxlength="40">
-      </div>
+      <div><div class="field-lbl">Niveau</div><input type="text" id="add-niveau" placeholder="Débutant" maxlength="40"></div>
+      <div><div class="field-lbl">Genre</div><input type="text" id="add-genre" placeholder="Études…" maxlength="40"></div>
     </div>
     <div class="field-lbl">Description</div>
-    <textarea id="add-desc" placeholder="Notes pédagogiques, contexte, conseils d'utilisation…" maxlength="600"></textarea>
+    <textarea id="add-desc" placeholder="Notes pédagogiques, contexte…" maxlength="600"></textarea>
     <div class="modal-footer">
       <button class="btn-cancel" id="modal-add-close">Annuler</button>
       <button class="btn-save" id="modal-add-save">✓ Ajouter</button>
@@ -671,267 +604,307 @@ html.light .toast { background: rgba(255,255,255,.95); }
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- ══════════════════════════════════════════════════
-     DONNÉES ET LOGIQUE
-══════════════════════════════════════════════════ -->
 <script>
-/* ──────────────────────────────────────────────────
-   RÉPERTOIRE DE PARTITIONS (données initiales)
-────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════
+   DONNÉES
+══════════════════════════════════════════════════ */
 const REPERTOIRE_DATA = {
   1: [
     {
-      id:"c1_01", titre:"50 Études Faciles et Progressives — Vol. 1",
+      id:"c1_01",
+      titre:"50 Études Faciles et Progressives — Vol. 1",
       auteur:"Guy Lacour", editeur:"Billaudot", annee:1974,
       niveau:"Débutant", genre:"Études",
       couleur:"#1a3e72", spine:"#102850", emoji:"🎵",
+      isbn:"9790042807595",
       desc:"Recueil incontournable pour les premières années. Ces 50 études progressives couvrent les fondamentaux : sons tenus, legato, staccato, articulations de base. Idéal pour structurer les deux premières années de pratique."
     },
     {
-      id:"c1_02", titre:"Méthode Complète de Saxophone",
+      id:"c1_02",
+      titre:"Méthode Complète de Saxophone",
       auteur:"Hyacinthe Klosé", editeur:"Leduc", annee:1846,
       niveau:"Débutant", genre:"Méthode",
       couleur:"#2d1a50", spine:"#1e0e38", emoji:"📖",
+      isbn:"9790046008018",
       desc:"La méthode originelle pour saxophone, écrite par le collaborateur d'Adolphe Sax. Fondamentale dans l'histoire pédagogique de l'instrument, elle pose les bases de la technique classique française."
     },
     {
-      id:"c1_03", titre:"L'Indispensable du Saxophone",
+      id:"c1_03",
+      titre:"L'Indispensable du Saxophone",
       auteur:"Denis Gäbel", editeur:"Lemoine", annee:2004,
       niveau:"Débutant", genre:"Méthode",
       couleur:"#1a4a3a", spine:"#103028", emoji:"🌱",
+      isbn:"9790230982184",
       desc:"Approche pédagogique moderne intégrant lecture, solfège rythmique et pièces variées avec supports audio. Méthode adaptée aux élèves contemporains, couvrant les deux premières années de cycle 1."
     },
     {
-      id:"c1_04", titre:"35 Études Techniques",
+      id:"c1_04",
+      titre:"35 Études Techniques",
       auteur:"Paul Jeanjean", editeur:"Leduc", annee:1927,
       niveau:"Fin de Cycle 1", genre:"Études",
       couleur:"#1a3a2a", spine:"#0e2618", emoji:"⚙️",
+      isbn:"9790046093226",
       desc:"Études techniques de Jeanjean centrées sur les articulations, gammes et arpèges. Un pilier du répertoire pédagogique français qui complète utilement les méthodes de début et prépare le cycle 2."
     },
     {
-      id:"c1_05", titre:"Rubank Elementary Method for Saxophone",
+      id:"c1_05",
+      titre:"Rubank Elementary Method for Saxophone",
       auteur:"H. Voxman", editeur:"Rubank", annee:1934,
       niveau:"Débutant", genre:"Méthode",
       couleur:"#3a1a1a", spine:"#281010", emoji:"🇺🇸",
+      isbn:"9781423444091",
       desc:"Méthode américaine de référence très utilisée dans les écoles de musique anglophones. Présente une progression claire avec des exercices techniques bien dosés et un répertoire varié."
     },
     {
-      id:"c1_06", titre:"Premières Pièces pour Saxophone",
+      id:"c1_06",
+      titre:"Premières Pièces pour Saxophone",
       auteur:"Divers compositeurs", editeur:"Billaudot", annee:1990,
       niveau:"Fin de Cycle 1", genre:"Répertoire",
       couleur:"#3a2a10", spine:"#281c08", emoji:"🎼",
+      isbn:"9790042806901",
       desc:"Anthologie de courtes pièces originales ou arrangées pour saxophone alto et piano, conçues pour préparer l'évaluation de fin de cycle 1. Styles variés : baroque, classique, jazz, musique du monde."
-    },
+    }
   ],
   2: [
     {
-      id:"c2_01", titre:"48 Études pour Saxophone",
+      id:"c2_01",
+      titre:"48 Études pour Saxophone",
       auteur:"W. Ferling (rev. Marcel Mule)", editeur:"Leduc", annee:1946,
       niveau:"Intermédiaire", genre:"Études",
       couleur:"#1e4a78", spine:"#123260", emoji:"🎓",
+      isbn:"9790046097521",
       desc:"Adaptation par Marcel Mule des études pour hautbois de Ferling. Ces 48 études sont un passage obligé pour tout saxophoniste classique sérieux, travaillant phrasés, nuances et articulations avancées."
     },
     {
-      id:"c2_02", titre:"Concertino da Camera",
+      id:"c2_02",
+      titre:"Concertino da Camera",
       auteur:"Jacques Ibert", editeur:"Leduc", annee:1935,
       niveau:"Fin de Cycle 2", genre:"Pièce concertante",
       couleur:"#4a1e3a", spine:"#321226", emoji:"🎪",
+      isbn:"9790046196002",
       desc:"Oeuvre concertante majeure du répertoire pour saxophone alto et orchestre de chambre. Virtuose et élégante, elle est souvent jouée en concours et représente un sommet stylistique néoclassique."
     },
     {
-      id:"c2_03", titre:"Ballade",
+      id:"c2_03",
+      titre:"Ballade",
       auteur:"Henri Tomasi", editeur:"Leduc", annee:1947,
       niveau:"Cycle 2", genre:"Pièce soliste",
       couleur:"#2a3a1e", spine:"#1a2810", emoji:"🌊",
+      isbn:"9790046196200",
       desc:"La Ballade de Tomasi est une pièce lyrique et expressive qui demande un vrai contrôle du son et un sens du legato évolué. Très jouée en examens de fin de cycle 2 dans les conservatoires français."
     },
     {
-      id:"c2_04", titre:"Fantaisie sur un thème original",
+      id:"c2_04",
+      titre:"Fantaisie sur un thème original",
       auteur:"Jules Demersseman", editeur:"Leduc", annee:1860,
       niveau:"Milieu Cycle 2", genre:"Fantaisie",
       couleur:"#2a1e4a", spine:"#1c1232", emoji:"✨",
+      isbn:"9790046099571",
       desc:"Fantaisie romantique virtuose du XIXe siècle, écrite par l'un des premiers compositeurs à s'intéresser au saxophone. Demande souplesse technique et sens de la mise en valeur mélodique."
     },
     {
-      id:"c2_05", titre:"Sonatine",
+      id:"c2_05",
+      titre:"Sonatine",
       auteur:"Pierre-Max Dubois", editeur:"Leduc", annee:1959,
       niveau:"Fin de Cycle 2", genre:"Sonate",
       couleur:"#1e3a4a", spine:"#122832", emoji:"🏛️",
+      isbn:"9790046192783",
       desc:"Oeuvre de style néoclassique en trois mouvements, avec humour et légèreté. La Sonatine de Dubois est idéale pour travailler la mise en place rythmique avec piano et le jeu en ensemble."
     },
     {
-      id:"c2_06", titre:"Aria et Toccata",
+      id:"c2_06",
+      titre:"Aria et Toccata",
       auteur:"Alfred Desenclos", editeur:"Leduc", annee:1967,
       niveau:"Fin de Cycle 2", genre:"Pièce soliste",
       couleur:"#3a2a1e", spine:"#261a10", emoji:"💎",
+      isbn:"9790046189981",
       desc:"Pièce magistrale en deux temps contrastés : une Aria expressive et lyrique suivie d'une Toccata brillante et rythmique. Exigeante techniquement, c'est un chef-d'oeuvre du répertoire classique français."
-    },
+    }
   ],
   3: [
     {
-      id:"c3_01", titre:"Concerto pour Saxophone Alto",
+      id:"c3_01",
+      titre:"Concerto pour Saxophone Alto",
       auteur:"Alexander Glazounov", editeur:"Leduc", annee:1934,
       niveau:"Avancé", genre:"Concerto",
       couleur:"#1a285a", spine:"#0e1a3c", emoji:"🏆",
+      isbn:"9790046193209",
       desc:"Le Concerto de Glazounov est sans doute la pièce la plus emblématique du répertoire concertant pour saxophone. Composé dans le style romantique tardif, il est présent dans tous les concours internationaux."
     },
     {
-      id:"c3_02", titre:"Tableaux de Provence",
+      id:"c3_02",
+      titre:"Tableaux de Provence",
       auteur:"Paule Maurice", editeur:"Lemoine", annee:1955,
       niveau:"Avancé", genre:"Suite",
       couleur:"#4a3a1a", spine:"#322810", emoji:"🌄",
+      isbn:"9790230965522",
       desc:"Suite poétique en cinq tableaux évoquant la lumière et les paysages de Provence. Paule Maurice y développe toutes les nuances expressives du saxophone alto dans un style impressionniste raffiné."
     },
     {
-      id:"c3_03", titre:"Sonate",
+      id:"c3_03",
+      titre:"Sonate pour Saxophone et Piano",
       auteur:"Claude Pascal", editeur:"Durand", annee:1945,
       niveau:"Avancé", genre:"Sonate",
       couleur:"#3a1a28", spine:"#28101a", emoji:"🌹",
+      isbn:"9790044017430",
       desc:"Sonate néoclassique française en quatre mouvements d'une écriture élégante et idiomatique. Souvent au programme des examens de fin de cycle supérieur et des concours nationaux de saxophone."
     },
     {
-      id:"c3_04", titre:"Sonate pour Saxophone",
+      id:"c3_04",
+      titre:"Sonate pour Saxophone",
       auteur:"Edison Denisov", editeur:"Leduc", annee:1970,
       niveau:"Avancé", genre:"Sonate contemporaine",
       couleur:"#1a1a28", spine:"#101018", emoji:"🌑",
+      isbn:"9790046198778",
       desc:"Oeuvre du modernisme soviétique explorant des sonorités inédites et une écriture atonale exigeante. Demande une parfaite maîtrise du son, du souffle et une grande liberté d'interprétation."
     },
     {
-      id:"c3_05", titre:"Sequenza IXb",
+      id:"c3_05",
+      titre:"Sequenza IXb",
       auteur:"Luciano Berio", editeur:"Universal Edition", annee:1981,
       niveau:"Virtuose", genre:"Contemporain solo",
       couleur:"#1a3a3a", spine:"#0e2828", emoji:"🎭",
+      isbn:"9783702475031",
       desc:"Pièce phare du répertoire contemporain pour saxophone solo. Berio pousse ici les limites de l'instrument avec multiphoniques, sons altérés et une écriture en flux continu de grande virtuosité."
     },
     {
-      id:"c3_06", titre:"Rhapsodie pour Saxophone et Orchestre",
+      id:"c3_06",
+      titre:"Rhapsodie pour Saxophone et Orchestre",
       auteur:"Claude Debussy (arr. R.-Ducasse)", editeur:"Durand", annee:1903,
       niveau:"Avancé", genre:"Pièce orchestrale",
       couleur:"#2a1a4a", spine:"#1a0e32", emoji:"🌊",
+      isbn:"9790044074051",
       desc:"Pièce commandée par Elise Hall, laissée inachevée par Debussy puis orchestrée par Roger-Ducasse. Elle représente l'une des rares incursions impressionnistes dans le répertoire classique du saxophone."
-    },
+    }
   ]
 };
 
-/* ──────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════
    ÉTAT GLOBAL
-────────────────────────────────────────────────── */
+══════════════════════════════════════════════════ */
 let currentCycle  = 1;
 let currentIndex  = 0;
 let filteredBooks = [];
 let isDark        = !document.documentElement.classList.contains('light');
 
-/* ──────────────────────────────────────────────────
-   ÉTOILES ANIMÉES
-────────────────────────────────────────────────── */
-(function(){
-  const cv = document.getElementById('stars');
-  cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
-  const ctx = cv.getContext('2d');
-  let stars = [];
-  function resize(){
-    cv.width = innerWidth; cv.height = innerHeight;
-    stars = [];
-    const n = Math.floor(cv.width * cv.height / 5500);
-    for(let i=0;i<n;i++) stars.push({
-      x: Math.random()*cv.width, y: Math.random()*cv.height,
-      r: Math.random()*1.3, a: Math.random(), sp: 0.004+Math.random()*0.006
-    });
-  }
-  function draw(){
-    ctx.clearRect(0,0,cv.width,cv.height);
-    if(!isDark){requestAnimationFrame(draw);return;}
-    stars.forEach(s=>{
-      s.a+=s.sp;
-      const al = 0.08 + 0.62*Math.abs(Math.sin(s.a));
-      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(180,210,255,${al})`; ctx.fill();
-    });
-    requestAnimationFrame(draw);
-  }
-  resize(); window.addEventListener('resize',resize); draw();
-})();
+// Cache des couvertures déjà récupérées
+const coverCache = {};
 
-/* ──────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════
    THÈME
-────────────────────────────────────────────────── */
+══════════════════════════════════════════════════ */
+function applyThemeIcons(){
+  document.getElementById('icon-moon').style.display = isDark ? '' : 'none';
+  document.getElementById('icon-sun').style.display  = isDark ? 'none' : '';
+}
+
 function toggleTheme(){
   isDark = !isDark;
   document.documentElement.classList.toggle('light', !isDark);
-  document.getElementById('theme-btn').textContent = isDark ? '🌙' : '☀️';
   try{ localStorage.setItem('rep_theme_v1', isDark ? 'dark' : 'light'); }catch(e){}
+  applyThemeIcons();
 }
+
+// Init icône selon état actuel
 try{
-  const sv = localStorage.getItem('rep_theme_v1');
-  if(sv==='light'){ isDark=false; document.getElementById('theme-btn').textContent='☀️'; }
+  if(localStorage.getItem('rep_theme_v1')==='light') isDark = false;
 }catch(e){}
+applyThemeIcons();
+
 document.getElementById('theme-btn').addEventListener('click', toggleTheme);
 
-/* ──────────────────────────────────────────────────
-   UTILITAIRES COULEUR
-────────────────────────────────────────────────── */
-function h2r(hex){ return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)]; }
-function r2h(r,g,b){ return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join(''); }
-function lighten(hex,a){ const [r,g,b]=h2r(hex); return r2h(r+a,g+a,b+a); }
-function darken(hex,a){ const [r,g,b]=h2r(hex); return r2h(r-a,g-a,b-a); }
+/* ══════════════════════════════════════════════════
+   COUVERTURES — Google Books API
+══════════════════════════════════════════════════ */
+function fetchCover(bk, imgEl, fallbackEl){
+  // Si déjà en cache
+  if(coverCache[bk.id]){
+    if(coverCache[bk.id] === 'none'){ fallbackEl.classList.remove('hidden'); return; }
+    imgEl.src = coverCache[bk.id];
+    return;
+  }
 
-/* ──────────────────────────────────────────────────
+  // Requête Google Books par ISBN ou titre+auteur
+  const query = bk.isbn
+    ? `isbn:${bk.isbn}`
+    : encodeURIComponent(`"${bk.titre}" ${bk.auteur}`);
+  const url = `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1&fields=items(volumeInfo/imageLinks)`;
+
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      const links = data?.items?.[0]?.volumeInfo?.imageLinks;
+      const thumb = links?.thumbnail || links?.smallThumbnail;
+      if(thumb){
+        // Upgrade vers plus haute résolution
+        const hq = thumb.replace('zoom=1','zoom=2').replace('http:','https:');
+        coverCache[bk.id] = hq;
+        imgEl.src = hq;
+        imgEl.onload = () => { fallbackEl.classList.add('hidden'); };
+        imgEl.onerror = () => { coverCache[bk.id]='none'; fallbackEl.classList.remove('hidden'); imgEl.style.display='none'; };
+      } else {
+        coverCache[bk.id] = 'none';
+        fallbackEl.classList.remove('hidden');
+      }
+    })
+    .catch(() => {
+      coverCache[bk.id] = 'none';
+      fallbackEl.classList.remove('hidden');
+    });
+}
+
+/* ══════════════════════════════════════════════════
+   UTILITAIRES COULEUR
+══════════════════════════════════════════════════ */
+function h2r(h){ return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
+function r2h(r,g,b){ return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join(''); }
+function lighten(h,a){ const[r,g,b]=h2r(h); return r2h(r+a,g+a,b+a); }
+function darken(h,a){  const[r,g,b]=h2r(h); return r2h(r-a,g-a,b-a); }
+
+/* ══════════════════════════════════════════════════
    CONSTRUCTION DU CAROUSEL
-────────────────────────────────────────────────── */
+══════════════════════════════════════════════════ */
 const ring = document.getElementById('ring');
 
 function getRadius(){
   const w = innerWidth;
-  if(w < 420) return 190;
-  if(w < 600) return 260;
-  if(w < 800) return 310;
-  return 360;
+  if(w<420) return 175; if(w<600) return 240; if(w<800) return 290; return 330;
 }
 
 function buildCarousel(books){
   ring.innerHTML = '';
-  const dots = document.getElementById('nav-dots');
+  const dots    = document.getElementById('nav-dots');
   dots.innerHTML = '';
-  const wrap = document.querySelector('.carousel-wrap');
-  const empty = document.getElementById('empty');
-  const infoCard = document.getElementById('info-card');
+  const wrap    = document.querySelector('.carousel-wrap');
+  const empty   = document.getElementById('empty');
+  const infoCard= document.getElementById('info-card');
 
   document.getElementById('count-badge').textContent =
     books.length ? `${books.length} partition${books.length>1?'s':''}` : 'Aucun résultat';
 
   if(!books.length){
-    empty.classList.add('on');
-    wrap.style.display = 'none';
-    dots.style.display = 'none';
-    infoCard.style.opacity = '0';
-    return;
+    empty.classList.add('on'); wrap.style.display='none';
+    dots.style.display='none'; infoCard.style.opacity='0'; return;
   }
-
-  empty.classList.remove('on');
-  wrap.style.display = '';
-  dots.style.display = '';
-  infoCard.style.opacity = '1';
+  empty.classList.remove('on'); wrap.style.display='';
+  dots.style.display=''; infoCard.style.opacity='1';
 
   const n = books.length;
-  const step = 360 / n;
+  const step = 360/n;
   const radius = getRadius();
 
-  books.forEach((bk, i) => {
-    const angle = i * step;
-
-    /* Slot carousel */
+  books.forEach((bk,i)=>{
+    const angle = i*step;
     const item = document.createElement('div');
-    item.className = 'carousel-item' + (i===currentIndex ? ' active' : '');
-    item.style.transform = n === 1
+    item.className = 'carousel-item'+(i===currentIndex?' active':'');
+    item.style.transform = n===1
       ? 'translateX(-50%) translateY(-50%)'
       : `rotateY(${angle}deg) translateZ(${radius}px) translateX(-50%) translateY(-50%)`;
     item.dataset.index = i;
 
-    /* Gradient couverture */
-    const covGrad = `linear-gradient(148deg,${lighten(bk.couleur,14)} 0%,${bk.couleur} 50%,${darken(bk.couleur,10)} 100%)`;
+    const covGrad = `linear-gradient(148deg,${lighten(bk.couleur,16)} 0%,${bk.couleur} 55%,${darken(bk.couleur,12)} 100%)`;
 
     item.innerHTML = `
       <div class="bk-wrap">
@@ -941,28 +914,37 @@ function buildCarousel(books){
           <div class="bk-spine" style="background:${bk.spine}">
             <div class="bk-spine-txt">${bk.auteur}</div>
           </div>
-          <div class="bk-face" style="background:${covGrad}">
-            <div class="bk-emoji">${bk.emoji}</div>
-            <div class="bk-titre">${bk.titre}</div>
-            <div class="bk-auteur">${bk.auteur}</div>
-            <div class="bk-annee">${bk.annee}</div>
+          <div class="bk-face">
+            <img class="bk-cover-img" src="" alt="${bk.titre}" style="display:none">
+            <div class="bk-cover-fallback" style="background:${covGrad}">
+              <div class="bk-emoji">${bk.emoji}</div>
+              <div class="bk-titre">${bk.titre}</div>
+              <div class="bk-auteur">${bk.auteur}</div>
+              <div class="bk-annee">${bk.annee}</div>
+            </div>
           </div>
         </div>
-      </div>
-    `;
+      </div>`;
 
-    item.addEventListener('click', ()=>{
-      if(i === currentIndex) openModalDetail(books[i]);
+    const imgEl      = item.querySelector('.bk-cover-img');
+    const fallbackEl = item.querySelector('.bk-cover-fallback');
+
+    // L'image est cachée jusqu'au chargement ; fallback visible par défaut
+    imgEl.style.display = '';
+    imgEl.onload  = () => { fallbackEl.classList.add('hidden'); imgEl.style.display=''; };
+    imgEl.onerror = () => { imgEl.style.display='none'; fallbackEl.classList.remove('hidden'); };
+
+    fetchCover(bk, imgEl, fallbackEl);
+
+    item.addEventListener('click',()=>{
+      if(i===currentIndex) openModalDetail(books[i]);
       else navigateTo(i);
     });
-
     ring.appendChild(item);
 
-    /* Dot */
     const dot = document.createElement('div');
-    dot.className = 'nav-dot' + (i===currentIndex ? ' active' : '');
-    dot.dataset.index = i;
-    dot.addEventListener('click', ()=> navigateTo(i));
+    dot.className = 'nav-dot'+(i===currentIndex?' active':'');
+    dot.addEventListener('click',()=> navigateTo(i));
     dots.appendChild(dot);
   });
 
@@ -973,14 +955,13 @@ function buildCarousel(books){
 function applyRotation(){
   const n = filteredBooks.length;
   if(!n) return;
-  const step = 360 / n;
-  ring.style.transform = n===1 ? '' : `rotateY(${-(currentIndex * step)}deg)`;
+  ring.style.transform = n===1 ? '' : `rotateY(${-(currentIndex*(360/n))}deg)`;
 }
 
 function navigateTo(idx){
   currentIndex = idx;
-  ring.querySelectorAll('.carousel-item').forEach((el,i)=> el.classList.toggle('active', i===idx));
-  document.querySelectorAll('.nav-dot').forEach((el,i)=> el.classList.toggle('active', i===idx));
+  ring.querySelectorAll('.carousel-item').forEach((el,i)=> el.classList.toggle('active',i===idx));
+  document.querySelectorAll('.nav-dot').forEach((el,i)=> el.classList.toggle('active',i===idx));
   applyRotation();
   updateInfoCard(filteredBooks[idx]);
 }
@@ -988,234 +969,189 @@ function navigateTo(idx){
 function navigate(dir){
   const n = filteredBooks.length;
   if(!n) return;
-  navigateTo((currentIndex + dir + n) % n);
+  navigateTo((currentIndex+dir+n)%n);
 }
 
 function updateInfoCard(bk){
   if(!bk) return;
-  document.getElementById('info-badge').textContent = `Cycle ${currentCycle} · ${bk.genre}`;
-  document.getElementById('info-title').textContent = bk.titre;
-  document.getElementById('info-author').textContent = bk.auteur;
-  document.getElementById('info-meta').innerHTML = `
-    <span>🎵 ${bk.niveau}</span>
-    <span>📅 ${bk.annee}</span>
-    <span>📚 ${bk.editeur}</span>
-  `;
-  document.getElementById('info-detail-btn').onclick = ()=> openModalDetail(bk);
+  document.getElementById('info-badge').textContent   = `Cycle ${currentCycle} · ${bk.genre}`;
+  document.getElementById('info-title').textContent   = bk.titre;
+  document.getElementById('info-author').textContent  = bk.auteur;
+  document.getElementById('info-meta').innerHTML      = `<span>🎵 ${bk.niveau}</span><span>📅 ${bk.annee}</span><span>📚 ${bk.editeur}</span>`;
+  document.getElementById('info-detail-btn').onclick  = ()=> openModalDetail(bk);
 }
 
-/* ──────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════
    FILTRE + RECHERCHE
-────────────────────────────────────────────────── */
+══════════════════════════════════════════════════ */
 function filterAndRebuild(){
   const q = document.getElementById('search-input').value.toLowerCase().trim();
   const all = [...(REPERTOIRE_DATA[currentCycle]||[])];
-
   filteredBooks = q
-    ? all.filter(b =>
-        b.titre.toLowerCase().includes(q) ||
-        b.auteur.toLowerCase().includes(q) ||
-        (b.editeur||'').toLowerCase().includes(q) ||
-        b.genre.toLowerCase().includes(q) ||
-        b.niveau.toLowerCase().includes(q) ||
-        (b.desc||'').toLowerCase().includes(q)
-      )
+    ? all.filter(b=>
+        b.titre.toLowerCase().includes(q)||b.auteur.toLowerCase().includes(q)||
+        (b.editeur||'').toLowerCase().includes(q)||b.genre.toLowerCase().includes(q)||
+        b.niveau.toLowerCase().includes(q)||(b.desc||'').toLowerCase().includes(q))
     : all;
-
   currentIndex = 0;
   buildCarousel(filteredBooks);
 }
 
-/* ──────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════
    MODAL FICHE DÉTAILLÉE
-────────────────────────────────────────────────── */
+══════════════════════════════════════════════════ */
 function openModalDetail(bk){
-  document.getElementById('modal-badge').textContent = `Cycle ${currentCycle} · ${bk.genre}`;
-  document.getElementById('modal-title').textContent = bk.titre;
+  document.getElementById('modal-badge').textContent  = `Cycle ${currentCycle} · ${bk.genre}`;
+  document.getElementById('modal-title').textContent  = bk.titre;
   document.getElementById('modal-author').textContent = bk.auteur;
 
-  /* Mini livre en aperçu */
-  const covGrad = `linear-gradient(148deg,${lighten(bk.couleur,14)} 0%,${bk.couleur} 50%,${darken(bk.couleur,10)} 100%)`;
+  const covGrad = `linear-gradient(148deg,${lighten(bk.couleur,16)} 0%,${bk.couleur} 55%,${darken(bk.couleur,12)} 100%)`;
+  const cached  = coverCache[bk.id];
+  const miniImg = (cached && cached!=='none')
+    ? `<img src="${cached}" style="width:60px;height:88px;object-fit:cover;border-radius:0 4px 4px 0;display:block;">`
+    : `<div style="width:60px;height:88px;background:${covGrad};border-radius:0 4px 4px 0;display:flex;align-items:center;justify-content:center;font-size:20px;">${bk.emoji}</div>`;
+
   document.getElementById('modal-mini-book').innerHTML = `
-    <div style="display:flex;transform:perspective(300px) rotateY(-15deg) rotateX(3deg);filter:drop-shadow(4px 6px 14px rgba(0,0,0,.55));">
-      <div style="width:11px;height:90px;background:${bk.spine};border-radius:3px 0 0 3px;flex-shrink:0;"></div>
-      <div style="width:66px;height:90px;background:${covGrad};border-radius:0 4px 4px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;padding:8px;box-shadow:3px 5px 16px rgba(0,0,0,.5);">${bk.emoji}</div>
-    </div>
-  `;
+    <div style="display:flex;transform:perspective(280px) rotateY(-14deg) rotateX(2deg);filter:drop-shadow(4px 6px 14px rgba(0,0,0,.55));">
+      <div style="width:10px;height:88px;background:${bk.spine};border-radius:3px 0 0 3px;flex-shrink:0;"></div>
+      ${miniImg}
+    </div>`;
 
   document.getElementById('modal-grid').innerHTML = `
     <div class="modal-field"><div class="modal-field-lbl">Éditeur</div><div class="modal-field-val">${bk.editeur}</div></div>
     <div class="modal-field"><div class="modal-field-lbl">Année</div><div class="modal-field-val">${bk.annee}</div></div>
     <div class="modal-field"><div class="modal-field-lbl">Niveau</div><div class="modal-field-val">${bk.niveau}</div></div>
-    <div class="modal-field"><div class="modal-field-lbl">Genre</div><div class="modal-field-val">${bk.genre}</div></div>
-  `;
+    <div class="modal-field"><div class="modal-field-lbl">Genre</div><div class="modal-field-val">${bk.genre}</div></div>`;
 
-  document.getElementById('modal-desc').textContent = bk.desc || '';
+  document.getElementById('modal-desc').textContent = bk.desc||'';
   document.getElementById('modal-detail').classList.add('open');
 }
 
-document.getElementById('modal-detail-close').addEventListener('click', ()=> document.getElementById('modal-detail').classList.remove('open'));
-document.getElementById('modal-detail').addEventListener('click', e=>{ if(e.target===document.getElementById('modal-detail')) document.getElementById('modal-detail').classList.remove('open'); });
+document.getElementById('modal-detail-close').addEventListener('click',()=> document.getElementById('modal-detail').classList.remove('open'));
+document.getElementById('modal-detail').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-detail')) document.getElementById('modal-detail').classList.remove('open'); });
 
-/* ──────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════
    MODAL AJOUT
-────────────────────────────────────────────────── */
-document.getElementById('add-btn').addEventListener('click', ()=>{
+══════════════════════════════════════════════════ */
+document.getElementById('add-btn').addEventListener('click',()=>{
   document.getElementById('add-cycle').value = currentCycle;
   document.getElementById('modal-add').classList.add('open');
 });
-document.getElementById('modal-add-close').addEventListener('click', ()=> document.getElementById('modal-add').classList.remove('open'));
-document.getElementById('modal-add').addEventListener('click', e=>{ if(e.target===document.getElementById('modal-add')) document.getElementById('modal-add').classList.remove('open'); });
+document.getElementById('modal-add-close').addEventListener('click',()=> document.getElementById('modal-add').classList.remove('open'));
+document.getElementById('modal-add').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-add')) document.getElementById('modal-add').classList.remove('open'); });
 
-document.getElementById('modal-add-save').addEventListener('click', ()=>{
+document.getElementById('modal-add-save').addEventListener('click',()=>{
   const titre  = document.getElementById('add-titre').value.trim();
   const auteur = document.getElementById('add-auteur').value.trim();
   const cycle  = parseInt(document.getElementById('add-cycle').value);
+  if(!titre||!auteur){ showToast('⚠️ Titre et auteur sont requis'); return; }
 
-  if(!titre || !auteur){
-    showToast('⚠️ Titre et auteur sont requis');
-    return;
-  }
-
-  /* Couleurs par défaut selon cycle */
-  const colors = {1:['#1a3e72','#102850'],2:['#1e4a78','#123260'],3:['#1a285a','#0e1a3c']};
-  const emojis = ['🎵','🎼','📖','🎓','🏆','✨','🌊','💎','⚙️','🌱'];
-  const [coul,sp] = colors[cycle] || colors[1];
+  const cols = {1:['#1a3e72','#102850'],2:['#1e4a78','#123260'],3:['#1a285a','#0e1a3c']};
+  const emjs = ['🎵','🎼','📖','🎓','🏆','✨','🌊','💎','⚙️','🌱'];
+  const [coul,sp] = cols[cycle]||cols[1];
 
   const newBook = {
-    id: 'usr_' + Date.now(),
-    titre, auteur,
-    editeur: document.getElementById('add-editeur').value.trim() || '—',
-    annee:   parseInt(document.getElementById('add-annee').value) || new Date().getFullYear(),
-    niveau:  document.getElementById('add-niveau').value.trim() || '—',
-    genre:   document.getElementById('add-genre').value.trim() || '—',
-    couleur: coul, spine: sp,
-    emoji:   emojis[Math.floor(Math.random()*emojis.length)],
-    desc:    document.getElementById('add-desc').value.trim()
+    id:'usr_'+Date.now(), titre, auteur,
+    editeur:document.getElementById('add-editeur').value.trim()||'—',
+    annee:parseInt(document.getElementById('add-annee').value)||new Date().getFullYear(),
+    niveau:document.getElementById('add-niveau').value.trim()||'—',
+    genre:document.getElementById('add-genre').value.trim()||'—',
+    couleur:coul, spine:sp, emoji:emjs[Math.floor(Math.random()*emjs.length)],
+    desc:document.getElementById('add-desc').value.trim()
   };
 
-  if(!REPERTOIRE_DATA[cycle]) REPERTOIRE_DATA[cycle] = [];
+  if(!REPERTOIRE_DATA[cycle]) REPERTOIRE_DATA[cycle]=[];
   REPERTOIRE_DATA[cycle].unshift(newBook);
-
-  /* Nettoyage formulaire */
   ['add-titre','add-auteur','add-editeur','add-annee','add-niveau','add-genre','add-desc']
-    .forEach(id => document.getElementById(id).value = '');
+    .forEach(id=>document.getElementById(id).value='');
   document.getElementById('modal-add').classList.remove('open');
 
-  /* Activer le bon cycle */
   currentCycle = cycle;
   currentIndex = 0;
-  document.querySelectorAll('.cycle-tab').forEach(t => t.classList.toggle('active', parseInt(t.dataset.cycle)===cycle));
+  document.querySelectorAll('.cycle-tab').forEach(t=>t.classList.toggle('active',parseInt(t.dataset.cycle)===cycle));
   filterAndRebuild();
-  showToast('✓ Partition ajoutée avec succès !');
-
-  /* TODO : Sauvegarder dans Firebase */
-  // saveToFirebase(newBook, cycle);
+  showToast('✓ Partition ajoutée !');
 });
 
-/* ──────────────────────────────────────────────────
-   FIREBASE (hooks préparés)
-────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════
+   FIREBASE
+══════════════════════════════════════════════════ */
 function initFirebase(){
-  try {
+  try{
     firebase.initializeApp(FIREBASE_CONFIG);
-    const db = firebase.database();
-    // Exemple : charger les partitions depuis Firebase
-    // db.ref('repertoire').on('value', snapshot => {
-    //   const data = snapshot.val();
-    //   if(data) { /* fusionner avec REPERTOIRE_DATA */ }
-    //   filterAndRebuild();
-    // });
     console.log('Firebase connecté ✓');
-  } catch(e) {
-    console.info('Firebase non configuré — mode local uniquement');
-  }
+  }catch(e){ console.info('Firebase — mode local'); }
 }
 
-function saveToFirebase(book, cycle){
-  try {
-    const db = firebase.database();
-    db.ref(`repertoire/cycle${cycle}/${book.id}`).set(book);
-  } catch(e) { /* silencieux */ }
-}
+/* ══════════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════════ */
+document.getElementById('arr-l').addEventListener('click',()=> navigate(-1));
+document.getElementById('arr-r').addEventListener('click',()=> navigate(1));
 
-/* ──────────────────────────────────────────────────
-   NAVIGATION (flèches, clavier, swipe, molette)
-────────────────────────────────────────────────── */
-document.getElementById('arr-l').addEventListener('click', ()=> navigate(-1));
-document.getElementById('arr-r').addEventListener('click', ()=> navigate(1));
-
-document.addEventListener('keydown', e => {
-  if(document.getElementById('search-input') === document.activeElement) return;
-  if(e.key==='ArrowLeft') navigate(-1);
+document.addEventListener('keydown',e=>{
+  if(document.activeElement===document.getElementById('search-input')) return;
+  if(e.key==='ArrowLeft')  navigate(-1);
   if(e.key==='ArrowRight') navigate(1);
   if(e.key==='Escape'){
     document.getElementById('modal-detail').classList.remove('open');
     document.getElementById('modal-add').classList.remove('open');
   }
-  if(e.key==='Enter' && filteredBooks[currentIndex]) openModalDetail(filteredBooks[currentIndex]);
+  if(e.key==='Enter'&&filteredBooks[currentIndex]) openModalDetail(filteredBooks[currentIndex]);
 });
 
-let touchX = 0;
-const scene = document.querySelector('.carousel-scene');
-scene.addEventListener('touchstart', e=>{ touchX=e.touches[0].clientX; },{passive:true});
-scene.addEventListener('touchend', e=>{
-  const dx = e.changedTouches[0].clientX - touchX;
+let touchX=0;
+const scene=document.querySelector('.carousel-scene');
+scene.addEventListener('touchstart',e=>{ touchX=e.touches[0].clientX; },{passive:true});
+scene.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-touchX;
   if(Math.abs(dx)>44) navigate(dx<0?1:-1);
 },{passive:true});
+scene.addEventListener('wheel',e=>{ e.preventDefault(); navigate(e.deltaY>0?1:-1); },{passive:false});
 
-scene.addEventListener('wheel', e=>{
-  e.preventDefault();
-  navigate(e.deltaY > 0 ? 1 : -1);
-},{passive:false});
-
-/* ──────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════
    ONGLETS CYCLE
-────────────────────────────────────────────────── */
-document.querySelectorAll('.cycle-tab').forEach(tab => {
-  tab.addEventListener('click', ()=>{
-    document.querySelectorAll('.cycle-tab').forEach(t => t.classList.remove('active'));
+══════════════════════════════════════════════════ */
+document.querySelectorAll('.cycle-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.cycle-tab').forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
-    currentCycle = parseInt(tab.dataset.cycle);
-    currentIndex = 0;
-    document.getElementById('search-input').value = '';
+    currentCycle=parseInt(tab.dataset.cycle);
+    currentIndex=0;
+    document.getElementById('search-input').value='';
     filterAndRebuild();
   });
 });
 
-/* ──────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════
    RECHERCHE
-────────────────────────────────────────────────── */
+══════════════════════════════════════════════════ */
 let searchTimer;
-document.getElementById('search-input').addEventListener('input', ()=>{
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(filterAndRebuild, 180);
+document.getElementById('search-input').addEventListener('input',()=>{
+  clearTimeout(searchTimer); searchTimer=setTimeout(filterAndRebuild,180);
 });
 
-/* ──────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════
    RESIZE
-────────────────────────────────────────────────── */
+══════════════════════════════════════════════════ */
 let resizeTimer;
-window.addEventListener('resize', ()=>{
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(()=> buildCarousel(filteredBooks), 220);
+window.addEventListener('resize',()=>{
+  clearTimeout(resizeTimer); resizeTimer=setTimeout(()=>buildCarousel(filteredBooks),220);
 });
 
-/* ──────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════
    TOAST
-────────────────────────────────────────────────── */
+══════════════════════════════════════════════════ */
 let toastTimer;
 function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=> t.classList.remove('show'), 2800);
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
 }
 
-/* ──────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════
    INITIALISATION
-────────────────────────────────────────────────── */
+══════════════════════════════════════════════════ */
 initFirebase();
 filterAndRebuild();
 </script>
