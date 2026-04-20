@@ -15,7 +15,7 @@
 
 <script>
 /* ── FIREBASE CONFIG (personnalisez ces valeurs) ── */
-const firebaseConfig = {
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyATeUW3Jk2pzggUoNRKUDL1cOaatpr4AKs",
   authDomain: "repertoires-pedagogiques.firebaseapp.com",
   databaseURL: "https://repertoires-pedagogiques-default-rtdb.europe-west1.firebasedatabase.app",
@@ -1089,7 +1089,7 @@ document.getElementById('modal-add-save').addEventListener('click', ()=>{
 ────────────────────────────────────────────────── */
 function initFirebase(){
   try {
-    firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(FIREBASE_CONFIG);
     const db = firebase.database();
     // Exemple : charger les partitions depuis Firebase
     // db.ref('repertoire').on('value', snapshot => {
