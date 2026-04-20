@@ -1089,7 +1089,7 @@ document.getElementById('modal-add-save').addEventListener('click', ()=>{
 ────────────────────────────────────────────────── */
 function initFirebase(){
   try {
-    firebase.initializeApp(FIREBASE_CONFIG);
+    firebase.initializeApp(firebase_Config);
     const db = firebase.database();
     // Exemple : charger les partitions depuis Firebase
     // db.ref('repertoire').on('value', snapshot => {
