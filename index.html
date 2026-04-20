@@ -102,28 +102,6 @@ html.light .scene-bg {
 html.light #stars { opacity: 0; }
 
 /* ══════════════════════════════════════════════════
-   HUD COINS + LABELS
-══════════════════════════════════════════════════ */
-.hud-corner {
-  position: fixed; width: 22px; height: 22px;
-  z-index: 50; pointer-events: none; transition: opacity 0.4s;
-}
-.hud-corner.tl { top:12px; left:12px;  border-top:1.5px solid rgba(55,138,221,.5); border-left:1.5px solid rgba(55,138,221,.5); }
-.hud-corner.tr { top:12px; right:12px; border-top:1.5px solid rgba(55,138,221,.5); border-right:1.5px solid rgba(55,138,221,.5); }
-.hud-corner.bl { bottom:12px; left:12px;  border-bottom:1.5px solid rgba(55,138,221,.5); border-left:1.5px solid rgba(55,138,221,.5); }
-.hud-corner.br { bottom:12px; right:12px; border-bottom:1.5px solid rgba(55,138,221,.5); border-right:1.5px solid rgba(55,138,221,.5); }
-html.light .hud-corner { border-color: rgba(21,88,168,.35) !important; }
-
-.hud-lbl {
-  position: fixed; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
-  color: rgba(55,138,221,.38); font-family: var(--font-mono);
-  pointer-events: none; z-index: 50; white-space: nowrap;
-}
-html.light .hud-lbl { color: rgba(21,88,168,.32); }
-.hud-lbl.top { top:10px; left:50%; transform:translateX(-50%); }
-.hud-lbl.bot { bottom:10px; right:14px; }
-
-/* ══════════════════════════════════════════════════
    LAYOUT PRINCIPAL
 ══════════════════════════════════════════════════ */
 .app {
@@ -535,14 +513,6 @@ html.light .toast { background: rgba(255,255,255,.95); }
 <!-- Fond + étoiles -->
 <div class="scene-bg"></div>
 <canvas id="stars"></canvas>
-
-<!-- HUD coins -->
-<div class="hud-corner tl"></div>
-<div class="hud-corner tr"></div>
-<div class="hud-corner bl"></div>
-<div class="hud-corner br"></div>
-<div class="hud-lbl top">RÉPERTOIRES PÉDAGOGIQUES · SAX</div>
-<div class="hud-lbl bot">v1.0 · DE Saxophone</div>
 
 <!-- ══════════ APP ══════════ -->
 <div class="app">
