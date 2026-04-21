@@ -89,21 +89,39 @@ html.light body::before {
 }
 
 /* ══════════════════════════════════════════════════
-   LAYOUT
+   LAYOUT — full viewport, centré verticalement
 ══════════════════════════════════════════════════ */
+html, body { height:100%; }
+
+body { display:flex; flex-direction:column; }
+
 .app {
   position:relative; z-index:1;
-  max-width:720px; margin:0 auto;
-  padding:0 18px 80px;
-  display:flex; flex-direction:column; align-items:center;
+  width:100%; max-width:720px; margin:0 auto;
+  padding:0 18px;
+  display:flex; flex-direction:column;
+  min-height:100vh;
 }
+
+/* Zone haute : header + contrôles */
+.app-top { width:100%; flex-shrink:0; }
+
+/* Zone centrale : carousel — prend tout l'espace restant */
+.app-mid {
+  flex:1; display:flex; flex-direction:column;
+  justify-content:center; align-items:center;
+  width:100%; padding:8px 0;
+}
+
+/* Zone basse : info card */
+.app-bot { width:100%; flex-shrink:0; padding-bottom:24px; }
 
 /* ══════════════════════════════════════════════════
    EN-TÊTE
 ══════════════════════════════════════════════════ */
 .app-header {
   width:100%; display:flex; align-items:center;
-  justify-content:space-between; padding:20px 0 14px;
+  justify-content:space-between; padding:18px 0 12px;
 }
 .header-left .eyebrow {
   font-size:9px; letter-spacing:2.5px; text-transform:uppercase;
@@ -320,13 +338,13 @@ html.light .arr { background:rgba(240,244,251,.85); }
   transition:transform .5s cubic-bezier(.25,.46,.45,.94);
 }
 
-/* Le livre actif est parfaitement de face */
+/* Le livre actif est parfaitement de face, face centrée (+8px pour compenser la tranche) */
 .carousel-item.active .bk-3d {
-  transform:perspective(900px) rotateY(0deg) rotateX(0deg) translateY(-6px) scale(1.06);
+  transform:perspective(900px) rotateY(0deg) rotateX(0deg) translateX(8px) translateY(-6px) scale(1.06);
 }
 /* Hover sur le livre actif = léger tilt */
 .carousel-item.active .bk-3d:hover {
-  transform:perspective(900px) rotateY(-8deg) rotateX(3deg) translateY(-8px) scale(1.07);
+  transform:perspective(900px) rotateY(-8deg) rotateX(3deg) translateX(4px) translateY(-8px) scale(1.07);
 }
 
 /* ══════════════════════════════════════════════════
@@ -475,81 +493,78 @@ html.light .toast { background:rgba(255,255,255,.97); }
 
 <div class="app">
 
-  <!-- En-tête -->
-  <header class="app-header">
-    <div class="header-left">
-      <div class="eyebrow">Diplôme d'État · Saxophone</div>
-      <div class="title">Répertoires Pédagogiques</div>
-      <div class="subtitle">Bibliothèque de partitions</div>
-    </div>
-    <div class="header-right">
-      <!-- Bouton thème : SVG lune ou soleil selon mode -->
-      <button class="icon-btn" id="theme-btn" title="Thème">
-        <svg id="icon-moon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
-        <svg id="icon-sun" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-          <circle cx="12" cy="12" r="5"/>
-          <line x1="12" y1="1" x2="12" y2="3"/>
-          <line x1="12" y1="21" x2="12" y2="23"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-          <line x1="1" y1="12" x2="3" y2="12"/>
-          <line x1="21" y1="12" x2="23" y2="12"/>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-        </svg>
-      </button>
-      <button class="icon-btn" id="add-btn" title="Ajouter une partition">
-        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-      </button>
-    </div>
-  </header>
+  <!-- Zone haute : en-tête + contrôles -->
+  <div class="app-top">
+    <header class="app-header">
+      <div class="header-left">
+        <div class="eyebrow">Diplôme d'État · Saxophone</div>
+        <div class="title">Répertoires Pédagogiques</div>
+        <div class="subtitle">Bibliothèque de partitions</div>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn" id="theme-btn" title="Thème">
+          <svg id="icon-moon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <svg id="icon-sun" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="add-btn" title="Ajouter une partition">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    </header>
 
-  <!-- Onglets + Recherche -->
-  <div class="controls">
-    <div class="cycle-tabs">
-      <div class="cycle-tab active" data-cycle="1">Cycle 1</div>
-      <div class="cycle-tab" data-cycle="2">Cycle 2</div>
-      <div class="cycle-tab" data-cycle="3">Cycle 3</div>
-    </div>
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input class="search-input" id="search-input" type="text"
-        placeholder="Titre, auteur, éditeur, genre…" autocomplete="off" spellcheck="false">
+    <div class="controls">
+      <div class="cycle-tabs">
+        <div class="cycle-tab active" data-cycle="1">Cycle 1</div>
+        <div class="cycle-tab" data-cycle="2">Cycle 2</div>
+        <div class="cycle-tab" data-cycle="3">Cycle 3</div>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="search-input" type="text"
+          placeholder="Titre, auteur, éditeur, genre…" autocomplete="off" spellcheck="false">
+      </div>
     </div>
   </div>
 
-  <!-- Compteur -->
-  <div class="count-badge" id="count-badge">—</div>
+  <!-- Zone centrale : carousel -->
+  <div class="app-mid">
+    <div class="count-badge" id="count-badge">—</div>
 
-  <!-- Carousel 3D -->
-  <div class="carousel-wrap">
-    <button class="arr left" id="arr-l">‹</button>
-    <div class="carousel-scene">
-      <div class="carousel-ring" id="ring"></div>
+    <div class="carousel-wrap" style="width:100%">
+      <button class="arr left" id="arr-l">‹</button>
+      <div class="carousel-scene">
+        <div class="carousel-ring" id="ring"></div>
+      </div>
+      <button class="arr right" id="arr-r">›</button>
     </div>
-    <button class="arr right" id="arr-r">›</button>
+
+    <div class="empty" id="empty">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-txt">Aucune partition trouvée.</div>
+    </div>
+
+    <div class="nav-dots" id="nav-dots"></div>
   </div>
 
-  <!-- État vide -->
-  <div class="empty" id="empty">
-    <div class="empty-icon">🔍</div>
-    <div class="empty-txt">Aucune partition trouvée pour cette recherche.</div>
-  </div>
-
-  <!-- Points de navigation -->
-  <div class="nav-dots" id="nav-dots"></div>
-
-  <!-- Carte info -->
-  <div class="info-card" id="info-card">
-    <div class="info-badge" id="info-badge"></div>
-    <div class="info-title" id="info-title">Sélectionnez une partition</div>
-    <div class="info-author" id="info-author"></div>
-    <div class="info-meta" id="info-meta"></div>
-    <button class="info-btn" id="info-detail-btn">Voir la fiche complète →</button>
+  <!-- Zone basse : info carte -->
+  <div class="app-bot">
+    <div class="info-card" id="info-card">
+      <div class="info-badge" id="info-badge"></div>
+      <div class="info-title" id="info-title">Sélectionnez une partition</div>
+      <div class="info-author" id="info-author"></div>
+      <div class="info-meta" id="info-meta"></div>
+      <button class="info-btn" id="info-detail-btn">Voir la fiche complète →</button>
+    </div>
   </div>
 
 </div>
@@ -618,7 +633,7 @@ const REPERTOIRE_DATA = {
       auteur:"Guy Lacour", editeur:"Billaudot", annee:1974,
       niveau:"Débutant", genre:"Études",
       couleur:"#1a3e72", spine:"#102850", emoji:"🎵",
-      isbn:"9790042807595",
+      coverUrl:null, /* Ajoutez ici une URL d'image si disponible */
       desc:"Recueil incontournable pour les premières années. Ces 50 études progressives couvrent les fondamentaux : sons tenus, legato, staccato, articulations de base. Idéal pour structurer les deux premières années de pratique."
     },
     {
@@ -627,7 +642,7 @@ const REPERTOIRE_DATA = {
       auteur:"Hyacinthe Klosé", editeur:"Leduc", annee:1846,
       niveau:"Débutant", genre:"Méthode",
       couleur:"#2d1a50", spine:"#1e0e38", emoji:"📖",
-      isbn:"9790046008018",
+
       desc:"La méthode originelle pour saxophone, écrite par le collaborateur d'Adolphe Sax. Fondamentale dans l'histoire pédagogique de l'instrument, elle pose les bases de la technique classique française."
     },
     {
@@ -636,7 +651,7 @@ const REPERTOIRE_DATA = {
       auteur:"Denis Gäbel", editeur:"Lemoine", annee:2004,
       niveau:"Débutant", genre:"Méthode",
       couleur:"#1a4a3a", spine:"#103028", emoji:"🌱",
-      isbn:"9790230982184",
+
       desc:"Approche pédagogique moderne intégrant lecture, solfège rythmique et pièces variées avec supports audio. Méthode adaptée aux élèves contemporains, couvrant les deux premières années de cycle 1."
     },
     {
@@ -645,7 +660,7 @@ const REPERTOIRE_DATA = {
       auteur:"Paul Jeanjean", editeur:"Leduc", annee:1927,
       niveau:"Fin de Cycle 1", genre:"Études",
       couleur:"#1a3a2a", spine:"#0e2618", emoji:"⚙️",
-      isbn:"9790046093226",
+
       desc:"Études techniques de Jeanjean centrées sur les articulations, gammes et arpèges. Un pilier du répertoire pédagogique français qui complète utilement les méthodes de début et prépare le cycle 2."
     },
     {
@@ -654,7 +669,7 @@ const REPERTOIRE_DATA = {
       auteur:"H. Voxman", editeur:"Rubank", annee:1934,
       niveau:"Débutant", genre:"Méthode",
       couleur:"#3a1a1a", spine:"#281010", emoji:"🇺🇸",
-      isbn:"9781423444091",
+
       desc:"Méthode américaine de référence très utilisée dans les écoles de musique anglophones. Présente une progression claire avec des exercices techniques bien dosés et un répertoire varié."
     },
     {
@@ -663,7 +678,7 @@ const REPERTOIRE_DATA = {
       auteur:"Divers compositeurs", editeur:"Billaudot", annee:1990,
       niveau:"Fin de Cycle 1", genre:"Répertoire",
       couleur:"#3a2a10", spine:"#281c08", emoji:"🎼",
-      isbn:"9790042806901",
+
       desc:"Anthologie de courtes pièces originales ou arrangées pour saxophone alto et piano, conçues pour préparer l'évaluation de fin de cycle 1. Styles variés : baroque, classique, jazz, musique du monde."
     }
   ],
@@ -674,7 +689,7 @@ const REPERTOIRE_DATA = {
       auteur:"W. Ferling (rev. Marcel Mule)", editeur:"Leduc", annee:1946,
       niveau:"Intermédiaire", genre:"Études",
       couleur:"#1e4a78", spine:"#123260", emoji:"🎓",
-      isbn:"9790046097521",
+
       desc:"Adaptation par Marcel Mule des études pour hautbois de Ferling. Ces 48 études sont un passage obligé pour tout saxophoniste classique sérieux, travaillant phrasés, nuances et articulations avancées."
     },
     {
@@ -683,7 +698,7 @@ const REPERTOIRE_DATA = {
       auteur:"Jacques Ibert", editeur:"Leduc", annee:1935,
       niveau:"Fin de Cycle 2", genre:"Pièce concertante",
       couleur:"#4a1e3a", spine:"#321226", emoji:"🎪",
-      isbn:"9790046196002",
+
       desc:"Oeuvre concertante majeure du répertoire pour saxophone alto et orchestre de chambre. Virtuose et élégante, elle est souvent jouée en concours et représente un sommet stylistique néoclassique."
     },
     {
@@ -692,7 +707,7 @@ const REPERTOIRE_DATA = {
       auteur:"Henri Tomasi", editeur:"Leduc", annee:1947,
       niveau:"Cycle 2", genre:"Pièce soliste",
       couleur:"#2a3a1e", spine:"#1a2810", emoji:"🌊",
-      isbn:"9790046196200",
+
       desc:"La Ballade de Tomasi est une pièce lyrique et expressive qui demande un vrai contrôle du son et un sens du legato évolué. Très jouée en examens de fin de cycle 2 dans les conservatoires français."
     },
     {
@@ -701,7 +716,7 @@ const REPERTOIRE_DATA = {
       auteur:"Jules Demersseman", editeur:"Leduc", annee:1860,
       niveau:"Milieu Cycle 2", genre:"Fantaisie",
       couleur:"#2a1e4a", spine:"#1c1232", emoji:"✨",
-      isbn:"9790046099571",
+
       desc:"Fantaisie romantique virtuose du XIXe siècle, écrite par l'un des premiers compositeurs à s'intéresser au saxophone. Demande souplesse technique et sens de la mise en valeur mélodique."
     },
     {
@@ -710,7 +725,7 @@ const REPERTOIRE_DATA = {
       auteur:"Pierre-Max Dubois", editeur:"Leduc", annee:1959,
       niveau:"Fin de Cycle 2", genre:"Sonate",
       couleur:"#1e3a4a", spine:"#122832", emoji:"🏛️",
-      isbn:"9790046192783",
+
       desc:"Oeuvre de style néoclassique en trois mouvements, avec humour et légèreté. La Sonatine de Dubois est idéale pour travailler la mise en place rythmique avec piano et le jeu en ensemble."
     },
     {
@@ -719,7 +734,7 @@ const REPERTOIRE_DATA = {
       auteur:"Alfred Desenclos", editeur:"Leduc", annee:1967,
       niveau:"Fin de Cycle 2", genre:"Pièce soliste",
       couleur:"#3a2a1e", spine:"#261a10", emoji:"💎",
-      isbn:"9790046189981",
+
       desc:"Pièce magistrale en deux temps contrastés : une Aria expressive et lyrique suivie d'une Toccata brillante et rythmique. Exigeante techniquement, c'est un chef-d'oeuvre du répertoire classique français."
     }
   ],
@@ -730,7 +745,7 @@ const REPERTOIRE_DATA = {
       auteur:"Alexander Glazounov", editeur:"Leduc", annee:1934,
       niveau:"Avancé", genre:"Concerto",
       couleur:"#1a285a", spine:"#0e1a3c", emoji:"🏆",
-      isbn:"9790046193209",
+
       desc:"Le Concerto de Glazounov est sans doute la pièce la plus emblématique du répertoire concertant pour saxophone. Composé dans le style romantique tardif, il est présent dans tous les concours internationaux."
     },
     {
@@ -739,7 +754,7 @@ const REPERTOIRE_DATA = {
       auteur:"Paule Maurice", editeur:"Lemoine", annee:1955,
       niveau:"Avancé", genre:"Suite",
       couleur:"#4a3a1a", spine:"#322810", emoji:"🌄",
-      isbn:"9790230965522",
+
       desc:"Suite poétique en cinq tableaux évoquant la lumière et les paysages de Provence. Paule Maurice y développe toutes les nuances expressives du saxophone alto dans un style impressionniste raffiné."
     },
     {
@@ -748,7 +763,7 @@ const REPERTOIRE_DATA = {
       auteur:"Claude Pascal", editeur:"Durand", annee:1945,
       niveau:"Avancé", genre:"Sonate",
       couleur:"#3a1a28", spine:"#28101a", emoji:"🌹",
-      isbn:"9790044017430",
+
       desc:"Sonate néoclassique française en quatre mouvements d'une écriture élégante et idiomatique. Souvent au programme des examens de fin de cycle supérieur et des concours nationaux de saxophone."
     },
     {
@@ -757,7 +772,7 @@ const REPERTOIRE_DATA = {
       auteur:"Edison Denisov", editeur:"Leduc", annee:1970,
       niveau:"Avancé", genre:"Sonate contemporaine",
       couleur:"#1a1a28", spine:"#101018", emoji:"🌑",
-      isbn:"9790046198778",
+
       desc:"Oeuvre du modernisme soviétique explorant des sonorités inédites et une écriture atonale exigeante. Demande une parfaite maîtrise du son, du souffle et une grande liberté d'interprétation."
     },
     {
@@ -766,7 +781,7 @@ const REPERTOIRE_DATA = {
       auteur:"Luciano Berio", editeur:"Universal Edition", annee:1981,
       niveau:"Virtuose", genre:"Contemporain solo",
       couleur:"#1a3a3a", spine:"#0e2828", emoji:"🎭",
-      isbn:"9783702475031",
+
       desc:"Pièce phare du répertoire contemporain pour saxophone solo. Berio pousse ici les limites de l'instrument avec multiphoniques, sons altérés et une écriture en flux continu de grande virtuosité."
     },
     {
@@ -775,7 +790,7 @@ const REPERTOIRE_DATA = {
       auteur:"Claude Debussy (arr. R.-Ducasse)", editeur:"Durand", annee:1903,
       niveau:"Avancé", genre:"Pièce orchestrale",
       couleur:"#2a1a4a", spine:"#1a0e32", emoji:"🌊",
-      isbn:"9790044074051",
+
       desc:"Pièce commandée par Elise Hall, laissée inachevée par Debussy puis orchestrée par Roger-Ducasse. Elle représente l'une des rares incursions impressionnistes dans le répertoire classique du saxophone."
     }
   ]
@@ -816,43 +831,45 @@ applyThemeIcons();
 document.getElementById('theme-btn').addEventListener('click', toggleTheme);
 
 /* ══════════════════════════════════════════════════
-   COUVERTURES — Google Books API
+   COUVERTURES
+   Les partitions ont des ISMNs (979-0…), pas des ISBNs.
+   Google Books n'indexe pas les partitions musicales.
+   → On cherche via Open Library (titre+auteur), ou on
+     utilise un coverUrl fourni manuellement dans la data.
+   → Sinon : fallback gradient.
 ══════════════════════════════════════════════════ */
 function fetchCover(bk, imgEl, fallbackEl){
-  // Si déjà en cache
-  if(coverCache[bk.id]){
-    if(coverCache[bk.id] === 'none'){ fallbackEl.classList.remove('hidden'); return; }
-    imgEl.src = coverCache[bk.id];
+  // 1. URL manuelle renseignée dans la data → prioritaire
+  if(bk.coverUrl){
+    imgEl.src = bk.coverUrl;
+    imgEl.onload  = () => { fallbackEl.classList.add('hidden'); };
+    imgEl.onerror = () => { fallbackEl.classList.remove('hidden'); imgEl.style.display='none'; };
     return;
   }
-
-  // Requête Google Books par ISBN ou titre+auteur
-  const query = bk.isbn
-    ? `isbn:${bk.isbn}`
-    : encodeURIComponent(`"${bk.titre}" ${bk.auteur}`);
-  const url = `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1&fields=items(volumeInfo/imageLinks)`;
-
-  fetch(url)
-    .then(r => r.json())
-    .then(data => {
-      const links = data?.items?.[0]?.volumeInfo?.imageLinks;
-      const thumb = links?.thumbnail || links?.smallThumbnail;
-      if(thumb){
-        // Upgrade vers plus haute résolution
-        const hq = thumb.replace('zoom=1','zoom=2').replace('http:','https:');
-        coverCache[bk.id] = hq;
-        imgEl.src = hq;
-        imgEl.onload = () => { fallbackEl.classList.add('hidden'); };
-        imgEl.onerror = () => { coverCache[bk.id]='none'; fallbackEl.classList.remove('hidden'); imgEl.style.display='none'; };
+  // 2. Cache
+  if(coverCache[bk.id] !== undefined){
+    if(coverCache[bk.id]){ imgEl.src = coverCache[bk.id]; fallbackEl.classList.add('hidden'); }
+    else { fallbackEl.classList.remove('hidden'); }
+    return;
+  }
+  // 3. Open Library — recherche titre + auteur
+  const q = encodeURIComponent(bk.titre.split('—')[0].trim() + ' ' + bk.auteur.split('(')[0].trim());
+  fetch(`https://openlibrary.org/search.json?q=${q}&limit=1&fields=cover_i,title`)
+    .then(r=>r.json())
+    .then(data=>{
+      const coverId = data?.docs?.[0]?.cover_i;
+      if(coverId){
+        const url = `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`;
+        coverCache[bk.id] = url;
+        imgEl.src = url;
+        imgEl.onload  = () => { fallbackEl.classList.add('hidden'); };
+        imgEl.onerror = () => { coverCache[bk.id]=''; fallbackEl.classList.remove('hidden'); imgEl.style.display='none'; };
       } else {
-        coverCache[bk.id] = 'none';
+        coverCache[bk.id] = '';
         fallbackEl.classList.remove('hidden');
       }
     })
-    .catch(() => {
-      coverCache[bk.id] = 'none';
-      fallbackEl.classList.remove('hidden');
-    });
+    .catch(()=>{ coverCache[bk.id]=''; fallbackEl.classList.remove('hidden'); });
 }
 
 /* ══════════════════════════════════════════════════
