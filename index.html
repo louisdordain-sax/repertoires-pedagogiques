@@ -94,34 +94,35 @@ html.light body::before{
 .srch:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--glow2);}
 
 /* Centre */
-.mid{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;}
+.mid{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;overflow:visible;}
 .cnt{flex-shrink:0;font-size:7.5px;color:var(--c3);font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase;padding:3px 0;}
 
-.cw{flex:1;min-height:0;width:100%;position:relative;display:flex;flex-direction:column;}
+.cw{flex:1;min-height:0;width:100%;position:relative;display:flex;flex-direction:column;overflow:visible;}
 
-/* ══ SCÈNE 3D ═══════════════════════════════════════
-   .cs  = scène, remplit flex:1
-   .cr  = anneau, position:absolute inset:0
-   .ci  = item, top:50% left:50% dans l'anneau
-          AUCUN translateX/Y sur .ci — centrage uniquement sur .bw
-   .bw  = livre wrapper, translateX(-50%) translateY(-50%)
-          .bw width = face width (tranche en position:absolute left)
-          → -50% = centre exactement la face
-══════════════════════════════════════════════════════ */
+/* ══ SCÈNE 3D ══════════════════════════════════════════════════════════
+   .cr  = pivot zéro-dimension (top:50% left:50% width:0 height:0)
+          → items tournent autour du CENTRE EXACT de la scène
+   .ci  = top:0 left:0 (au pivot), transform: rotateY(i×step) translateZ(R)
+   .bw  = translateX(-60px) translateY(-90px) = -FW/2, -BH/2
+          → face.center = scène.center, garanti, tous les livres identiques
+═══════════════════════════════════════════════════════════════════════ */
 .cs{
   flex:1;min-height:80px;width:100%;
-  perspective:1000px;perspective-origin:50% 50%;
+  perspective:900px;perspective-origin:50% 50%;
   position:relative;overflow:visible;
 }
+/* Pivot zéro-dimension centré : les items tournent AUTOUR du centre exact */
 .cr{
-  position:absolute;inset:0;
+  position:absolute;
+  top:50%;left:50%;
+  width:0;height:0;
   transform-style:preserve-3d;
   transition:transform .78s cubic-bezier(.22,.68,0,1.2);
 }
+/* Chaque item part de l'origine du pivot (= centre scène) */
 .ci{
-  position:absolute;top:50%;left:50%;
+  position:absolute;top:0;left:0;
   cursor:pointer;transform-style:preserve-3d;
-  /* PAS de translateX/Y ici — le centrage est sur .bw */
 }
 .ci:not(.act) .bw{opacity:.32;filter:brightness(.44) saturate(.45);}
 .ci.act .bw{opacity:1;}
@@ -237,7 +238,7 @@ html.light .arr{background:rgba(235,242,255,.9);}
 .empty.on{display:block;}
 
 /* ══ BAS : infos ═════════════════════════════════════ */
-.bot{flex-shrink:0;padding:4px 18px 14px;text-align:center;}
+.bot{flex-shrink:0;padding:6px 18px 16px;text-align:center;overflow:visible;}
 .ibadge{
   display:inline-flex;align-items:center;gap:5px;
   font-size:7.5px;letter-spacing:1.8px;text-transform:uppercase;
@@ -469,7 +470,14 @@ function rr(ctx,x,y,w,h,r){
 }
 
 function drawCover(cvs,bk){
-  const W=cvs.width,H=cvs.height,ctx=cvs.getContext('2d');
+  /* Dessin en haute résolution (devicePixelRatio) pour texte net */
+  const DPR=window.devicePixelRatio||2;
+  const cssW=cvs.width,cssH=cvs.height;          /* dimensions CSS */
+  cvs.width=cssW*DPR; cvs.height=cssH*DPR;       /* buffer haute-res */
+  cvs.style.width=cssW+'px'; cvs.style.height=cssH+'px';
+  const ctx=cvs.getContext('2d');
+  ctx.scale(DPR,DPR);
+  const W=cssW,H=cssH;                            /* on travaille en coords CSS */
   ctx.clearRect(0,0,W,H);
 
   const col=bk.col;
@@ -644,10 +652,6 @@ function build(bklist){
     /* ── CENTRAGE DÉFINITIF ──────────────────────────
        .ci a top:50%; left:50% → son coin supérieur-gauche
        est au centre de la scène.
-       On ne met AUCUN translateX/Y sur .ci.
-       Le centrage est uniquement sur .bw (translateX(-50%)
-       translateY(-50%)) dont la largeur = FW (face seule).
-    ─────────────────────────────────────────────────── */
     el.style.transform = n===1
       ? 'none'
       : `rotateY(${i*step}deg) translateZ(${R}px)`;
@@ -660,7 +664,7 @@ function build(bklist){
           <div class="bs-t">${bk.a}</div>
         </div>
         <div class="bf">
-          <canvas class="bc" width="${FW}" height="${BH}"></canvas>
+          <canvas class="bc" width="${FW}" height="${BH}" style="width:${FW}px;height:${BH}px"></canvas>
           <div class="bf-shine"></div>
           <div class="bf-edge"></div>
         </div>
