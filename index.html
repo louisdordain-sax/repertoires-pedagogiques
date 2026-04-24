@@ -649,9 +649,6 @@ function build(bklist){
     const el=document.createElement('div');
     el.className='ci'+(i===idx?' act':'');
 
-    /* ── CENTRAGE DÉFINITIF ──────────────────────────
-       .ci a top:50%; left:50% → son coin supérieur-gauche
-       est au centre de la scène.
     el.style.transform = n===1
       ? 'none'
       : `rotateY(${i*step}deg) translateZ(${R}px)`;
@@ -699,14 +696,15 @@ function rotate(){
 }
 function goto(i, dir){
   const n=books.length;if(!n)return;
-  /* Si dir est fourni on l'utilise pour choisir le sens court ou long */
+  const step=360/n;
   if(dir===undefined){
-    /* clic direct sur un item : chemin le plus court */
+    /* clic direct : chemin le plus court */
     let delta=(i-idx+n)%n;
-    if(delta>n/2)delta-=n;
-    totalDeg-=delta*(360/n);
+    if(delta>n/2) delta-=n;
+    totalDeg-=delta*step;
   } else {
-    totalDeg+=dir*(360/n);
+    /* flèche/swipe : sens explicite */
+    totalDeg-=dir*step;
   }
   idx=i;
   ring.querySelectorAll('.ci').forEach((e,j)=>e.classList.toggle('act',j===i));
@@ -715,7 +713,8 @@ function goto(i, dir){
 }
 function nav(d){
   const n=books.length;if(!n)return;
-  goto((idx-d+n)%n, d);
+  /* d=1 : suivant (droite), d=-1 : précédent (gauche) */
+  goto((idx+d+n)%n, d);
 }
 
 function updateInfo(bk){
@@ -785,19 +784,19 @@ document.getElementById('oasv').onclick=()=>{
 };
 
 /* ════ NAVIGATION ════════════════════════════════════ */
-document.getElementById('arrl').onclick=()=>nav(1);
-document.getElementById('arrr').onclick=()=>nav(-1);
+document.getElementById('arrl').onclick=()=>nav(-1);
+document.getElementById('arrr').onclick=()=>nav(1);
 document.addEventListener('keydown',e=>{
   if(document.activeElement===document.getElementById('srch'))return;
-  if(e.key==='ArrowLeft')nav(1);if(e.key==='ArrowRight')nav(-1);
+  if(e.key==='ArrowLeft')nav(-1);if(e.key==='ArrowRight')nav(1);
   if(e.key==='Escape'){document.getElementById('od').classList.remove('open');document.getElementById('oa').classList.remove('open');}
   if(e.key==='Enter'&&books[idx])openDetail(books[idx]);
 });
 let tx=0;
 const sc=document.getElementById('cs');
 sc.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
-sc.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>44)nav(dx<0?-1:1);},{passive:true});
-sc.addEventListener('wheel',e=>{e.preventDefault();nav(e.deltaY>0?-1:1);},{passive:false});
+sc.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>44)nav(dx>0?-1:1);},{passive:true});
+sc.addEventListener('wheel',e=>{e.preventDefault();nav(e.deltaY>0?1:-1);},{passive:false});
 
 document.querySelectorAll('.tab').forEach(tab=>{
   tab.addEventListener('click',()=>{
