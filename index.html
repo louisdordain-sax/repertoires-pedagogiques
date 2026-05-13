@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-const FIREBASE_CONFIG={apiKey:"AIzaSyATeUW3Jk2pzggUoNRKUDL1cOaatpr4AKs",authDomain:"repertoires-pedagogiques.firebaseapp.com",databaseURL:"https://repertoires-pedagogiques-default-rtdb.europe-west1.firebasedatabase.app",projectId:"repertoires-pedagogiques",storageBucket:"repertoires-pedagogiques.firebasestorage.app",messagingSenderId:"693778494651",appId:"1:693778494651:web:ee9c27cf4561a61819659e"};
+const FIREBASE_CONFIG={apiKey:"AIzaSyATeUW3Jk2pzggUoNRKUDL1cOaatpr4AKs",authDomain:"repertoires-pedagogiques.firebaseapp.com",databaseURL:"https://repertoires-pedagogiques-default-rtdb.europe-west1.fi[...]
 </script>
 <script>(function(){try{if(localStorage.getItem('rp_theme')==='light')document.documentElement.classList.add('light');}catch(e){}})();</script>
 <style>
@@ -94,10 +94,10 @@ html.light body::before{
 .srch:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--glow2);}
 
 /* Centre */
-.mid{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;overflow:visible;}
-.cnt{flex-shrink:0;font-size:7.5px;color:var(--c3);font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase;padding:3px 0;}
+.mid{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}
+.cnt{flex-shrink:0;font-size:7.5px;color:var(--c3);font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase;padding:3px 0;position:absolute;top:6px;}
 
-.cw{flex:1;min-height:0;width:100%;position:relative;display:flex;flex-direction:column;overflow:visible;}
+.cw{flex:1;min-height:0;width:100%;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:visible;}
 
 /* ══ SCÈNE 3D ══════════════════════════════════════════════════════════
    .cr  = pivot zéro-dimension (top:50% left:50% width:0 height:0)
@@ -105,11 +105,11 @@ html.light body::before{
    .ci  = top:0 left:0 (au pivot), transform: rotateY(i×step) translateZ(R)
    .bw  = translateX(-60px) translateY(-90px) = -FW/2, -BH/2
           → face.center = scène.center, garanti, tous les livres identiques
-═══════════════════════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════════════════════════ */
 .cs{
-  flex:1;min-height:80px;width:100%;
+  width:100%;height:280px;
   perspective:900px;perspective-origin:50% 50%;
-  position:relative;overflow:visible;
+  position:relative;overflow:visible;display:flex;align-items:center;justify-content:center;
 }
 /* Pivot zéro-dimension centré : les items tournent AUTOUR du centre exact */
 .cr{
@@ -142,13 +142,13 @@ html.light body::before{
   transition:opacity .25s, border-color .2s, color .2s, box-shadow .2s;
   pointer-events:none;
 }
-.cw:hover .arr{ opacity:1; pointer-events:auto; }
+.cs:hover .arr{ opacity:1; pointer-events:auto; }
 .arr:hover{border-color:var(--acc);color:var(--acc);box-shadow:0 0 18px var(--glow);}
 html.light .arr{background:rgba(235,242,255,.9);}
 .arr.l{left:4px;}.arr.r{right:4px;}
 
 /* Dots */
-.dots{flex-shrink:0;display:flex;gap:5px;justify-content:center;align-items:center;padding:5px 0 2px;}
+.dots{flex-shrink:0;display:flex;gap:5px;justify-content:center;align-items:center;padding:8px 0 0;position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);}
 .dot{width:5px;height:5px;border-radius:50%;background:var(--bd1);cursor:pointer;transition:all .3s;}
 .dot.act{background:var(--acc);width:16px;border-radius:99px;box-shadow:0 0 7px var(--glow);}
 
@@ -420,28 +420,28 @@ html.light .toast{background:rgba(255,255,255,.97);}
 /* ════ DONNÉES ══════════════════════════════════════ */
 const DATA={
   1:[
-    {id:"c1_01",t:"50 Études Faciles et Progressives",st:"Vol. 1",a:"Guy Lacour",ed:"Billaudot",y:1974,nv:"Débutant",g:"Études",col:"#1a3e72",sp:"#0d2448",cu:null,desc:"Recueil incontournable pour les premières années. Ces 50 études progressives couvrent les fondamentaux : sons tenus, legato, staccato, articulations de base. Idéal pour structurer les deux premières années de pratique."},
-    {id:"c1_02",t:"Méthode Complète de Saxophone",st:"",a:"Hyacinthe Klosé",ed:"Leduc",y:1846,nv:"Débutant",g:"Méthode",col:"#2d1a50",sp:"#1c0e34",cu:null,desc:"La méthode originelle pour saxophone, écrite par le collaborateur d'Adolphe Sax. Fondamentale dans l'histoire pédagogique de l'instrument, elle pose les bases de la technique classique française."},
-    {id:"c1_03",t:"L'Indispensable du Saxophone",st:"",a:"Denis Gäbel",ed:"Lemoine",y:2004,nv:"Débutant",g:"Méthode",col:"#1a4a3a",sp:"#0e2e24",cu:null,desc:"Approche pédagogique moderne intégrant lecture, solfège rythmique et pièces variées avec supports audio. Méthode adaptée aux élèves contemporains, couvrant les deux premières années de cycle 1."},
-    {id:"c1_04",t:"35 Études Techniques",st:"",a:"Paul Jeanjean",ed:"Leduc",y:1927,nv:"Fin de Cycle 1",g:"Études",col:"#1a3a2a",sp:"#0e2418",cu:null,desc:"Études techniques de Jeanjean centrées sur les articulations, gammes et arpèges. Un pilier du répertoire pédagogique français qui complète les méthodes de début et prépare le cycle 2."},
-    {id:"c1_05",t:"Rubank Elementary Method for Saxophone",st:"",a:"H. Voxman",ed:"Rubank",y:1934,nv:"Débutant",g:"Méthode",col:"#3a1a1a",sp:"#240e0e",cu:null,desc:"Méthode américaine de référence très utilisée dans les écoles de musique anglophones. Présente une progression claire avec des exercices techniques bien dosés et un répertoire varié."},
-    {id:"c1_06",t:"Premières Pièces pour Saxophone",st:"",a:"Divers compositeurs",ed:"Billaudot",y:1990,nv:"Fin de Cycle 1",g:"Répertoire",col:"#3a2a10",sp:"#241a08",cu:null,desc:"Anthologie de courtes pièces originales ou arrangées pour saxophone alto et piano. Styles variés : baroque, classique, jazz, musique du monde."}
+    {id:"c1_01",t:"50 Études Faciles et Progressives",st:"Vol. 1",a:"Guy Lacour",ed:"Billaudot",y:1974,nv:"Débutant",g:"Études",col:"#1a3e72",sp:"#0d2448",cu:null,desc:"Recueil incontournable [...]
+    {id:"c1_02",t:"Méthode Complète de Saxophone",st:"",a:"Hyacinthe Klosé",ed:"Leduc",y:1846,nv:"Débutant",g:"Méthode",col:"#2d1a50",sp:"#1c0e34",cu:null,desc:"La méthode originelle pour s[...]
+    {id:"c1_03",t:"L'Indispensable du Saxophone",st:"",a:"Denis Gäbel",ed:"Lemoine",y:2004,nv:"Débutant",g:"Méthode",col:"#1a4a3a",sp:"#0e2e24",cu:null,desc:"Approche pédagogique moderne int[...]
+    {id:"c1_04",t:"35 Études Techniques",st:"",a:"Paul Jeanjean",ed:"Leduc",y:1927,nv:"Fin de Cycle 1",g:"Études",col:"#1a3a2a",sp:"#0e2418",cu:null,desc:"Études techniques de Jeanjean centré[...]
+    {id:"c1_05",t:"Rubank Elementary Method for Saxophone",st:"",a:"H. Voxman",ed:"Rubank",y:1934,nv:"Débutant",g:"Méthode",col:"#3a1a1a",sp:"#240e0e",cu:null,desc:"Méthode américaine de réf[...]
+    {id:"c1_06",t:"Premières Pièces pour Saxophone",st:"",a:"Divers compositeurs",ed:"Billaudot",y:1990,nv:"Fin de Cycle 1",g:"Répertoire",col:"#3a2a10",sp:"#241a08",cu:null,desc:"Anthologie d[...]
   ],
   2:[
-    {id:"c2_01",t:"48 Études pour Saxophone",st:"",a:"W. Ferling / M. Mule",ed:"Leduc",y:1946,nv:"Intermédiaire",g:"Études",col:"#1e4a78",sp:"#102e50",cu:null,desc:"Adaptation par Marcel Mule des études pour hautbois de Ferling. Ces 48 études sont un passage obligé pour tout saxophoniste classique sérieux, travaillant phrasés, nuances et articulations avancées."},
-    {id:"c2_02",t:"Concertino da Camera",st:"",a:"Jacques Ibert",ed:"Leduc",y:1935,nv:"Fin de Cycle 2",g:"Pièce concertante",col:"#4a1e3a",sp:"#2e1224",cu:null,desc:"Oeuvre concertante majeure du répertoire pour saxophone alto et orchestre de chambre. Virtuose et élégante, souvent jouée en concours."},
-    {id:"c2_03",t:"Ballade",st:"pour saxophone et piano",a:"Henri Tomasi",ed:"Leduc",y:1947,nv:"Cycle 2",g:"Pièce soliste",col:"#2a3a1e",sp:"#1a2412",cu:null,desc:"La Ballade de Tomasi est une pièce lyrique et expressive qui demande un vrai contrôle du son et un sens du legato évolué."},
-    {id:"c2_04",t:"Fantaisie sur un thème original",st:"",a:"Jules Demersseman",ed:"Leduc",y:1860,nv:"Milieu Cycle 2",g:"Fantaisie",col:"#2a1e4a",sp:"#1a1230",cu:null,desc:"Fantaisie romantique virtuose du XIXe siècle. Demande souplesse technique et sens de la mise en valeur mélodique."},
-    {id:"c2_05",t:"Sonatine",st:"pour saxophone et piano",a:"Pierre-Max Dubois",ed:"Leduc",y:1959,nv:"Fin de Cycle 2",g:"Sonate",col:"#1e3a4a",sp:"#12242e",cu:null,desc:"Oeuvre de style néoclassique en trois mouvements, avec humour et légèreté. Idéale pour travailler la mise en place rythmique avec piano."},
-    {id:"c2_06",t:"Aria et Toccata",st:"",a:"Alfred Desenclos",ed:"Leduc",y:1967,nv:"Fin de Cycle 2",g:"Pièce soliste",col:"#3a2a1e",sp:"#24180e",cu:null,desc:"Pièce magistrale en deux temps contrastés : Aria expressive suivie d'une Toccata brillante. Un chef-d'oeuvre du répertoire classique français."}
+    {id:"c2_01",t:"48 Études pour Saxophone",st:"",a:"W. Ferling / M. Mule",ed:"Leduc",y:1946,nv:"Intermédiaire",g:"Études",col:"#1e4a78",sp:"#102e50",cu:null,desc:"Adaptation par Marcel Mule [...]
+    {id:"c2_02",t:"Concertino da Camera",st:"",a:"Jacques Ibert",ed:"Leduc",y:1935,nv:"Fin de Cycle 2",g:"Pièce concertante",col:"#4a1e3a",sp:"#2e1224",cu:null,desc:"Oeuvre concertante majeure d[...]
+    {id:"c2_03",t:"Ballade",st:"pour saxophone et piano",a:"Henri Tomasi",ed:"Leduc",y:1947,nv:"Cycle 2",g:"Pièce soliste",col:"#2a3a1e",sp:"#1a2412",cu:null,desc:"La Ballade de Tomasi est une p[...]
+    {id:"c2_04",t:"Fantaisie sur un thème original",st:"",a:"Jules Demersseman",ed:"Leduc",y:1860,nv:"Milieu Cycle 2",g:"Fantaisie",col:"#2a1e4a",sp:"#1a1230",cu:null,desc:"Fantaisie romantique [...]
+    {id:"c2_05",t:"Sonatine",st:"pour saxophone et piano",a:"Pierre-Max Dubois",ed:"Leduc",y:1959,nv:"Fin de Cycle 2",g:"Sonate",col:"#1e3a4a",sp:"#12242e",cu:null,desc:"Oeuvre de style néoclass[...]
+    {id:"c2_06",t:"Aria et Toccata",st:"",a:"Alfred Desenclos",ed:"Leduc",y:1967,nv:"Fin de Cycle 2",g:"Pièce soliste",col:"#3a2a1e",sp:"#24180e",cu:null,desc:"Pièce magistrale en deux temps co[...]
   ],
   3:[
-    {id:"c3_01",t:"Concerto pour Saxophone Alto",st:"Mib et orchestre",a:"Alexander Glazounov",ed:"Leduc",y:1934,nv:"Avancé",g:"Concerto",col:"#1a285a",sp:"#0e183a",cu:null,desc:"Le Concerto de Glazounov est la pièce la plus emblématique du répertoire concertant pour saxophone. Présent dans tous les concours internationaux."},
-    {id:"c3_02",t:"Tableaux de Provence",st:"",a:"Paule Maurice",ed:"Lemoine",y:1955,nv:"Avancé",g:"Suite",col:"#4a3a1a",sp:"#2e240e",cu:null,desc:"Suite poétique en cinq tableaux évoquant la lumière et les paysages de Provence. Un style impressionniste raffiné et expressif."},
-    {id:"c3_03",t:"Sonate pour Saxophone et Piano",st:"",a:"Claude Pascal",ed:"Durand",y:1945,nv:"Avancé",g:"Sonate",col:"#3a1a28",sp:"#240e18",cu:null,desc:"Sonate néoclassique française en quatre mouvements d'une écriture élégante et idiomatique. Au programme des concours nationaux."},
-    {id:"c3_04",t:"Sonate pour Saxophone",st:"",a:"Edison Denisov",ed:"Leduc",y:1970,nv:"Avancé",g:"Sonate contemporaine",col:"#1a1a28",sp:"#0e0e18",cu:null,desc:"Oeuvre du modernisme soviétique à l'écriture atonale exigeante. Demande maîtrise du son, du souffle et grande liberté d'interprétation."},
-    {id:"c3_05",t:"Sequenza IXb",st:"pour saxophone solo",a:"Luciano Berio",ed:"Universal Edition",y:1981,nv:"Virtuose",g:"Contemporain solo",col:"#1a3a3a",sp:"#0e2424",cu:null,desc:"Pièce phare du répertoire contemporain. Berio explore multiphoniques, sons altérés et une écriture en flux continu de grande virtuosité."},
-    {id:"c3_06",t:"Rhapsodie pour Saxophone",st:"et orchestre",a:"Claude Debussy",ed:"Durand",y:1903,nv:"Avancé",g:"Pièce orchestrale",col:"#2a1a4a",sp:"#1a0e30",cu:null,desc:"Pièce commandée par Elise Hall, laissée inachevée par Debussy puis orchestrée par Roger-Ducasse. Incursion impressionniste unique."}
+    {id:"c3_01",t:"Concerto pour Saxophone Alto",st:"Mib et orchestre",a:"Alexander Glazounov",ed:"Leduc",y:1934,nv:"Avancé",g:"Concerto",col:"#1a285a",sp:"#0e183a",cu:null,desc:"Le Concerto de [...]
+    {id:"c3_02",t:"Tableaux de Provence",st:"",a:"Paule Maurice",ed:"Lemoine",y:1955,nv:"Avancé",g:"Suite",col:"#4a3a1a",sp:"#2e240e",cu:null,desc:"Suite poétique en cinq tableaux évoquant la [...]
+    {id:"c3_03",t:"Sonate pour Saxophone et Piano",st:"",a:"Claude Pascal",ed:"Durand",y:1945,nv:"Avancé",g:"Sonate",col:"#3a1a28",sp:"#240e18",cu:null,desc:"Sonate néoclassique française en q[...]
+    {id:"c3_04",t:"Sonate pour Saxophone",st:"",a:"Edison Denisov",ed:"Leduc",y:1970,nv:"Avancé",g:"Sonate contemporaine",col:"#1a1a28",sp:"#0e0e18",cu:null,desc:"Oeuvre du modernisme soviétiqu[...]
+    {id:"c3_05",t:"Sequenza IXb",st:"pour saxophone solo",a:"Luciano Berio",ed:"Universal Edition",y:1981,nv:"Virtuose",g:"Contemporain solo",col:"#1a3a3a",sp:"#0e2424",cu:null,desc:"Pièce phare[...]
+    {id:"c3_06",t:"Rhapsodie pour Saxophone",st:"et orchestre",a:"Claude Debussy",ed:"Durand",y:1903,nv:"Avancé",g:"Pièce orchestrale",col:"#2a1a4a",sp:"#1a0e30",cu:null,desc:"Pièce commandée[...]
   ]
 };
 
