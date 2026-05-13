@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-const FIREBASE_CONFIG={apiKey:"AIzaSyATeUW3Jk2pzggUoNRKUDL1cOaatpr4AKs",authDomain:"repertoires-pedagogiques.firebaseapp.com",databaseURL:"https://repertoires-pedagogiques-default-rtdb.europe-west1.fi[...]
+const FIREBASE_CONFIG={apiKey:"AIzaSyATeUW3Jk2pzggUoNRKUDL1cOaatpr4AKs",authDomain:"repertoires-pedagogiques.firebaseapp.com",databaseURL:"https://repertoires-pedagogiques-default-rtdb.europe-west[...]
 </script>
 <script>(function(){try{if(localStorage.getItem('rp_theme')==='light')document.documentElement.classList.add('light');}catch(e){}})();</script>
 <style>
@@ -103,9 +103,9 @@ html.light body::before{
    .cr  = pivot zéro-dimension (top:50% left:50% width:0 height:0)
           → items tournent autour du CENTRE EXACT de la scène
    .ci  = top:0 left:0 (au pivot), transform: rotateY(i×step) translateZ(R)
-   .bw  = translateX(-60px) translateY(-90px) = -FW/2, -BH/2
+   .bw  = translate3d(-50%, -50%, 0) = centrage 3D pur, compatible preserve-3d
           → face.center = scène.center, garanti, tous les livres identiques
-══════════════════════════════════════════════════════════════════════════ */
+═════════════════════════════════════════════════════════════════ */
 .cs{
   width:100%;height:280px;
   perspective:900px;perspective-origin:50% 50%;
@@ -153,16 +153,19 @@ html.light .arr{background:rgba(235,242,255,.9);}
 .dot.act{background:var(--acc);width:16px;border-radius:99px;box-shadow:0 0 7px var(--glow);}
 
 /* ══ LIVRE 3D ═══════════════════════════════════════
-   Centrage garanti par pixels fixes :
-   translateX(-60px) = -FW/2 = centre horizontal de la face
-   translateY(-90px) = -BH/2 = centre vertical du livre
-   → indépendant de la taille calculée, fonctionne dans preserve-3d
+   Centrage 3D pur :
+   translate3d(-50%, -50%, 0) centre dans le contexte preserve-3d
+   → fonctionne correctement en 3D, pas de clipping inattendu
 ══════════════════════════════════════════════════════ */
 .bw{
   display:block;
-  position:relative;
-  transform:translateX(-60px) translateY(-90px);
+  position:absolute;
+  top:50%;left:50%;
+  width:var(--fw,120px);
+  height:var(--bh,180px);
+  transform:translate3d(-50%, -50%, 0);
   transition:filter .3s,opacity .3s;
+  transform-style:preserve-3d;
 }
 
 /* Halo sol sous le livre actif */
@@ -422,7 +425,7 @@ const DATA={
   1:[
     {id:"c1_01",t:"50 Études Faciles et Progressives",st:"Vol. 1",a:"Guy Lacour",ed:"Billaudot",y:1974,nv:"Débutant",g:"Études",col:"#1a3e72",sp:"#0d2448",cu:null,desc:"Recueil incontournable [...]
     {id:"c1_02",t:"Méthode Complète de Saxophone",st:"",a:"Hyacinthe Klosé",ed:"Leduc",y:1846,nv:"Débutant",g:"Méthode",col:"#2d1a50",sp:"#1c0e34",cu:null,desc:"La méthode originelle pour s[...]
-    {id:"c1_03",t:"L'Indispensable du Saxophone",st:"",a:"Denis Gäbel",ed:"Lemoine",y:2004,nv:"Débutant",g:"Méthode",col:"#1a4a3a",sp:"#0e2e24",cu:null,desc:"Approche pédagogique moderne int[...]
+    {id:"c1_03",t:"L'Indispensable du Saxophone",st:"",a:"Denis Gäbel",ed:"Lemoine",y:2004,nv:"Débutant",g:"Méthode",col:"#1a4a3a",sp:"#0e2e24",cu:null,desc:"Approche pédagogique moderne int[[...]
     {id:"c1_04",t:"35 Études Techniques",st:"",a:"Paul Jeanjean",ed:"Leduc",y:1927,nv:"Fin de Cycle 1",g:"Études",col:"#1a3a2a",sp:"#0e2418",cu:null,desc:"Études techniques de Jeanjean centré[...]
     {id:"c1_05",t:"Rubank Elementary Method for Saxophone",st:"",a:"H. Voxman",ed:"Rubank",y:1934,nv:"Débutant",g:"Méthode",col:"#3a1a1a",sp:"#240e0e",cu:null,desc:"Méthode américaine de réf[...]
     {id:"c1_06",t:"Premières Pièces pour Saxophone",st:"",a:"Divers compositeurs",ed:"Billaudot",y:1990,nv:"Fin de Cycle 1",g:"Répertoire",col:"#3a2a10",sp:"#241a08",cu:null,desc:"Anthologie d[...]
@@ -611,9 +614,8 @@ document.getElementById('tbtn').onclick=()=>{
 /* ════ DIMENSIONS LIVRE ═════════════════════════════
    FW = face width. BH = book height. SW = spine width.
    .ci dans le carousel : top:50%; left:50%; PAS de translateX/Y
-   .bw : translateX(-50%) translateY(-50%)
-         width de .bw = FW (tranche en absolute)
-         → -50% = -FW/2 → centre parfaitement la face
+   .bw : translate3d(-50%, -50%, 0) = centrage 3D pur
+         → centre parfaitement la face dans le contexte preserve-3d
 ════════════════════════════════════════════════════ */
 const FW=120,BH=180,SW=26;
 // Set CSS vars
