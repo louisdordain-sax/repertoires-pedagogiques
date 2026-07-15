@@ -10,14 +10,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyATeUW3Jk2pzggUoNRKUDL1cOaatpr4AKs",
-  authDomain: "repertoires-pedagogiques.firebaseapp.com",
-  databaseURL: "https://repertoires-pedagogiques-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "repertoires-pedagogiques",
-  storageBucket: "repertoires-pedagogiques.firebasestorage.app",
-  messagingSenderId: "693778494651",
-  appId: "1:693778494651:web:ee9c27cf4561a61819659e"
+const FIREBASE_CONFIG={
+  apiKey:"AIzaSyATeUW3Jk2pzggUoNRKUDL1cOaatpr4AKs",
+  authDomain:"repertoires-pedagogiques.firebaseapp.com",
+  databaseURL:"https://repertoires-pedagogiques-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"repertoires-pedagogiques",
+  storageBucket:"repertoires-pedagogiques.firebasestorage.app",
+  messagingSenderId:"693778494651",
+  appId:"1:693778494651:web:ee9c27cf4561a61819659e"
 };
 </script>
 <script>(function(){try{if(localStorage.getItem('rp_theme')==='light')document.documentElement.classList.add('light');}catch(e){}})();</script>
@@ -349,11 +349,12 @@ html.light .hashtags-suggestions{background:rgba(237,241,250,.35);}
 .toast{
   position:fixed;bottom:16px;left:50%;z-index:300;
   transform:translateX(-50%) translateY(70px);
-  background:rgba(7,9,15,.97);border:.5px solid var(--bd2);border-radius:99px;
-  padding:8px 20px;font-size:11px;color:var(--c1);
+  background:rgba(7,9,15,.97);border:.5px solid var(--bd2);border-radius:16px;
+  padding:9px 18px;font-size:11px;color:var(--c1);line-height:1.5;
   box-shadow:0 4px 20px rgba(0,0,0,.5);
   transition:transform .32s cubic-bezier(.22,.68,0,1.2),opacity .32s;
-  opacity:0;pointer-events:none;white-space:nowrap;
+  opacity:0;pointer-events:none;white-space:pre-wrap;
+  max-width:min(340px,86vw);text-align:center;
 }
 html.light .toast{background:rgba(255,255,255,.97);}
 .toast.on{transform:translateX(-50%) translateY(0);opacity:1;}
@@ -721,6 +722,16 @@ let db=null;
 let firebaseReady=false;
 
 function initFirebase(){
+  // Cas fréquent : le <script> externe firebase-app-compat.js (chargé depuis
+  // gstatic.com) n'a pas pu se charger — pas de connexion au moment du chargement
+  // de la page, ou navigateur qui bloque les scripts tiers en contexte local
+  // (fichier ouvert directement plutôt que via une page servie en https://).
+  if(typeof firebase==='undefined'){
+    console.error('Erreur initialisation Firebase : le SDK Firebase (script gstatic.com) ne s\'est pas chargé.');
+    firebaseReady=false;
+    toast('⚠️ SDK Firebase non chargé — vérifie la connexion internet, ou teste via l\'URL en ligne plutôt qu\'en fichier local',7000);
+    return;
+  }
   try{
     firebase.initializeApp(FIREBASE_CONFIG);
     db=firebase.database();
@@ -728,6 +739,7 @@ function initFirebase(){
   }catch(err){
     console.error('Erreur initialisation Firebase :',err);
     firebaseReady=false;
+    toast('⚠️ Erreur initialisation Firebase :\n'+describeFirebaseError(err),7000);
   }
 }
 
@@ -756,17 +768,20 @@ async function loadDataFromFirebase(){
     } else {
       // Base vide → premier lancement : on l'amorce avec le catalogue de base
       DATA=DEFAULT_DATA;
-      await seedFirebase(DEFAULT_DATA);
+      const seedResult=await seedFirebase(DEFAULT_DATA);
+      if(!seedResult.ok){
+        toast('⚠️ Amorçage Firebase échoué :\n'+seedResult.detail,7000);
+      }
     }
   }catch(err){
     console.error('Erreur lecture Firebase, passage en mode local :',err);
     DATA=DEFAULT_DATA;
-    toast('⚠️ Mode hors-ligne : données non synchronisées');
+    toast('⚠️ Lecture Firebase échouée :\n'+describeFirebaseError(err),7000);
   }
 }
 
 async function seedFirebase(data){
-  if(!firebaseReady)return false;
+  if(!firebaseReady)return{ok:false,detail:'Firebase non connecté'};
   try{
     const payload={};
     Object.keys(data).forEach(cycleKey=>{
@@ -774,42 +789,48 @@ async function seedFirebase(data){
       data[cycleKey].forEach(bk=>{payload[cycleKey][bk.id]=bk;});
     });
     await db.ref('repertoire').set(payload);
-    return true;
+    return{ok:true,detail:null};
   }catch(err){
     // err.code vaut souvent 'PERMISSION_DENIED' si les règles de sécurité
     // Firebase interdisent l'écriture : à vérifier en priorité si l'amorçage échoue.
     console.error('Erreur amorçage Firebase :',err.code||'',err.message||err);
-    return false;
+    return{ok:false,detail:describeFirebaseError(err)};
   }
+}
+
+// Formate une erreur Firebase en texte court et lisible pour affichage à l'écran
+function describeFirebaseError(err){
+  if(!err)return 'Erreur inconnue';
+  return err.code ? `${err.code} — ${err.message||''}` : String(err.message||err);
 }
 
 async function saveBookToFirebase(cycle,book){
   if(!firebaseReady){
     console.warn('saveBookToFirebase : Firebase non connecté (firebaseReady=false)');
-    return false;
+    return{ok:false,detail:'Firebase non connecté (voir initFirebase)'};
   }
   try{
     await db.ref(`repertoire/${cycle}/${book.id}`).set(book);
-    return true;
+    return{ok:true,detail:null};
   }catch(err){
     // 'PERMISSION_DENIED' → vérifier les règles de la Realtime Database
     // dans la console Firebase (onglet Rules), qui doivent autoriser l'écriture.
     console.error('Erreur écriture Firebase :',err.code||'',err.message||err);
-    return false;
+    return{ok:false,detail:describeFirebaseError(err)};
   }
 }
 
 async function updateTagsInFirebase(cycle,bookId,tags){
   if(!firebaseReady){
     console.warn('updateTagsInFirebase : Firebase non connecté (firebaseReady=false)');
-    return false;
+    return{ok:false,detail:'Firebase non connecté (voir initFirebase)'};
   }
   try{
     await db.ref(`repertoire/${cycle}/${bookId}/tags`).set(tags);
-    return true;
+    return{ok:true,detail:null};
   }catch(err){
     console.error('Erreur écriture tags Firebase :',err.code||'',err.message||err);
-    return false;
+    return{ok:false,detail:describeFirebaseError(err)};
   }
 }
 
@@ -1192,8 +1213,12 @@ document.getElementById('otsv').onclick=async(e)=>{
       ? tagsStr.split(',').map(t=>t.trim().toLowerCase()).filter(t=>t)
       : [];
     document.getElementById('ot').classList.remove('open');
-    const saved=await updateTagsInFirebase(cyc,currentBookForTags.id,currentBookForTags.tags);
-    toast(saved ? '✓ Tags enregistrés !' : '⚠️ Tags non sauvegardés (voir console)');
+    const result=await updateTagsInFirebase(cyc,currentBookForTags.id,currentBookForTags.tags);
+    if(result.ok){
+      toast('✓ Tags enregistrés !');
+    } else {
+      toast('⚠️ Tags NON sauvegardés :\n'+result.detail,7000);
+    }
   }
 };
 
@@ -1279,11 +1304,11 @@ document.getElementById('oasv').onclick=async(e)=>{
 
   // On attend la vraie confirmation d'écriture avant d'annoncer le succès :
   // ainsi un échec (ex. règles Firebase trop restrictives) n'est plus silencieux.
-  const saved=await saveBookToFirebase(c,nb);
-  if(saved){
+  const result=await saveBookToFirebase(c,nb);
+  if(result.ok){
     toast('✓ Partition ajoutée et enregistrée !');
   } else {
-    toast('⚠️ Ajoutée localement UNIQUEMENT — non sauvegardée (voir console)');
+    toast('⚠️ NON sauvegardée sur Firebase :\n'+result.detail,7000);
   }
 };
 
@@ -1381,14 +1406,19 @@ window.addEventListener('resize',()=>{
   rt=setTimeout(()=>build(books),200);
 });
 
-/* ════ TOAST ════════════════════════════════════════ */
+/* ════ TOAST ════════════════════════════════════════
+   duration personnalisable : les messages d'erreur (avec
+   détail technique) restent affichés plus longtemps que
+   les confirmations courantes, pour rester lisibles sur
+   un appareil sans accès à la console (ex. tablette).
+════════════════════════════════════════════════════ */
 let tt;
-function toast(msg){
+function toast(msg,duration=2600){
   const el=document.getElementById('toast');
   el.textContent=msg;
   el.classList.add('on');
   clearTimeout(tt);
-  tt=setTimeout(()=>el.classList.remove('on'),2600);
+  tt=setTimeout(()=>el.classList.remove('on'),duration);
 }
 
 /* ════ ÉCRAN D'INTRODUCTION ══════════════════════════
