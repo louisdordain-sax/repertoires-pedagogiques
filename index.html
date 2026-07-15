@@ -10,15 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyATeUW3Jk2pzggUoNRKUDL1cOaatpr4AKs",
-  authDomain: "repertoires-pedagogiques.firebaseapp.com",
-  databaseURL: "https://repertoires-pedagogiques-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "repertoires-pedagogiques",
-  storageBucket: "repertoires-pedagogiques.firebasestorage.app",
-  messagingSenderId: "693778494651",
-  appId: "1:693778494651:web:ee9c27cf4561a61819659e"
-};
+const FIREBASE_CONFIG={apiKey:"AIzaSyATeUW3Jk2pzggUoNRKUDL1cOaatpr4AKs",authDomain:"repertoires-pedagogiques.firebaseapp.com",databaseURL:"https://repertoires-pedagogiques-default-rtdb.europe-west1.firebasedatabase.app",projectId:"repertoires-pedagogiques",storageBucket:"repertoires-pedagogiques.firebasestorage.app",messagingSenderId:"693778494651",appId:"1:693778494651:web:ee9c27cf4561a61819659e"};
 </script>
 <script>(function(){try{if(localStorage.getItem('rp_theme')==='light')document.documentElement.classList.add('light');}catch(e){}})();</script>
 <style>
@@ -358,11 +350,109 @@ html.light .hashtags-suggestions{background:rgba(237,241,250,.35);}
 html.light .toast{background:rgba(255,255,255,.97);}
 .toast.on{transform:translateX(-50%) translateY(0);opacity:1;}
 
+/* ══ ÉCRAN D'INTRODUCTION ═══════════════════════════
+   Affiché à chaque chargement, par-dessus toute l'appli
+   (z-index le plus haut), jusqu'à ce que l'utilisateur
+   clique sur « Entrer ». Le chargement des données
+   Firebase se fait en arrière-plan pendant ce temps.
+════════════════════════════════════════════════════ */
+.intro-ov{
+  position:fixed;inset:0;z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;background:var(--bg);
+  transition:opacity .45s ease,visibility 0s .45s;
+}
+.intro-ov::before{
+  content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -5%,rgba(55,138,221,.18) 0%,transparent 70%),
+    radial-gradient(ellipse 100% 60% at 50% 0%,#0b1428 0%,var(--bg) 72%);
+}
+html.light .intro-ov::before{
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -5%,rgba(100,160,255,.22) 0%,transparent 70%),
+    radial-gradient(ellipse 100% 60% at 50% 0%,#c8daff 0%,var(--bg) 72%);
+}
+.intro-ov.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+.intro-box{
+  width:min(420px,100%);text-align:center;
+  animation:mi .5s cubic-bezier(.22,.68,0,1.2) both;
+}
+.intro-badge{
+  display:inline-block;font-size:8px;letter-spacing:2.5px;text-transform:uppercase;
+  font-family:var(--mono);color:var(--c3);margin-bottom:14px;
+}
+.intro-ttl{
+  font-size:26px;font-weight:700;color:var(--c1);letter-spacing:-.6px;
+  line-height:1.2;margin-bottom:8px;
+}
+.intro-sub{
+  font-size:12.5px;color:var(--acc);font-family:var(--mono);
+  letter-spacing:.3px;margin-bottom:22px;opacity:.85;
+}
+.intro-desc{
+  font-size:12.5px;color:var(--c2);line-height:1.75;
+  margin-bottom:26px;padding:0 6px;
+}
+.intro-features{
+  display:flex;flex-direction:column;gap:10px;margin-bottom:30px;text-align:left;
+}
+.intro-feat{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:12px;
+  border:.5px solid var(--bd1);background:var(--tbg);
+}
+.intro-feat-ic{
+  flex-shrink:0;width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+  background:var(--tact);color:var(--acc);
+}
+.intro-feat-tx{font-size:11px;color:var(--c2);line-height:1.4;}
+.intro-feat-tx b{color:var(--c1);font-weight:600;}
+.intro-enter{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:11px 28px;border-radius:99px;border:.5px solid var(--acc);
+  background:var(--tact);color:var(--acc);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .2s;font-family:var(--font);letter-spacing:.2px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+.intro-enter:hover{background:var(--acc);color:#fff;box-shadow:0 0 22px var(--glow);}
+
 ::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--bd1);border-radius:99px;}
 @media(max-width:400px){.tab{font-size:9.5px;padding:5px 3px;}.ttl{font-size:15px;}}
 </style>
 </head>
 <body>
+
+<!-- ÉCRAN D'INTRODUCTION -->
+<div class="intro-ov" id="introOv">
+  <div class="intro-box">
+    <div class="intro-badge">Diplôme d'État · Saxophone</div>
+    <div class="intro-ttl">Répertoires Pédagogiques</div>
+    <div class="intro-sub">Bibliothèque de partitions pour l'enseignement</div>
+    <p class="intro-desc">
+      Un outil pensé pour organiser, explorer et faire vivre le répertoire pédagogique
+      du saxophone au fil des trois cycles d'études — de la découverte de l'instrument
+      aux œuvres du répertoire de concours.
+    </p>
+    <div class="intro-features">
+      <div class="intro-feat">
+        <div class="intro-feat-ic">🎓</div>
+        <div class="intro-feat-tx"><b>3 cycles</b> — un répertoire classé et progressif, du débutant au niveau avancé</div>
+      </div>
+      <div class="intro-feat">
+        <div class="intro-feat-ic">🔍</div>
+        <div class="intro-feat-tx"><b>Recherche libre</b> — par titre, auteur, éditeur, genre ou niveau</div>
+      </div>
+      <div class="intro-feat">
+        <div class="intro-feat-ic">🏷️</div>
+        <div class="intro-feat-tx"><b>Fiches et tags pédagogiques</b> — pour noter et retrouver l'intérêt de chaque œuvre</div>
+      </div>
+    </div>
+    <button class="intro-enter" id="introEnter">Entrer →</button>
+  </div>
+</div>
+
 <div class="app">
 
   <!-- HAUT -->
@@ -668,7 +758,7 @@ async function loadDataFromFirebase(){
 }
 
 async function seedFirebase(data){
-  if(!firebaseReady)return;
+  if(!firebaseReady)return false;
   try{
     const payload={};
     Object.keys(data).forEach(cycleKey=>{
@@ -676,34 +766,42 @@ async function seedFirebase(data){
       data[cycleKey].forEach(bk=>{payload[cycleKey][bk.id]=bk;});
     });
     await db.ref('repertoire').set(payload);
+    return true;
   }catch(err){
-    console.error('Erreur amorçage Firebase :',err);
+    // err.code vaut souvent 'PERMISSION_DENIED' si les règles de sécurité
+    // Firebase interdisent l'écriture : à vérifier en priorité si l'amorçage échoue.
+    console.error('Erreur amorçage Firebase :',err.code||'',err.message||err);
+    return false;
   }
 }
 
 async function saveBookToFirebase(cycle,book){
   if(!firebaseReady){
-    toast('⚠️ Partition ajoutée localement (hors-ligne)');
-    return;
+    console.warn('saveBookToFirebase : Firebase non connecté (firebaseReady=false)');
+    return false;
   }
   try{
     await db.ref(`repertoire/${cycle}/${book.id}`).set(book);
+    return true;
   }catch(err){
-    console.error('Erreur écriture Firebase :',err);
-    toast('⚠️ Échec de la synchronisation');
+    // 'PERMISSION_DENIED' → vérifier les règles de la Realtime Database
+    // dans la console Firebase (onglet Rules), qui doivent autoriser l'écriture.
+    console.error('Erreur écriture Firebase :',err.code||'',err.message||err);
+    return false;
   }
 }
 
 async function updateTagsInFirebase(cycle,bookId,tags){
   if(!firebaseReady){
-    toast('⚠️ Tags enregistrés localement (hors-ligne)');
-    return;
+    console.warn('updateTagsInFirebase : Firebase non connecté (firebaseReady=false)');
+    return false;
   }
   try{
     await db.ref(`repertoire/${cycle}/${bookId}/tags`).set(tags);
+    return true;
   }catch(err){
-    console.error('Erreur écriture tags Firebase :',err);
-    toast('⚠️ Échec de la synchronisation des tags');
+    console.error('Erreur écriture tags Firebase :',err.code||'',err.message||err);
+    return false;
   }
 }
 
@@ -1078,7 +1176,7 @@ document.getElementById('otcl').onclick=(e)=>{
   document.getElementById('ot').classList.remove('open');
 };
 
-document.getElementById('otsv').onclick=(e)=>{
+document.getElementById('otsv').onclick=async(e)=>{
   e.stopPropagation();
   if(currentBookForTags){
     const tagsStr=document.getElementById('ot-tags').value.trim();
@@ -1086,8 +1184,8 @@ document.getElementById('otsv').onclick=(e)=>{
       ? tagsStr.split(',').map(t=>t.trim().toLowerCase()).filter(t=>t)
       : [];
     document.getElementById('ot').classList.remove('open');
-    updateTagsInFirebase(cyc,currentBookForTags.id,currentBookForTags.tags);
-    toast('✓ Tags enregistrés !');
+    const saved=await updateTagsInFirebase(cyc,currentBookForTags.id,currentBookForTags.tags);
+    toast(saved ? '✓ Tags enregistrés !' : '⚠️ Tags non sauvegardés (voir console)');
   }
 };
 
@@ -1132,7 +1230,7 @@ document.getElementById('oa').onclick=(e)=>{
 
 document.querySelector('.ambox')?.addEventListener('click',(e)=>{e.stopPropagation();});
 
-document.getElementById('oasv').onclick=(e)=>{
+document.getElementById('oasv').onclick=async(e)=>{
   e.stopPropagation();
   
   const t=document.getElementById('at').value.trim();
@@ -1159,9 +1257,9 @@ document.getElementById('oasv').onclick=(e)=>{
     desc:document.getElementById('ad').value.trim()
   };
   
+  // Affichage local immédiat (réactivité), puis confirmation de l'écriture distante.
   if(!DATA[c])DATA[c]=[];
   DATA[c].unshift(nb);
-  saveBookToFirebase(c,nb);
   
   ['at','au','ae','ay','an','ag2','acu','ad'].forEach(id=>document.getElementById(id).value='');
   closeAddModal();
@@ -1170,8 +1268,15 @@ document.getElementById('oasv').onclick=(e)=>{
   idx=0;
   document.querySelectorAll('.tab').forEach(tabEl=>tabEl.classList.toggle('act',parseInt(tabEl.dataset.c)===c));
   filter();
-  
-  toast('✓ Partition ajoutée !');
+
+  // On attend la vraie confirmation d'écriture avant d'annoncer le succès :
+  // ainsi un échec (ex. règles Firebase trop restrictives) n'est plus silencieux.
+  const saved=await saveBookToFirebase(c,nb);
+  if(saved){
+    toast('✓ Partition ajoutée et enregistrée !');
+  } else {
+    toast('⚠️ Ajoutée localement UNIQUEMENT — non sauvegardée (voir console)');
+  }
 };
 
 /* ════ NAVIGATION ════════════════════════════════════ */
@@ -1277,6 +1382,18 @@ function toast(msg){
   clearTimeout(tt);
   tt=setTimeout(()=>el.classList.remove('on'),2600);
 }
+
+/* ════ ÉCRAN D'INTRODUCTION ══════════════════════════
+   Affiché par défaut au chargement (voir CSS .intro-ov).
+   Le clic sur « Entrer » le fait disparaître en fondu ;
+   il est retiré du flux (display:none) une fois le fondu
+   terminé pour ne plus intercepter aucun clic ni lecteur d'écran.
+════════════════════════════════════════════════════ */
+document.getElementById('introEnter').addEventListener('click',()=>{
+  const intro=document.getElementById('introOv');
+  intro.classList.add('hidden');
+  setTimeout(()=>{intro.style.display='none';},480);
+});
 
 /* ════ INIT ══════════════════════════════════════════
    1. Connexion à Firebase
