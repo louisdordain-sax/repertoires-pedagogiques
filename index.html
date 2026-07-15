@@ -721,6 +721,11 @@ function wrapText(ctx,text,maxW,font){
 let db=null;
 let firebaseReady=false;
 
+// Nœud racine dans la Realtime Database : DOIT correspondre exactement
+// au chemin autorisé dans les règles de sécurité Firebase (onglet Rules).
+// Actuellement : "sax_repertoire".
+const DB_ROOT='sax_repertoire';
+
 function initFirebase(){
   // Cas fréquent : le <script> externe firebase-app-compat.js (chargé depuis
   // gstatic.com) n'a pas pu se charger — pas de connexion au moment du chargement
@@ -756,7 +761,7 @@ async function loadDataFromFirebase(){
     return;
   }
   try{
-    const snap=await db.ref('repertoire').once('value');
+    const snap=await db.ref(DB_ROOT).once('value');
     const val=snap.val();
     if(val){
       // La base fait autorité : on reconstruit DATA depuis Firebase
@@ -788,7 +793,7 @@ async function seedFirebase(data){
       payload[cycleKey]={};
       data[cycleKey].forEach(bk=>{payload[cycleKey][bk.id]=bk;});
     });
-    await db.ref('repertoire').set(payload);
+    await db.ref(DB_ROOT).set(payload);
     return{ok:true,detail:null};
   }catch(err){
     // err.code vaut souvent 'PERMISSION_DENIED' si les règles de sécurité
@@ -810,7 +815,7 @@ async function saveBookToFirebase(cycle,book){
     return{ok:false,detail:'Firebase non connecté (voir initFirebase)'};
   }
   try{
-    await db.ref(`repertoire/${cycle}/${book.id}`).set(book);
+    await db.ref(`${DB_ROOT}/${cycle}/${book.id}`).set(book);
     return{ok:true,detail:null};
   }catch(err){
     // 'PERMISSION_DENIED' → vérifier les règles de la Realtime Database
@@ -826,7 +831,7 @@ async function updateTagsInFirebase(cycle,bookId,tags){
     return{ok:false,detail:'Firebase non connecté (voir initFirebase)'};
   }
   try{
-    await db.ref(`repertoire/${cycle}/${bookId}/tags`).set(tags);
+    await db.ref(`${DB_ROOT}/${cycle}/${bookId}/tags`).set(tags);
     return{ok:true,detail:null};
   }catch(err){
     console.error('Erreur écriture tags Firebase :',err.code||'',err.message||err);
@@ -1277,7 +1282,7 @@ document.getElementById('oasv').onclick=async(e)=>{
 
   // Identifiant : clé générée par Firebase (unique, sûre sur plusieurs appareils)
   // avec repli sur un identifiant local si la base est indisponible.
-  const newId=(firebaseReady && db) ? db.ref(`repertoire/${c}`).push().key : 'u'+Date.now();
+  const newId=(firebaseReady && db) ? db.ref(`${DB_ROOT}/${c}`).push().key : 'u'+Date.now();
 
   const nb={
     id:newId,
