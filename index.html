@@ -296,7 +296,7 @@ html.light .hashtags-suggestions{background:rgba(237,241,250,.35);}
 .hashtag-btn.active{background:var(--tact);color:var(--acc);border-color:var(--acc);box-shadow:0 0 8px var(--glow2);}
 
 /* ══ VUE LISTE ═══════════════════════════════════════ */
-.list-view{display:none;flex-direction:column;gap:8px;padding:0 15px;}
+.list-view{display:none;flex-direction:column;gap:8px;padding:0 15px;width:100%;}
 .list-view.active{display:flex;}
 .list-item{
   background:var(--ibg);border:.5px solid var(--bd1);border-radius:8px;
@@ -309,7 +309,7 @@ html.light .hashtags-suggestions{background:rgba(237,241,250,.35);}
   background:var(--tbg);border:.5px solid var(--bd1);
 }
 .list-item-cover canvas{width:100%;height:100%;display:block;}
-.list-item-content{flex:1;display:flex;flex-direction:column;justify-content:space-between;}
+.list-item-content{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;}
 .list-item-title{font-weight:600;color:var(--c1);font-size:11.5px;margin-bottom:2px;line-height:1.3;}
 .list-item-author{font-size:9.5px;color:var(--c2);font-style:italic;margin-bottom:4px;}
 .list-item-meta{display:flex;gap:10px;font-size:8px;color:var(--c3);font-family:var(--mono);margin-bottom:6px;}
@@ -336,6 +336,27 @@ html.light .hashtags-suggestions{background:rgba(237,241,250,.35);}
 .mfl{font-size:7px;letter-spacing:1.5px;text-transform:uppercase;color:var(--c3);font-family:var(--mono);margin-bottom:3px;}
 .mfv{font-size:11.5px;color:var(--c1);}
 .mdesc{font-size:11.5px;color:var(--c2);line-height:1.8;margin-bottom:16px;}
+.mtags{
+  display:flex;flex-wrap:wrap;align-items:center;
+  gap:7px 8px;margin-bottom:16px;
+}
+.tag-pill{
+  display:inline-block;padding:4px 12px;border-radius:99px;
+  font-size:9.5px;font-family:var(--mono);letter-spacing:.3px;
+  white-space:nowrap;border:.5px solid;line-height:1.4;
+  transition:transform .18s;
+}
+.tag-pill:hover{transform:scale(1.08) translateY(-1px) !important;}
+
+.mbio{
+  margin-bottom:16px;padding:11px 13px;border-radius:9px;
+  background:var(--tbg);border:.5px solid var(--bd1);
+}
+.mbio-label{
+  font-size:7px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--c3);font-family:var(--mono);margin-bottom:5px;
+}
+.mbio-text{font-size:11px;color:var(--c2);line-height:1.75;}
 .yt-wrap{
   position:relative;width:100%;padding-bottom:56.25%;height:0;
   border-radius:10px;overflow:hidden;margin-bottom:14px;
@@ -573,8 +594,13 @@ html.light .intro-ov::before{
       <div class="minfo"><div class="mbadge" id="mbadge"></div><div class="mttl" id="mttl"></div><div class="mauth" id="mauth"></div></div>
     </div>
     <div class="mgrid" id="mgrid"></div>
+    <div class="mtags" id="mtags"></div>
     <div class="yt-wrap" id="myt" style="display:none;"></div>
     <p class="mdesc" id="mdesc"></p>
+    <div class="mbio" id="mbio" style="display:none;">
+      <div class="mbio-label" id="mbio-label"></div>
+      <div class="mbio-text" id="mbio-text"></div>
+    </div>
     <button class="mclose" id="odcl" style="margin-bottom:8px;">Fermer</button>
     <button class="mclose" id="oedit" style="background:var(--tact);color:var(--acc);border-color:var(--acc);margin-bottom:8px;display:none;">✏️ Éditer les tags</button>
     <button class="mclose" id="oeditfull" style="margin-bottom:8px;display:none;">📝 Éditer la notice</button>
@@ -613,6 +639,8 @@ html.light .intro-ov::before{
     </div>
     <div class="fl">URL couverture (optionnel)</div><input type="url" id="acu" placeholder="https://…">
     <div class="fl">Vidéo YouTube (optionnel)</div><input type="url" id="ayt" placeholder="https://www.youtube.com/watch?v=…">
+    <div class="fl">Biographie de l'auteur (optionnel)</div>
+    <textarea id="abio" placeholder="Éléments biographiques, contexte de composition…" maxlength="800"></textarea>
     <div class="fl">Description</div>
     <textarea id="ad" placeholder="Notes pédagogiques…" maxlength="600"></textarea>
     <div class="mfoot"><button class="bcnl" id="oacl">Annuler</button><button class="bsav" id="oasv">✓ Ajouter</button></div>
@@ -743,7 +771,7 @@ function wrapText(ctx,text,maxW,font){
 /* ════ PERSISTANCE FIREBASE + AUTHENTIFICATION ═══════
    Base de données temps réel (Realtime Database), structure :
      /sax_repertoire/{cycle}/{id} = { t, st, a, ed, y, nv, g,
-                                       col, sp, cu, yt, tags, desc }
+                                       col, sp, cu, yt, bio, tags, desc }
 
    Fonctionnement :
    1. initFirebase()          → connexion à la base + à l'authentification
@@ -1256,10 +1284,17 @@ function buildListView(bklist){
 }
 
 /* ════ FILTRE ════════════════════════════════════════ */
+// Normalise un texte pour une recherche insensible aux accents ET à la casse :
+// "étude" et "essai" matchent aussi bien "etude" que "ÉTUDE" saisi sans accent.
+// NFD décompose les caractères accentués en lettre + accent séparé, qu'on retire ensuite.
+function normalizeSearchText(s){
+  return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+
 function filter(forceIdx){
   if(!DATA[cyc]){cyc=1;}
   
-  const q=document.getElementById('srch').value.toLowerCase().trim();
+  const q=normalizeSearchText(document.getElementById('srch').value.trim());
   const all=[...(DATA[cyc]||[])];
   
   // Se souvenir du livre actuellement affiché AVANT de recalculer la liste,
@@ -1269,7 +1304,7 @@ function filter(forceIdx){
   const previousActiveId=books[idx]?books[idx].id:null;
   
   books=q
-    ? all.filter(b=>[b.t,b.a,b.ed,b.g,b.nv,b.desc||'',...(b.tags||[])].some(s=>String(s).toLowerCase().includes(q)))
+    ? all.filter(b=>[b.t,b.a,b.ed,b.g,b.nv,b.desc||'',b.bio||'',...(b.tags||[])].some(s=>normalizeSearchText(s).includes(q)))
     : all;
   
   if(typeof forceIdx==='number'){
@@ -1285,6 +1320,67 @@ function filter(forceIdx){
     buildListView(books);
     updateInfo(books.length>0 ? books[idx] : null);
   }
+}
+
+/* ════ NUAGE DE TAGS ══════════════════════════════════
+   Chaque tag reçoit une teinte dérivée de son propre texte (hash simple) :
+   le même tag a toujours la même couleur, partout dans l'appli — ce qui
+   aide à repérer visuellement un thème récurrent d'une fiche à l'autre.
+   Les teintes restent dans une plage bleu → indigo pour rester cohérentes
+   avec le reste de l'interface (harmonie avec --acc), tout en variant
+   légèrement taille et rotation de chaque pastille pour un effet "nuage"
+   organique sans nuire à la lisibilité.
+════════════════════════════════════════════════════ */
+function hashTagText(str){
+  let h=0;
+  for(let i=0;i<str.length;i++){
+    h=(h*31+str.charCodeAt(i))>>>0;
+  }
+  return h;
+}
+
+// Clic sur un tag : ferme la fiche détail et lance une recherche sur ce tag
+function searchByTag(tag){
+  document.getElementById('od').classList.remove('open');
+  stopDetailVideo();
+  
+  srchInput.value=tag;
+  hasSearched=true;
+  srchClear.classList.add('visible');
+  clearTimeout(st); // annule un éventuel debounce en attente, on filtre tout de suite
+  filter();
+}
+
+function renderTagCloud(tags){
+  const el=document.getElementById('mtags');
+  el.innerHTML='';
+  if(!tags||!tags.length){el.style.display='none';return;}
+  el.style.display='';
+  
+  tags.forEach(tag=>{
+    const h=hashTagText(tag);
+    const hue=190+(h%60);          // 190–250° : bleu → indigo, harmonieux avec --acc
+    const sat=55+(h%18);           // 55–73% de saturation
+    const textLight=dark?(70+(h%14)):(32+(h%12)); // lisible sur fond sombre ou clair
+    const bgAlpha=dark?0.16:0.10;
+    const rotation=((h%7)-3);      // -3° à +3°
+    const scale=(0.95+((h%9)/100)); // 0.95–1.03
+    
+    const pill=document.createElement('span');
+    pill.className='tag-pill';
+    pill.textContent=tag;
+    pill.title=`Rechercher « ${tag} »`;
+    pill.style.cursor='pointer';
+    pill.style.color=`hsl(${hue},${sat}%,${textLight}%)`;
+    pill.style.borderColor=`hsla(${hue},${sat}%,${textLight}%,.4)`;
+    pill.style.background=`hsla(${hue},${sat}%,50%,${bgAlpha})`;
+    pill.style.transform=`rotate(${rotation}deg) scale(${scale})`;
+    pill.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      searchByTag(tag);
+    });
+    el.appendChild(pill);
+  });
 }
 
 /* ════ MODAL DÉTAIL ══════════════════════════════════ */
@@ -1317,7 +1413,21 @@ function openDetail(bk){
     <div class="mf"><div class="mfl">Niveau</div><div class="mfv">${bk.nv}</div></div>
     <div class="mf"><div class="mfl">Genre</div><div class="mfv">${bk.g}</div></div>`;
   
+  renderTagCloud(bk.tags);
+  
   document.getElementById('mdesc').textContent=bk.desc||'';
+  
+  // Biographie de l'auteur : bloc optionnel, visible seulement s'il est renseigné.
+  const bioEl=document.getElementById('mbio');
+  if(bk.bio){
+    document.getElementById('mbio-label').textContent=`Biographie — ${bk.a}`;
+    document.getElementById('mbio-text').textContent=bk.bio;
+    bioEl.style.display='';
+  } else {
+    document.getElementById('mbio-label').textContent='';
+    document.getElementById('mbio-text').textContent='';
+    bioEl.style.display='none';
+  }
   
   // Lecteur vidéo intégré : visible uniquement si une vidéo YouTube est renseignée.
   // youtube-nocookie.com = mode confidentialité renforcée (pas de cookies tant
@@ -1389,6 +1499,7 @@ document.getElementById('oeditfull').onclick=(e)=>{
   document.getElementById('ag2').value=(bk.g==='—')?'':(bk.g||'');
   document.getElementById('acu').value=bk.cu||'';
   document.getElementById('ayt').value=bk.yt?`https://www.youtube.com/watch?v=${bk.yt}`:'';
+  document.getElementById('abio').value=bk.bio||'';
   document.getElementById('ad').value=bk.desc||'';
   
   document.getElementById('oa-title').textContent='Modifier la partition';
@@ -1518,7 +1629,7 @@ document.getElementById('abtn').onclick=(e)=>{
 
 function closeAddModal(){
   document.getElementById('oa').classList.remove('open');
-  ['at','ast','au','ae','ay','an','ag2','acu','ayt','ad'].forEach(id=>document.getElementById(id).value='');
+  ['at','ast','au','ae','ay','an','ag2','acu','ayt','abio','ad'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('oa-title').textContent='Ajouter une partition';
   document.getElementById('oasv').textContent='✓ Ajouter';
   editingBook=null;
@@ -1558,6 +1669,7 @@ document.getElementById('oasv').onclick=async(e)=>{
   const ytRaw=document.getElementById('ayt').value.trim();
   const yt=extractYoutubeId(ytRaw);
   const ytInvalid=(ytRaw && !yt); // une URL a été saisie mais non reconnue
+  const bio=document.getElementById('abio').value.trim();
   const desc=document.getElementById('ad').value.trim();
   const cols={1:['#1a3e72','#0d2448'],2:['#1e4a78','#102e50'],3:['#1a285a','#0e183a']};
   
@@ -1576,7 +1688,7 @@ document.getElementById('oasv').onclick=async(e)=>{
     const cycleChanged=(c!==originalCycle);
     const[cl,sp]=cycleChanged ? (cols[c]||cols[1]) : [bookBeingEdited.col,bookBeingEdited.sp];
     
-    const updated={...bookBeingEdited,t,st,a,ed,y,nv,g,cu,yt,desc,col:cl,sp};
+    const updated={...bookBeingEdited,t,st,a,ed,y,nv,g,cu,yt,bio,desc,col:cl,sp};
     
     if(DATA[originalCycle])DATA[originalCycle]=DATA[originalCycle].filter(b=>b.id!==updated.id);
     if(!DATA[c])DATA[c]=[];
@@ -1605,7 +1717,7 @@ document.getElementById('oasv').onclick=async(e)=>{
     // Identifiant : clé générée par Firebase (unique, sûre sur plusieurs appareils)
     // avec repli sur un identifiant local si la base est indisponible.
     const newId=(firebaseReady && db) ? db.ref(`${DB_ROOT}/${c}`).push().key : 'u'+Date.now();
-    const nb={id:newId,t,st,a,ed,y,nv,g,col:cl,sp,cu,yt,tags:[],desc};
+    const nb={id:newId,t,st,a,ed,y,nv,g,col:cl,sp,cu,yt,bio,tags:[],desc};
     
     if(!DATA[c])DATA[c]=[];
     DATA[c].unshift(nb);
