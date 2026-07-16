@@ -9,6 +9,7 @@
 <title>Répertoires Pédagogiques — Saxophone</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 const FIREBASE_CONFIG={
   apiKey:"AIzaSyATeUW3Jk2pzggUoNRKUDL1cOaatpr4AKs",
@@ -326,9 +327,17 @@ html.light .hashtags-suggestions{background:rgba(237,241,250,.35);}
 .mfl{font-size:7px;letter-spacing:1.5px;text-transform:uppercase;color:var(--c3);font-family:var(--mono);margin-bottom:3px;}
 .mfv{font-size:11.5px;color:var(--c1);}
 .mdesc{font-size:11.5px;color:var(--c2);line-height:1.8;margin-bottom:16px;}
+.yt-wrap{
+  position:relative;width:100%;padding-bottom:56.25%;height:0;
+  border-radius:10px;overflow:hidden;margin-bottom:14px;
+  background:#000;border:.5px solid var(--bd1);
+}
+.yt-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
 .mclose{width:100%;padding:9px;border-radius:99px;border:.5px solid var(--bd1);background:none;
   color:var(--c2);font-size:11px;cursor:pointer;transition:all .2s;font-family:var(--font);}
 .mclose:hover{border-color:var(--bd2);color:var(--c1);background:var(--tact);}
+.mclose.danger{border-color:rgba(220,70,70,.45);color:#ff7a7a;background:rgba(220,70,70,.08);}
+.mclose.danger:hover{background:#dc4646;color:#fff;border-color:#dc4646;}
 
 .ambox{max-width:400px;}
 .ambox input,.ambox select,.ambox textarea{
@@ -492,7 +501,11 @@ html.light .intro-ov::before{
             <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
           </svg>
         </button>
-        <button class="ibtn" id="abtn">
+        <button class="ibtn" id="lockbtn" title="Connexion enseignant">
+          <svg id="lockClosed" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <svg id="lockOpen" viewBox="0 0 24 24" style="display:none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+        </button>
+        <button class="ibtn" id="abtn" style="display:none;">
           <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
       </div>
@@ -551,9 +564,12 @@ html.light .intro-ov::before{
       <div class="minfo"><div class="mbadge" id="mbadge"></div><div class="mttl" id="mttl"></div><div class="mauth" id="mauth"></div></div>
     </div>
     <div class="mgrid" id="mgrid"></div>
+    <div class="yt-wrap" id="myt" style="display:none;"></div>
     <p class="mdesc" id="mdesc"></p>
     <button class="mclose" id="odcl" style="margin-bottom:8px;">Fermer</button>
-    <button class="mclose" id="oedit" style="background:var(--tact);color:var(--acc);border-color:var(--acc);">✏️ Éditer les tags</button>
+    <button class="mclose" id="oedit" style="background:var(--tact);color:var(--acc);border-color:var(--acc);margin-bottom:8px;display:none;">✏️ Éditer les tags</button>
+    <button class="mclose" id="oeditfull" style="margin-bottom:8px;display:none;">📝 Éditer la notice</button>
+    <button class="mclose danger" id="odelete" style="display:none;">🗑️ Supprimer cette partition</button>
   </div>
 </div>
 
@@ -571,8 +587,9 @@ html.light .intro-ov::before{
 <!-- Modal ajout -->
 <div class="ov" id="oa">
   <div class="mb ambox">
-    <div class="mh3">Ajouter une partition</div>
+    <div class="mh3" id="oa-title">Ajouter une partition</div>
     <div class="fl">Titre *</div><input type="text" id="at" placeholder="50 Études Faciles…" maxlength="120">
+    <div class="fl">Sous-titre (optionnel)</div><input type="text" id="ast" placeholder="Vol. 1…" maxlength="60">
     <div class="ag">
       <div><div class="fl">Auteur *</div><input type="text" id="au" placeholder="Guy Lacour" maxlength="80"></div>
       <div><div class="fl">Éditeur</div><input type="text" id="ae" placeholder="Billaudot" maxlength="60"></div>
@@ -586,9 +603,25 @@ html.light .intro-ov::before{
       <div><div class="fl">Genre</div><input type="text" id="ag2" placeholder="Études…" maxlength="40"></div>
     </div>
     <div class="fl">URL couverture (optionnel)</div><input type="url" id="acu" placeholder="https://…">
+    <div class="fl">Vidéo YouTube (optionnel)</div><input type="url" id="ayt" placeholder="https://www.youtube.com/watch?v=…">
     <div class="fl">Description</div>
     <textarea id="ad" placeholder="Notes pédagogiques…" maxlength="600"></textarea>
     <div class="mfoot"><button class="bcnl" id="oacl">Annuler</button><button class="bsav" id="oasv">✓ Ajouter</button></div>
+  </div>
+</div>
+
+<!-- Modal connexion enseignant -->
+<div class="ov" id="loginOv">
+  <div class="mb ambox">
+    <div class="mh3">Connexion enseignant</div>
+    <div class="fl">Email</div>
+    <input type="email" id="login-email" placeholder="prof@exemple.com" autocomplete="username">
+    <div class="fl">Mot de passe</div>
+    <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    <div class="mfoot">
+      <button class="bcnl" id="loginCancel">Annuler</button>
+      <button class="bsav" id="loginSubmit">Se connecter</button>
+    </div>
   </div>
 </div>
 
@@ -698,13 +731,13 @@ function wrapText(ctx,text,maxW,font){
   return lines;
 }
 
-/* ════ PERSISTANCE FIREBASE ══════════════════════════
+/* ════ PERSISTANCE FIREBASE + AUTHENTIFICATION ═══════
    Base de données temps réel (Realtime Database), structure :
-     /repertoire/{cycle}/{id} = { t, st, a, ed, y, nv, g,
-                                   col, sp, cu, tags, desc }
+     /sax_repertoire/{cycle}/{id} = { t, st, a, ed, y, nv, g,
+                                       col, sp, cu, yt, tags, desc }
 
    Fonctionnement :
-   1. initFirebase()          → connexion à la base
+   1. initFirebase()          → connexion à la base + à l'authentification
    2. loadDataFromFirebase()  → lecture unique au démarrage
         - base non vide  → DATA = contenu de la base
         - base vide      → premier lancement : on amorce la
@@ -714,11 +747,25 @@ function wrapText(ctx,text,maxW,font){
                             l'appli reste utilisable hors-ligne
    3. saveBookToFirebase()    → écrit une nouvelle partition
    4. updateTagsInFirebase()  → met à jour les tags d'une notice
+   5. deleteBookFromFirebase()→ supprime une partition
 
    Toute écriture qui échoue est signalée par un toast, mais
    ne bloque jamais l'utilisation de l'appli en local.
+
+   ── AUTHENTIFICATION ──
+   L'appli est en LECTURE SEULE par défaut pour tout le monde.
+   Les boutons d'ajout/édition/suppression/tags ne s'affichent
+   que pour l'utilisateur connecté (updateAuthUI()). Ceci n'est
+   une vraie protection QUE si les règles de sécurité Firebase
+   exigent aussi une authentification pour écrire, ex. :
+     { "rules": { "sax_repertoire": {
+         ".read": true, ".write": "auth != null"
+     }}}
+   Sans quoi cacher les boutons ne serait qu'un habillage visuel.
 ════════════════════════════════════════════════════ */
 let db=null;
+let auth=null;
+let currentUser=null;
 let firebaseReady=false;
 
 // Nœud racine dans la Realtime Database : DOIT correspondre exactement
@@ -740,7 +787,15 @@ function initFirebase(){
   try{
     firebase.initializeApp(FIREBASE_CONFIG);
     db=firebase.database();
+    auth=firebase.auth();
     firebaseReady=true;
+    
+    // Écoute en continu l'état de connexion (persiste entre les rechargements
+    // grâce à la persistance locale par défaut de Firebase Auth).
+    auth.onAuthStateChanged(user=>{
+      currentUser=user;
+      updateAuthUI();
+    });
   }catch(err){
     console.error('Erreur initialisation Firebase :',err);
     firebaseReady=false;
@@ -748,8 +803,31 @@ function initFirebase(){
   }
 }
 
+// Affiche/masque les contrôles réservés à l'enseignant connecté
+function updateAuthUI(){
+  const loggedIn=!!currentUser;
+  document.getElementById('abtn').style.display=loggedIn?'':'none';
+  document.getElementById('oedit').style.display=loggedIn?'':'none';
+  document.getElementById('oeditfull').style.display=loggedIn?'':'none';
+  document.getElementById('odelete').style.display=loggedIn?'':'none';
+  document.getElementById('lockClosed').style.display=loggedIn?'none':'';
+  document.getElementById('lockOpen').style.display=loggedIn?'':'none';
+  document.getElementById('lockbtn').title=loggedIn
+    ? `Connecté : ${currentUser.email} (cliquer pour se déconnecter)`
+    : 'Connexion enseignant';
+}
+
 // Convertit un objet Firebase {clé:{...}} en tableau [{...,id:clé}]
 // (le champ id du livre prime si présent, sinon on utilise la clé Firebase)
+// Extrait l'identifiant vidéo (11 caractères) depuis n'importe quel format
+// d'URL YouTube courant : watch?v=, youtu.be/, embed/, shorts/.
+// Retourne null si l'URL ne correspond à aucun format reconnu.
+function extractYoutubeId(url){
+  if(!url)return null;
+  const m=url.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
 function firebaseObjToArray(obj){
   if(!obj)return [];
   return Object.keys(obj).map(key=>({...obj[key],id:obj[key].id||key}));
@@ -821,6 +899,20 @@ async function saveBookToFirebase(cycle,book){
     // 'PERMISSION_DENIED' → vérifier les règles de la Realtime Database
     // dans la console Firebase (onglet Rules), qui doivent autoriser l'écriture.
     console.error('Erreur écriture Firebase :',err.code||'',err.message||err);
+    return{ok:false,detail:describeFirebaseError(err)};
+  }
+}
+
+async function deleteBookFromFirebase(cycle,id){
+  if(!firebaseReady){
+    console.warn('deleteBookFromFirebase : Firebase non connecté (firebaseReady=false)');
+    return{ok:false,detail:'Firebase non connecté'};
+  }
+  try{
+    await db.ref(`${DB_ROOT}/${cycle}/${id}`).remove();
+    return{ok:true,detail:null};
+  }catch(err){
+    console.error('Erreur suppression Firebase :',err.code||'',err.message||err);
     return{ok:false,detail:describeFirebaseError(err)};
   }
 }
@@ -1141,7 +1233,7 @@ function filter(){
   const all=[...(DATA[cyc]||[])];
   
   books=q
-    ? all.filter(b=>[b.t,b.a,b.ed,b.g,b.nv,b.desc||''].some(s=>s.toLowerCase().includes(q)))
+    ? all.filter(b=>[b.t,b.a,b.ed,b.g,b.nv,b.desc||'',...(b.tags||[])].some(s=>String(s).toLowerCase().includes(q)))
     : all;
   
   idx=0;
@@ -1185,16 +1277,42 @@ function openDetail(bk){
     <div class="mf"><div class="mfl">Genre</div><div class="mfv">${bk.g}</div></div>`;
   
   document.getElementById('mdesc').textContent=bk.desc||'';
+  
+  // Lecteur vidéo intégré : visible uniquement si une vidéo YouTube est renseignée.
+  // youtube-nocookie.com = mode confidentialité renforcée (pas de cookies tant
+  // que la vidéo n'est pas lancée), adapté à un usage pédagogique.
+  const ytEl=document.getElementById('myt');
+  if(bk.yt){
+    ytEl.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${bk.yt}" title="${bk.t}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>`;
+    ytEl.style.display='';
+  } else {
+    ytEl.innerHTML='';
+    ytEl.style.display='none';
+  }
+  
   document.getElementById('od').classList.add('open');
+}
+
+// Vide le lecteur vidéo (coupe la lecture) à chaque fermeture de la fiche détail
+function stopDetailVideo(){
+  document.getElementById('myt').innerHTML='';
 }
 
 document.getElementById('odcl').onclick=(e)=>{
   e.stopPropagation();
   document.getElementById('od').classList.remove('open');
+  stopDetailVideo();
   setTimeout(()=>{rotate();updateInfo(books[idx]);},50);
 };
 
 let currentBookForTags=null;
+
+// Mode édition de la fiche complète (titre/auteur/éditeur/etc.) :
+// editingBook = la partition en cours d'édition (null = mode "ajout")
+// editingOriginalCycle = son cycle d'origine, pour détecter un changement de cycle
+let editingBook=null;
+let editingOriginalCycle=null;
+
 document.getElementById('oedit').onclick=(e)=>{
   e.stopPropagation();
   if(books[idx]){
@@ -1208,6 +1326,59 @@ document.getElementById('oedit').onclick=(e)=>{
 document.getElementById('otcl').onclick=(e)=>{
   e.stopPropagation();
   document.getElementById('ot').classList.remove('open');
+};
+
+/* -- Éditer la notice complète : ouvre le formulaire d'ajout/édition,
+      pré-rempli avec les données de la partition sélectionnée -- */
+document.getElementById('oeditfull').onclick=(e)=>{
+  e.stopPropagation();
+  if(!books[idx])return;
+  const bk=books[idx];
+  
+  editingBook=bk;
+  editingOriginalCycle=cyc;
+  
+  document.getElementById('at').value=bk.t||'';
+  document.getElementById('ast').value=bk.st||'';
+  document.getElementById('au').value=bk.a||'';
+  document.getElementById('ae').value=(bk.ed==='—')?'':(bk.ed||'');
+  document.getElementById('ay').value=bk.y||'';
+  document.getElementById('ac').value=cyc;
+  document.getElementById('an').value=(bk.nv==='—')?'':(bk.nv||'');
+  document.getElementById('ag2').value=(bk.g==='—')?'':(bk.g||'');
+  document.getElementById('acu').value=bk.cu||'';
+  document.getElementById('ayt').value=bk.yt?`https://www.youtube.com/watch?v=${bk.yt}`:'';
+  document.getElementById('ad').value=bk.desc||'';
+  
+  document.getElementById('oa-title').textContent='Modifier la partition';
+  document.getElementById('oasv').textContent='✓ Enregistrer';
+  
+  document.getElementById('od').classList.remove('open');
+  stopDetailVideo();
+  document.getElementById('oa').classList.add('open');
+};
+
+/* -- Supprimer la partition sélectionnée (avec confirmation explicite) -- */
+document.getElementById('odelete').onclick=async(e)=>{
+  e.stopPropagation();
+  if(!books[idx])return;
+  const bk=books[idx];
+  
+  const sure=window.confirm(`Supprimer définitivement « ${bk.t} » ?\n\nCette action est irréversible.`);
+  if(!sure)return;
+  
+  document.getElementById('od').classList.remove('open');
+  stopDetailVideo();
+  
+  // Retrait local immédiat pour la réactivité de l'interface
+  DATA[cyc]=(DATA[cyc]||[]).filter(b=>b.id!==bk.id);
+  filter();
+  
+  const result=await deleteBookFromFirebase(cyc,bk.id);
+  toast(
+    result.ok ? '✓ Partition supprimée' : '⚠️ Suppression NON confirmée sur Firebase :\n'+result.detail,
+    result.ok ? 2600 : 7000
+  );
 };
 
 document.getElementById('otsv').onclick=async(e)=>{
@@ -1238,19 +1409,79 @@ document.getElementById('od').onclick=e=>{
   if(e.target===document.getElementById('od')){
     e.stopPropagation();
     document.getElementById('od').classList.remove('open');
+    stopDetailVideo();
     setTimeout(()=>{rotate();updateInfo(books[idx]);},50);
   }
 };
 
-/* ════ MODAL AJOUT ═══════════════════════════════════ */
+/* ════ AUTHENTIFICATION ENSEIGNANT ═══════════════════
+   Clic sur le cadenas :
+   - non connecté → ouvre le modal de connexion
+   - connecté     → déconnexion immédiate (aucune donnée
+                     n'est perdue, c'est juste un changement
+                     de droits d'accès)
+════════════════════════════════════════════════════ */
+document.getElementById('lockbtn').onclick=()=>{
+  if(!firebaseReady||!auth){
+    toast('⚠️ Authentification indisponible (Firebase non connecté)');
+    return;
+  }
+  if(currentUser){
+    auth.signOut().then(()=>toast('Déconnecté(e)'));
+  } else {
+    document.getElementById('login-email').value='';
+    document.getElementById('login-pass').value='';
+    document.getElementById('loginOv').classList.add('open');
+  }
+};
+
+document.getElementById('loginCancel').onclick=()=>{
+  document.getElementById('loginOv').classList.remove('open');
+};
+document.getElementById('loginOv').onclick=e=>{
+  if(e.target===document.getElementById('loginOv')){
+    document.getElementById('loginOv').classList.remove('open');
+  }
+};
+
+document.getElementById('loginSubmit').onclick=async(e)=>{
+  e.stopPropagation();
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  if(!email||!pass){toast('⚠️ Email et mot de passe requis');return;}
+  try{
+    await auth.signInWithEmailAndPassword(email,pass);
+    document.getElementById('loginOv').classList.remove('open');
+    document.getElementById('login-pass').value='';
+    toast('✓ Connecté(e) !');
+  }catch(err){
+    // 'auth/wrong-password', 'auth/user-not-found', 'auth/invalid-email'…
+    toast('⚠️ Connexion échouée :\n'+describeFirebaseError(err),6000);
+  }
+};
+// Permet de valider avec la touche Entrée depuis le champ mot de passe
+document.getElementById('login-pass').addEventListener('keydown',e=>{
+  if(e.key==='Enter')document.getElementById('loginSubmit').click();
+});
+
+/* ════ MODAL AJOUT / ÉDITION ═════════════════════════ */
 document.getElementById('abtn').onclick=(e)=>{
   e.stopPropagation();
+  editingBook=null;
+  editingOriginalCycle=null;
+  document.getElementById('oa-title').textContent='Ajouter une partition';
+  document.getElementById('oasv').textContent='✓ Ajouter';
   document.getElementById('ac').value=cyc;
   document.getElementById('oa').classList.add('open');
 };
 
 function closeAddModal(){
   document.getElementById('oa').classList.remove('open');
+  ['at','ast','au','ae','ay','an','ag2','acu','ayt','ad'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('oa-title').textContent='Ajouter une partition';
+  document.getElementById('oasv').textContent='✓ Ajouter';
+  editingBook=null;
+  editingOriginalCycle=null;
   setTimeout(()=>{rotate();updateInfo(books[idx]);},50);
 }
 
@@ -1272,48 +1503,89 @@ document.getElementById('oasv').onclick=async(e)=>{
   e.stopPropagation();
   
   const t=document.getElementById('at').value.trim();
+  const st=document.getElementById('ast').value.trim();
   const a=document.getElementById('au').value.trim();
   const c=parseInt(document.getElementById('ac').value);
   
   if(!t||!a){toast('⚠️ Titre et auteur requis');return;}
   
+  const ed=document.getElementById('ae').value.trim()||'—';
+  const y=parseInt(document.getElementById('ay').value)||new Date().getFullYear();
+  const nv=document.getElementById('an').value.trim()||'—';
+  const g=document.getElementById('ag2').value.trim()||'—';
+  const cu=document.getElementById('acu').value.trim()||null;
+  const ytRaw=document.getElementById('ayt').value.trim();
+  const yt=extractYoutubeId(ytRaw);
+  const ytInvalid=(ytRaw && !yt); // une URL a été saisie mais non reconnue
+  const desc=document.getElementById('ad').value.trim();
   const cols={1:['#1a3e72','#0d2448'],2:['#1e4a78','#102e50'],3:['#1a285a','#0e183a']};
-  const[cl,sp]=cols[c]||cols[1];
-
-  // Identifiant : clé générée par Firebase (unique, sûre sur plusieurs appareils)
-  // avec repli sur un identifiant local si la base est indisponible.
-  const newId=(firebaseReady && db) ? db.ref(`${DB_ROOT}/${c}`).push().key : 'u'+Date.now();
-
-  const nb={
-    id:newId,
-    t,st:'',a,
-    ed:document.getElementById('ae').value.trim()||'—',
-    y:parseInt(document.getElementById('ay').value)||new Date().getFullYear(),
-    nv:document.getElementById('an').value.trim()||'—',
-    g:document.getElementById('ag2').value.trim()||'—',
-    col:cl,sp,cu:null,tags:[],
-    desc:document.getElementById('ad').value.trim()
-  };
   
-  // Affichage local immédiat (réactivité), puis confirmation de l'écriture distante.
-  if(!DATA[c])DATA[c]=[];
-  DATA[c].unshift(nb);
+  // On capture l'état d'édition AVANT de fermer le modal,
+  // car closeAddModal() réinitialise editingBook à null.
+  const isEditing=!!editingBook;
+  const bookBeingEdited=editingBook;
+  const originalCycle=editingOriginalCycle;
   
-  ['at','au','ae','ay','an','ag2','acu','ad'].forEach(id=>document.getElementById(id).value='');
   closeAddModal();
   
-  cyc=c;
-  idx=0;
-  document.querySelectorAll('.tab').forEach(tabEl=>tabEl.classList.toggle('act',parseInt(tabEl.dataset.c)===c));
-  filter();
-
-  // On attend la vraie confirmation d'écriture avant d'annoncer le succès :
-  // ainsi un échec (ex. règles Firebase trop restrictives) n'est plus silencieux.
-  const result=await saveBookToFirebase(c,nb);
-  if(result.ok){
-    toast('✓ Partition ajoutée et enregistrée !');
+  if(isEditing){
+    /* ── MODIFICATION D'UNE PARTITION EXISTANTE ────────
+       Si le cycle a changé, on déplace la notice : suppression
+       de l'ancien emplacement Firebase + écriture au nouveau. ──── */
+    const cycleChanged=(c!==originalCycle);
+    const[cl,sp]=cycleChanged ? (cols[c]||cols[1]) : [bookBeingEdited.col,bookBeingEdited.sp];
+    
+    const updated={...bookBeingEdited,t,st,a,ed,y,nv,g,cu,yt,desc,col:cl,sp};
+    
+    if(DATA[originalCycle])DATA[originalCycle]=DATA[originalCycle].filter(b=>b.id!==updated.id);
+    if(!DATA[c])DATA[c]=[];
+    DATA[c].unshift(updated);
+    
+    cyc=c;
+    idx=0;
+    document.querySelectorAll('.tab').forEach(tabEl=>tabEl.classList.toggle('act',parseInt(tabEl.dataset.c)===c));
+    filter();
+    
+    if(cycleChanged){
+      await deleteBookFromFirebase(originalCycle,updated.id);
+    }
+    const result=await saveBookToFirebase(c,updated);
+    if(ytInvalid){
+      toast('⚠️ URL YouTube non reconnue, vidéo ignorée',5000);
+    } else {
+      toast(
+        result.ok ? '✓ Modifications enregistrées !' : '⚠️ NON enregistrées sur Firebase :\n'+result.detail,
+        result.ok ? 2600 : 7000
+      );
+    }
+    
   } else {
-    toast('⚠️ NON sauvegardée sur Firebase :\n'+result.detail,7000);
+    /* ── AJOUT D'UNE NOUVELLE PARTITION ──────────────── */
+    const[cl,sp]=cols[c]||cols[1];
+    // Identifiant : clé générée par Firebase (unique, sûre sur plusieurs appareils)
+    // avec repli sur un identifiant local si la base est indisponible.
+    const newId=(firebaseReady && db) ? db.ref(`${DB_ROOT}/${c}`).push().key : 'u'+Date.now();
+    const nb={id:newId,t,st,a,ed,y,nv,g,col:cl,sp,cu,yt,tags:[],desc};
+    
+    if(!DATA[c])DATA[c]=[];
+    DATA[c].unshift(nb);
+    
+    cyc=c;
+    idx=0;
+    document.querySelectorAll('.tab').forEach(tabEl=>tabEl.classList.toggle('act',parseInt(tabEl.dataset.c)===c));
+    filter();
+    
+    // On attend la vraie confirmation d'écriture avant d'annoncer le succès :
+    // ainsi un échec (ex. règles Firebase trop restrictives) n'est plus silencieux.
+    const result=await saveBookToFirebase(c,nb);
+    if(ytInvalid){
+      toast('⚠️ URL YouTube non reconnue, vidéo ignorée',5000);
+    } else {
+      toast(
+        result.ok ? '✓ Partition ajoutée et enregistrée !' : '⚠️ NON sauvegardée sur Firebase :\n'+result.detail,
+        result.ok ? 2600 : 7000
+      );
+    }
   }
 };
 
@@ -1328,6 +1600,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     document.getElementById('od').classList.remove('open');
     document.getElementById('oa').classList.remove('open');
+    stopDetailVideo();
   }
   if(e.key==='Enter'&&books[idx])openDetail(books[idx]);
 });
