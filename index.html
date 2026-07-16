@@ -93,8 +93,9 @@ html.light body::before{
 }
 
 .srch-w{position:relative;margin-bottom:8px;}
-.srch-i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--c3);width:16px;height:16px;pointer-events:none;}
+.srch-i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--c2);width:16px;height:16px;pointer-events:none;z-index:2;}
 .srch{
+  position:relative;z-index:1;
   width:100%;padding:7px 14px 7px 31px;
   border:.5px solid var(--bd1);border-radius:99px;
   background:var(--ibg);color:var(--c1);
@@ -106,8 +107,9 @@ html.light body::before{
 
 .srch-clear{
   position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  z-index:2;
   width:20px;height:20px;border:none;background:none;
-  color:var(--c3);cursor:pointer;font-size:14px;
+  color:var(--c2);cursor:pointer;font-size:14px;
   display:none;transition:all .2s;padding:0;
   align-items:center;justify-content:center;
 }
@@ -167,6 +169,13 @@ html.light body::before{
 .arr:hover{border-color:var(--acc);color:var(--acc);box-shadow:0 0 18px var(--glow);}
 html.light .arr{background:rgba(235,242,255,.92);}
 .arr.l{left:6px;}.arr.r{right:6px;}
+/* Sur tactile (tablette, smartphone), le swipe suffit : les flèches
+   ne sont utiles qu'à la souris. On cible la capacité de l'appareil
+   (hover + pointeur précis) plutôt que la largeur d'écran, pour bien
+   distinguer un ordinateur d'une tablette de même taille. */
+@media (hover:none), (pointer:coarse){
+  .arr{display:none !important;}
+}
 
 /* Dots */
 .dots{flex-shrink:0;display:flex;gap:5px;justify-content:center;align-items:center;padding:5px 0 2px;}
@@ -521,7 +530,7 @@ html.light .intro-ov::before{
         <line x1="14" y1="14" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
       <input class="srch" id="srch" type="text" placeholder="Titre, auteur, éditeur, genre…" autocomplete="off" spellcheck="false">
-      <button class="srch-clear" id="srch-clear" style="display:none;">✕</button>
+      <button class="srch-clear" id="srch-clear">✕</button>
     </div>
     <!-- SUGGESTIONS HASHTAGS -->
     <div class="hashtags-suggestions" id="hashtags-suggestions"></div>
@@ -1115,6 +1124,7 @@ function build(bklist){
       drawCover(cvs,bk);
 
       el.addEventListener('click',()=>{
+        clearTimeout(st); // voir le commentaire dans goto()
         if(i===idx) openDetail(bklist[i]);
         else goto(i);
       });
@@ -1131,8 +1141,22 @@ function build(bklist){
     }
   });
 
-  totalDeg=0;
+  // Aligne la rotation sur l'élément marqué actif (idx), plutôt que de
+  // toujours revenir à 0 — sinon un rebuild (redimensionnement, ajout,
+  // etc.) survenant pendant que idx≠0 désynchronise le visuel de l'état.
+  //
+  // Le nombre de livres (donc l'angle par élément) change à chaque rebuild,
+  // même quand il s'agit "du même" livre actif (ex. recherche effacée) :
+  // sans précaution, le carrousel ferait une rotation animée pour rien.
+  // On désactive donc la transition le temps de ce repositionnement —
+  // il devient instantané — puis on la restaure pour les navigations
+  // manuelles suivantes (clic, flèche, swipe), qui doivent rester animées.
+  ring.style.transition='none';
+  totalDeg=-idx*step;
   rotate();
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{ring.style.transition='';});
+  });
   updateInfo(bklist[idx]);
 }
 
@@ -1145,6 +1169,12 @@ function rotate(){
 function goto(i, dir){
   const n=books.length;
   if(!n || i<0 || i>=n) return; // Vérifier que i est valide
+  
+  // Une sélection explicite (clic, flèche, swipe, dot) annule tout filtrage
+  // de recherche encore en attente (debounce) : sinon celui-ci se déclenche
+  // juste après, réinitialise idx à 0 et donne l'impression que le livre
+  // cliqué "n'est plus devant".
+  clearTimeout(st);
   
   const step=360/n;
   
@@ -1226,23 +1256,34 @@ function buildListView(bklist){
 }
 
 /* ════ FILTRE ════════════════════════════════════════ */
-function filter(){
+function filter(forceIdx){
   if(!DATA[cyc]){cyc=1;}
   
   const q=document.getElementById('srch').value.toLowerCase().trim();
   const all=[...(DATA[cyc]||[])];
   
+  // Se souvenir du livre actuellement affiché AVANT de recalculer la liste,
+  // pour le retrouver après (ex. en effaçant la recherche) plutôt que de
+  // systématiquement revenir au premier de la liste. Ignoré si un index
+  // précis est explicitement demandé (ex. après ajout/édition d'une notice).
+  const previousActiveId=books[idx]?books[idx].id:null;
+  
   books=q
     ? all.filter(b=>[b.t,b.a,b.ed,b.g,b.nv,b.desc||'',...(b.tags||[])].some(s=>String(s).toLowerCase().includes(q)))
     : all;
   
-  idx=0;
+  if(typeof forceIdx==='number'){
+    idx=Math.min(Math.max(forceIdx,0),Math.max(books.length-1,0));
+  } else {
+    const preservedIndex=previousActiveId ? books.findIndex(b=>b.id===previousActiveId) : -1;
+    idx=preservedIndex!==-1 ? preservedIndex : 0;
+  }
   
   if(viewMode==='carousel'){
     build(books); // build() appelle updateInfo(books[idx]) à la fin
   } else {
     buildListView(books);
-    updateInfo(books.length>0 ? books[0] : null);
+    updateInfo(books.length>0 ? books[idx] : null);
   }
 }
 
@@ -1542,9 +1583,8 @@ document.getElementById('oasv').onclick=async(e)=>{
     DATA[c].unshift(updated);
     
     cyc=c;
-    idx=0;
     document.querySelectorAll('.tab').forEach(tabEl=>tabEl.classList.toggle('act',parseInt(tabEl.dataset.c)===c));
-    filter();
+    filter(0);
     
     if(cycleChanged){
       await deleteBookFromFirebase(originalCycle,updated.id);
@@ -1571,9 +1611,8 @@ document.getElementById('oasv').onclick=async(e)=>{
     DATA[c].unshift(nb);
     
     cyc=c;
-    idx=0;
     document.querySelectorAll('.tab').forEach(tabEl=>tabEl.classList.toggle('act',parseInt(tabEl.dataset.c)===c));
-    filter();
+    filter(0);
     
     // On attend la vraie confirmation d'écriture avant d'annoncer le succès :
     // ainsi un échec (ex. règles Firebase trop restrictives) n'est plus silencieux.
@@ -1636,9 +1675,8 @@ tabButtons.forEach((btn)=>{
     btn.classList.add('act');
     
     cyc=newCyc;
-    idx=0;
     document.getElementById('srch').value='';
-    filter();
+    filter(0);
   }, false);
 });
 
