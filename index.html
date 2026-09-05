@@ -998,7 +998,16 @@ html.light .intro-ov::before{
     <input type="hidden" id="amet">
     <div class="fl">Couverture réelle (photo/scan, optionnel)</div>
     <div class="cover-upload-row">
-      <img id="acu-preview" class="cover-upload-preview" style="display:none;" alt="Aperçu de la couverture">
+      <img
+  id="acu-preview"
+  class="cover-upload-preview"
+  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+  width="44"
+  height="64"
+  style="display:none;"
+  alt="Aperçu de la couverture"
+>
+
       <div class="cover-upload-controls">
         <label class="cover-upload-btn" for="acuf">
           <svg class="btn-ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -3591,7 +3600,9 @@ function resetCoverUploadUI(){
   pendingCoverRemove=false;
   document.getElementById('acuf').value='';
   document.getElementById('acu-preview').style.display='none';
-  document.getElementById('acu-preview').src='';
+  document.getElementById('acu-preview').src=
+  'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+  
   document.getElementById('acu-remove').style.display='none';
 }
 
