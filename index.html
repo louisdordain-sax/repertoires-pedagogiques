@@ -1368,20 +1368,28 @@ function initFirebase(){
 // Affiche/masque les contrôles réservés à l'enseignant connecté
 function updateAuthUI(){
   const loggedIn=!!currentUser;
+
   document.getElementById('abtn').style.display=loggedIn?'':'none';
   document.getElementById('oedit').style.display=loggedIn?'':'none';
   document.getElementById('oeditfull').style.display=loggedIn?'':'none';
   document.getElementById('odelete').style.display=loggedIn?'':'none';
+
   document.getElementById('lockClosed').style.display=loggedIn?'none':'';
   document.getElementById('lockOpen').style.display=loggedIn?'':'none';
+
   document.getElementById('lockbtn').title=loggedIn
     ? `Connecté : ${currentUser.email} (cliquer pour se déconnecter)`
     : 'Connexion enseignant';
+
+  // Lance la migration seulement lorsque l’enseignant est connecté.
+  // migrateLegacyCovers() vérifie également que les données sont prêtes.
+  if(loggedIn){
+    setTimeout(migrateLegacyCovers,500);
+  }
 }
+
   
-if(loggedIn){
-  setTimeout(migrateLegacyCovers,500);
-}
+
 
   /* ════ MIGRATION DES ANCIENNES COUVERTURES ═══════════
    Une ancienne image n’est supprimée de sax_repertoire que dans la même
