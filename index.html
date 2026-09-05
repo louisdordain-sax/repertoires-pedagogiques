@@ -307,31 +307,55 @@ html.light .arr{background:rgba(235,242,255,.92);}
    couverture), superposé à deux trames de "feuilles" de fréquences
    différentes (pour éviter un motif trop mécanique/répétitif) et à un
    léger jaunissement papier plutôt qu'un simple gris neutre. */
+/* Fine tranche de pages sur le bord droit.
+   Les lignes horizontales représentent les feuilles empilées. */
 .bf-edge{
-  position:absolute;right:0;top:0;bottom:0;z-index:4;width:6px;
+  position:absolute;
+  right:0;
+  top:0;
+  bottom:0;
+  z-index:5;
+  width:4px;
+  pointer-events:none;
+
   background:
-    repeating-linear-gradient(to right,
-      rgba(70,60,42,.16) 0px, rgba(70,60,42,.16) .45px,
-      transparent .45px, transparent 1.15px),
-    repeating-linear-gradient(to right,
-      rgba(70,60,42,.10) 0px, rgba(70,60,42,.10) 1px,
-      transparent 1px, transparent 2.6px),
-    linear-gradient(to right,
-      rgba(0,0,0,.42) 0%, rgba(247,240,220,.95) 14%,
-      rgba(226,214,186,.65) 48%, rgba(214,200,168,.55) 78%,
-      rgba(0,0,0,.4) 100%);
+    /* Feuilles fines et légèrement irrégulières */
+    repeating-linear-gradient(
+      to bottom,
+      rgba(76,65,45,.34) 0,
+      rgba(76,65,45,.34) .45px,
+      rgba(255,252,240,.42) .45px,
+      rgba(255,252,240,.42) 1.15px
+    ),
+
+    /* Quelques séparations plus visibles */
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 3.4px,
+      rgba(80,67,45,.22) 3.4px,
+      rgba(80,67,45,.22) 3.9px
+    ),
+
+    /* Volume horizontal du bloc de papier */
+    linear-gradient(
+      to right,
+      rgba(70,58,38,.58) 0%,
+      rgba(232,222,198,.96) 28%,
+      rgba(250,245,229,.98) 58%,
+      rgba(184,169,137,.82) 100%
+    );
+
   background-blend-mode:multiply,multiply,normal;
-  /* La démarcation avec la couverture (ligne franche, pas un simple flou) est
-     ce qui vend l'illusion de deux matières distinctes : la couverture qui
-     recouvre le bloc de pages, pas une texture qui se fond dedans. Le bloc va
-     jusqu'en haut et en bas (pas d'inset) pour épouser l'arrondi de la
-     couverture (clippé par .bf) plutôt que de laisser dépasser de petits
-     coins de couleur qui ressemblaient à des prolongements bizarres. */
+
   box-shadow:
-    inset 2px 0 0 rgba(0,0,0,.5),
-    inset 3px 0 3px rgba(0,0,0,.22),
-    inset -0.5px 0 0 rgba(255,255,255,.3);
+    inset 1px 0 0 rgba(0,0,0,.5),
+    inset 2px 0 2px rgba(0,0,0,.2),
+    inset -.5px 0 0 rgba(255,255,255,.45);
+
+  opacity:.92;
 }
+
 
 /* Grain papier léger sur l'ensemble de la couverture (face) — un bruit fin
    en mélange "overlay", quasi imperceptible isolément, mais qui casse l'effet
@@ -689,11 +713,8 @@ html.light .intro-ov::before{
   width:11px;
 }
 
-/* Avec une vraie couverture, aucune bande de pages ne doit masquer
-   le bord droit de l’image : la photographie reste entière. */
-.bs.no-seam + .bf .bf-edge{
-  display:none;
-}
+
+
 
 /* Le reflet est légèrement réduit pour préserver la netteté des scans. */
 .bs.no-seam + .bf .bf-shine{
@@ -704,7 +725,38 @@ html.light .intro-ov::before{
 .bc,.bs-photo,.list-item-cover canvas{
   image-rendering:auto;
 }
+.mini-pages-edge{
+  position:absolute;
+  top:0;
+  right:0;
+  bottom:0;
+  z-index:5;
+  width:3px;
+  pointer-events:none;
 
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(76,65,45,.32) 0,
+      rgba(76,65,45,.32) .4px,
+      rgba(255,252,240,.46) .4px,
+      rgba(255,252,240,.46) 1px
+    ),
+    linear-gradient(
+      to right,
+      rgba(70,58,38,.55),
+      rgba(244,237,218,.97) 48%,
+      rgba(181,166,135,.8)
+    );
+
+  background-blend-mode:multiply,normal;
+
+  box-shadow:
+    inset 1px 0 0 rgba(0,0,0,.42),
+    inset -0.5px 0 0 rgba(255,255,255,.4);
+}
+
+  
 </style>
 </head>
 <body>
@@ -1194,10 +1246,12 @@ function getBookDims(bk){
 // pivot zéro-dimension plus haut dans le CSS pour le détail du calcul.
 function getBookTransformOffsets(dims){
   return {
-    tx:(dims.SW-dims.FW)/2,
+    // La face est maintenant le seul élément du livre.
+    tx:-dims.FW/2,
     ty:-dims.BH/2
   };
 }
+
 
 /* ════ BASCULEMENT VUE ══════════════════════════════ */
 document.getElementById('vbtn').onclick=(e)=>{
@@ -2471,31 +2525,40 @@ function build(bklist){
 
       const hasCover=!!bk.cu;
       el.innerHTML=`<div class="bw">
-        <div class="bg" style="left:${(dims.SW+dims.FW)/2}px"></div>
+        <div class="bg" style="left:${dims.FW/2}px"></div>
         <div class="b3">
-          <div class="bs${hasCover?' no-seam':''}" style="background:${bk.sp};width:${dims.SW}px;height:${dims.BH}px">
-            ${hasCover
-              ? `<canvas class="bs-photo" width="${dims.SW}" height="${dims.BH}" style="width:${dims.SW}px;height:${dims.BH}px"></canvas>`
-              : `<div class="bs-shine"></div><div class="bs-t">${bk.a}</div>`}
-          </div>
-          <div class="bf" style="width:${dims.FW}px;height:${dims.BH}px">
-            <canvas class="bc" width="${dims.FW}" height="${dims.BH}" style="width:${dims.FW}px;height:${dims.BH}px"></canvas>
-            <div class="bf-grain"></div>
-            <div class="bf-shine"></div>
-            <div class="bf-edge" style="width:${Math.max(3,Math.round(6*getCoverScale()))}px"></div>
-            ${hasDetailedAnalysis(bk)?`<div class="cover-badge" title="Analyse pédagogique détaillée">${analysisBadgeSvg()}</div>`:''}
-          </div>
-        </div>
+  <div class="bf" style="width:${dims.FW}px;height:${dims.BH}px">
+    <canvas
+      class="bc"
+      width="${dims.FW}"
+      height="${dims.BH}"
+      style="width:${dims.FW}px;height:${dims.BH}px"
+    ></canvas>
+
+    <div class="bf-grain"></div>
+    <div class="bf-shine"></div>
+
+    <div
+      class="bf-edge"
+      style="width:${Math.max(3,Math.round(4*getCoverScale()))}px"
+      aria-hidden="true"
+    ></div>
+
+    ${hasDetailedAnalysis(bk)
+      ? `<div class="cover-badge" title="Analyse pédagogique détaillée">${analysisBadgeSvg()}</div>`
+      : ''}
+  </div>
+</div>
+
       </div>`;
 
       const cvs=el.querySelector('.bc');
-      drawCover(cvs,bk);
-      if(hasCover){
-        const spineCvs=el.querySelector('.bs-photo');
-        applyRealCoverAcrossSpineFace(spineCvs,cvs,bk,dims.SW,dims.FW,dims.BH,5);
-      } else {
-        applyRealCoverImage(cvs,bk);
-      }
+
+drawCover(cvs,bk);
+
+if(hasCover){
+  applyRealCoverImage(cvs,bk);
+}
 
       el.addEventListener('click',()=>{
         clearTimeout(st); // voir le commentaire dans goto()
@@ -2626,6 +2689,44 @@ ch=Math.max(32,Math.round(ch));
     coverDiv.style.width=cw+'px';
     coverDiv.style.height=ch+'px';
     coverDiv.appendChild(cvs);
+    const listPagesEdge=document.createElement('div');
+
+listPagesEdge.className='list-pages-edge';
+listPagesEdge.setAttribute('aria-hidden','true');
+
+coverDiv.appendChild(listPagesEdge);
+    .list-pages-edge{
+  position:absolute;
+  top:0;
+  right:0;
+  bottom:0;
+  z-index:4;
+  width:3px;
+  pointer-events:none;
+
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(76,65,45,.3) 0,
+      rgba(76,65,45,.3) .4px,
+      rgba(255,252,240,.48) .4px,
+      rgba(255,252,240,.48) 1px
+    ),
+    linear-gradient(
+      to right,
+      rgba(70,58,38,.48),
+      rgba(244,237,218,.97) 48%,
+      rgba(181,166,135,.78)
+    );
+
+  background-blend-mode:multiply,normal;
+
+  box-shadow:
+    inset 1px 0 0 rgba(0,0,0,.4),
+    inset -.5px 0 0 rgba(255,255,255,.42);
+}
+
+
     if(hasDetailedAnalysis(bk)){
       const badgeEl=document.createElement('div');
       badgeEl.className='cover-badge cover-badge-sm';
@@ -3141,69 +3242,54 @@ mH=Math.max(40,Math.round(mH));
   // pour les couvertures générées uniquement — les couvertures réelles la
   // dessinent déjà elles-mêmes dans le canvas, voir plus bas).
   const coverWrap=document.createElement('div');
-  coverWrap.style.cssText=`position:relative;width:${mW}px;height:${mH}px;border-radius:0 1.5px 1.5px 0;overflow:hidden;`;
+  coverWrap.style.cssText=`
+  position:relative;
+  width:${mW}px;
+  height:${mH}px;
+  border-radius:2px;
+  overflow:hidden;
+`;
+
   coverWrap.appendChild(mc2);
   
   // Grain papier, cohérent avec celui du carrousel (.bf-grain) — même recette,
   // dupliquée ici en style inline car cette mini-couverture est construite en JS.
   const grainEl=document.createElement('div');
-  grainEl.style.cssText=`position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:0 1.5px 1.5px 0;
+  grainEl.style.cssText=`position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:2px;
     opacity:.5;mix-blend-mode:overlay;background-repeat:repeat;
     background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");`;
   coverWrap.appendChild(grainEl);
+
+const miniPagesEdge=document.createElement('div');
+
+miniPagesEdge.className='mini-pages-edge';
+miniPagesEdge.setAttribute('aria-hidden','true');
+
+coverWrap.appendChild(miniPagesEdge);
+
   
   if(hasCoverMini){
-    // La répartition de la photo (tranche + face) se fait plus bas,
-    // une fois le canvas de tranche (spEl) créé.
-  } else {
-    applyRealCoverImage(mc2,bk);
-    const edgeEl=document.createElement('div');
-    edgeEl.style.cssText=`position:absolute;right:0;top:0;bottom:0;width:4px;z-index:4;
-      background:
-        repeating-linear-gradient(to right,
-          rgba(70,60,42,.16) 0px, rgba(70,60,42,.16) .45px,
-          transparent .45px, transparent 1.15px),
-        repeating-linear-gradient(to right,
-          rgba(70,60,42,.10) 0px, rgba(70,60,42,.10) 1px,
-          transparent 1px, transparent 2.6px),
-        linear-gradient(to right,
-          rgba(0,0,0,.42) 0%, rgba(247,240,220,.95) 14%,
-          rgba(226,214,186,.65) 48%, rgba(214,200,168,.55) 78%,
-          rgba(0,0,0,.4) 100%);
-      background-blend-mode:multiply,multiply,normal;
-      box-shadow:
-        inset 2px 0 0 rgba(0,0,0,.5),
-        inset 3px 0 3px rgba(0,0,0,.22),
-        inset -0.5px 0 0 rgba(255,255,255,.3);`;
-    coverWrap.appendChild(edgeEl);
-  }
+  applyRealCoverImage(mc2,bk);
+}
+
   
-  // Reliure (tranche gauche) : canvas recevant la suite de la photo pour une
-  // couverture réelle, sinon la tranche colorée habituelle avec la teinte
-  // de la pièce. Rendu plat, pas de rotation isolée.
-  const wrap=document.createElement('div');
-  wrap.style.cssText='display:flex;filter:drop-shadow(3px 5px 12px rgba(0,0,0,.5));';
-  
-  let spEl;
-  if(hasCoverMini){
-    spEl=document.createElement('canvas');
-    spEl.width=9;
-    spEl.height=mH;
-    spEl.style.cssText=`display:block;width:9px;height:${mH}px;border-radius:1.5px 0 0 1.5px;flex-shrink:0;`;
-  } else {
-    spEl=document.createElement('div');
-    spEl.style.cssText=`width:9px;height:${mH}px;border-radius:1.5px 0 0 1.5px;flex-shrink:0;
-      background:linear-gradient(to bottom,rgba(255,255,255,.16) 0%,rgba(255,255,255,.02) 40%,rgba(0,0,0,.12) 100%),${bk.sp};`;
-  }
-  
-  wrap.appendChild(spEl);
-  wrap.appendChild(coverWrap);
-  document.getElementById('mmini').innerHTML='';
-  document.getElementById('mmini').appendChild(wrap);
-  
-  if(hasCoverMini){
-    applyRealCoverAcrossSpineFace(spEl,mc2,bk,9,mW,mH,3);
-  }
+// La couverture est désormais affichée sans tranche gauche.
+const wrap=document.createElement('div');
+
+wrap.style.cssText=`
+  display:flex;
+  filter:drop-shadow(3px 5px 12px rgba(0,0,0,.5));
+`;
+
+wrap.appendChild(coverWrap);
+
+document.getElementById('mmini').innerHTML='';
+document.getElementById('mmini').appendChild(wrap);
+
+if(hasCoverMini){
+  applyRealCoverImage(mc2,bk);
+}
+
   
   document.getElementById('mgrid').innerHTML=`
     <div class="mf"><div class="mfl">Éditeur</div><div class="mfv">${bk.ed}</div></div>
@@ -4126,6 +4212,34 @@ loadDataFromFirebase().then(()=>{
     (err&&err.message?err.message:String(err))
   );
 });
+  /* Sans tranche gauche, la face représente l’intégralité du livre. */
+.bf{
+  margin-left:0;
+  border-radius:2px;
+}
+
+.bc,
+.bf-grain,
+.bf-shine{
+  border-radius:2px;
+}
+
+  /* Marque-page parfaitement aligné sur le bord supérieur en vue liste. */
+.cover-badge-sm{
+  top:-1px;
+  right:5px;
+  z-index:7;
+  line-height:0;
+}
+
+.cover-badge-sm .analysis-ic{
+  display:block;
+  width:100%;
+  height:100%;
+  margin:0;
+  vertical-align:top;
+}
+
 
 </script>
 </body>
