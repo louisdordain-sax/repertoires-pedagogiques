@@ -681,6 +681,30 @@ html.light .intro-ov::before{
   .ibtn{width:28px;height:28px;}
   .hdr-r{gap:5px;}
 }
+  /* ══ COUVERTURES À RATIO AUTOMATIQUE ═════════════════ */
+
+/* Tranche gauche affinée. La largeur précise reste aussi définie
+   dynamiquement lors de la construction de chaque livre. */
+.bs{
+  width:11px;
+}
+
+/* Avec une vraie couverture, aucune bande de pages ne doit masquer
+   le bord droit de l’image : la photographie reste entière. */
+.bs.no-seam + .bf .bf-edge{
+  display:none;
+}
+
+/* Le reflet est légèrement réduit pour préserver la netteté des scans. */
+.bs.no-seam + .bf .bf-shine{
+  opacity:.45;
+}
+
+/* Les petites couvertures conservent leur définition Retina. */
+.bc,.bs-photo,.list-item-cover canvas{
+  image-rendering:auto;
+}
+
 </style>
 </head>
 <body>
@@ -874,11 +898,8 @@ html.light .intro-ov::before{
       <div><div class="fl">Année</div><input type="number" id="ay" placeholder="1974" min="1800" max="2099"></div>
       <div><div class="fl">Cycle *</div><select id="ac"><option value="1">Cycle 1</option><option value="2">Cycle 2</option><option value="3">Cycle 3</option></select></div>
     </div>
-    <div class="fl">Format de la couverture</div>
-    <select id="aor">
-      <option value="portrait">Portrait (habituel)</option>
-      <option value="paysage">Paysage</option>
-    </select>
+    <input type="hidden" id="aor" value="portrait">
+
     <div class="ag">
       <div><div class="fl">Niveau</div><input type="text" id="an" placeholder="Débutant" maxlength="80"></div>
       <div><div class="fl">Genre</div><input type="text" id="ag2" placeholder="Études…" maxlength="80" list="ag2-list"><datalist id="ag2-list"></datalist></div>
@@ -960,7 +981,7 @@ html.light .intro-ov::before{
         </div>
       </div>
       <div class="help-step">
-        <div class="help-step-ic"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="help-step-ic"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-7-5-7 5V3z"/></svg></div>
         <div class="help-step-body">
           <div class="help-step-ttl">Consulter une fiche</div>
           <div class="help-step-tx">Touche une couverture pour ouvrir sa fiche complète : métadonnées, tags cliquables (relancent une recherche), biographie, vidéo et description.</div>
@@ -1113,12 +1134,60 @@ document.documentElement.style.setProperty('--bh',Math.round(BH_BASE*getCoverSca
 // de même largeur — seule la hauteur du livre change en conséquence.
 function getBookDims(bk){
   const s=getCoverScale();
-  const sw=Math.round(SW_BASE*s);
-  if(bk.or==='paysage'){
-    return {FW:Math.round(FW_PAYSAGE_BASE*s),BH:Math.round(BH_PAYSAGE_BASE*s),SW:sw};
+
+  // Tranche beaucoup plus fine que l’ancienne tranche de 26 px.
+  const SW=Math.max(6,Math.round(11*s));
+
+  /*
+    Une notice sans véritable couverture conserve le format portrait
+    classique généré par l’application.
+  */
+  if(!bk||!bk.cu){
+    return {
+      FW:Math.round(FW_BASE*s),
+      BH:Math.round(BH_BASE*s),
+      SW
+    };
   }
-  return {FW:Math.round(FW_BASE*s),BH:Math.round(BH_BASE*s),SW:sw};
+
+  const cachedRatio=coverRatioCache.get(bk.cu);
+  const ratio=Number(bk.ar)||cachedRatio;
+
+  /*
+    Tant que le ratio n’est pas connu, on affiche provisoirement la
+    couverture au format portrait. Un nouveau rendu est déclenché dès
+    que l’image a été chargée et mesurée.
+  */
+  if(!Number.isFinite(ratio)||ratio<=0){
+    return {
+      FW:Math.round(FW_BASE*s),
+      BH:Math.round(BH_BASE*s),
+      SW
+    };
+  }
+
+  /*
+    La couverture entière doit entrer dans un cadre maximal de
+    180 × 180 px, sans découpe et sans déformation.
+  */
+  const maxW=180*s;
+  const maxH=180*s;
+
+  let FW=maxH*ratio;
+  let BH=maxH;
+
+  if(FW>maxW){
+    FW=maxW;
+    BH=FW/ratio;
+  }
+
+  return {
+    FW:Math.max(38,Math.round(FW)),
+    BH:Math.max(38,Math.round(BH)),
+    SW
+  };
 }
+
 
 // Formule de centrage du livre dans le carrousel 3D, valable quelles que
 // soient ses dimensions (portrait ou paysage) : voir le commentaire sur le
@@ -1257,6 +1326,14 @@ let dataReady=false;
 // au chemin autorisé dans les règles de sécurité Firebase (onglet Rules).
 // Actuellement : "sax_repertoire".
 const DB_ROOT='sax_repertoire';
+const COVERS_ROOT='sax_covers';
+
+// État des chargements progressifs des couvertures.
+// Une couverture est téléchargée uniquement lorsque son cycle est affiché.
+const coverLoadState=new Map();
+let progressiveCoverRenderTimer=null;
+let coverMigrationRunning=false;
+
 
 function initFirebase(){
   // Cas fréquent : le <script> externe firebase-app-compat.js (chargé depuis
@@ -1301,6 +1378,112 @@ function updateAuthUI(){
     ? `Connecté : ${currentUser.email} (cliquer pour se déconnecter)`
     : 'Connexion enseignant';
 }
+  
+if(loggedIn){
+  setTimeout(migrateLegacyCovers,500);
+}
+
+  /* ════ MIGRATION DES ANCIENNES COUVERTURES ═══════════
+   Une ancienne image n’est supprimée de sax_repertoire que dans la même
+   mise à jour atomique que sa copie vers sax_covers. Il n’existe donc
+   aucun moment où la couverture est supprimée sans avoir été copiée.
+════════════════════════════════════════════════════ */
+
+async function migrateLegacyCovers(){
+  if(
+    coverMigrationRunning||
+    !currentUser||
+    !firebaseReady||
+    !db||
+    !dataReady
+  ){
+    return;
+  }
+
+  const legacy=[];
+
+  [1,2,3].forEach(cycle=>{
+    (DATA[cycle]||[]).forEach(bk=>{
+      if(
+        typeof bk.cu==='string'&&
+        bk.cu.startsWith('data:image/')
+      ){
+        legacy.push({cycle,bk});
+      }
+    });
+  });
+
+  if(!legacy.length)return;
+
+  coverMigrationRunning=true;
+  toast(
+    `Migration sécurisée de ${legacy.length} couverture${legacy.length>1?'s':''}…`,
+    4000
+  );
+
+  let migrated=0;
+  let failed=0;
+
+  for(const item of legacy){
+    const {cycle,bk}=item;
+
+    try{
+      const ratio=
+        Number(bk.ar)||
+        coverRatioCache.get(bk.cu)||
+        await cacheCoverRatioFromDataUrl(bk.cu,bk);
+
+      const updates={};
+
+      updates[`${COVERS_ROOT}/${cycle}/${bk.id}`]={
+        data:bk.cu,
+        ratio:ratio||null
+      };
+
+      /*
+        La mise à jour du ratio et la suppression du champ historique cu
+        sont incluses dans la même écriture atomique que la copie.
+      */
+      updates[`${DB_ROOT}/${cycle}/${bk.id}/ar`]=ratio||null;
+      updates[`${DB_ROOT}/${cycle}/${bk.id}/cu`]=null;
+      updates[`${DB_ROOT}/${cycle}/${bk.id}/or`]=null;
+
+      await withTimeout(
+        db.ref().update(updates),
+        18000,
+        'Migration de couverture'
+      );
+
+      coverLoadState.set(
+        getCoverStateKey(cycle,bk.id),
+        'loaded'
+      );
+
+      migrated++;
+    }catch(err){
+      failed++;
+      console.error(
+        `Migration impossible pour ${cycle}/${bk.id} :`,
+        err
+      );
+    }
+  }
+
+  coverMigrationRunning=false;
+
+  if(failed){
+    toast(
+      `Migration : ${migrated} réussie${migrated>1?'s':''}, ${failed} en échec.\nLes anciennes images en échec ont été conservées.`,
+      8000
+    );
+  }else{
+    toast(
+      `✓ ${migrated} couverture${migrated>1?'s migrées':' migrée'} avec succès`,
+      4000
+    );
+  }
+}
+
 
 // Convertit un objet Firebase {clé:{...}} en tableau [{...,id:clé}]
 // (le champ id du livre prime si présent, sinon on utilise la clé Firebase)
@@ -1352,36 +1535,177 @@ function firebaseObjToArray(obj){
   if(!obj)return [];
   return Object.keys(obj).map(key=>({...obj[key],id:obj[key].id||key}));
 }
+/* ════ CHARGEMENT PROGRESSIF DES COUVERTURES ═════════
+   Les notices sont affichées immédiatement. Les couvertures du cycle
+   actuellement visible arrivent ensuite progressivement depuis
+   /sax_covers/{cycle}/{id}.
+════════════════════════════════════════════════════ */
 
-async function loadDataFromFirebase(){
-  if(!firebaseReady){
-    DATA=DEFAULT_DATA;
+function getCoverStateKey(cycle,id){
+  return `${cycle}/${id}`;
+}
+
+function scheduleProgressiveCoverRender(){
+  clearTimeout(progressiveCoverRenderTimer);
+
+  progressiveCoverRenderTimer=setTimeout(()=>{
+    if(!dataReady)return;
+
+    /*
+      Un seul rendu est effectué pour un groupe de couvertures arrivées
+      presque simultanément, afin d’éviter de reconstruire le carrousel
+      plusieurs fois par seconde.
+    */
+    if(viewMode==='carousel'){
+      build(books);
+    }else{
+      buildListView(books);
+    }
+  },120);
+}
+
+async function loadProgressiveCover(cycle,bk){
+  if(!firebaseReady||!db||!bk||!bk.id)return;
+
+  const stateKey=getCoverStateKey(cycle,bk.id);
+
+  if(coverLoadState.has(stateKey))return;
+
+  /*
+    Compatibilité avec les anciennes notices :
+    si cu est encore présent dans sax_repertoire, on peut déjà l’afficher.
+  */
+  if(bk.cu){
+    coverLoadState.set(stateKey,'legacy');
+    cacheCoverRatioFromDataUrl(bk.cu,bk);
     return;
   }
+
+  coverLoadState.set(stateKey,'loading');
+
   try{
-    const snap=await db.ref(DB_ROOT).once('value');
+    const snap=await withTimeout(
+      db.ref(`${COVERS_ROOT}/${cycle}/${bk.id}`).once('value'),
+      12000,
+      'Chargement de la couverture'
+    );
+
+    const value=snap.val();
+
+    /*
+      Le nouveau format accepte soit directement la chaîne base64,
+      soit un objet {data, ratio}, pour rester compatible avec les
+      premières variantes éventuelles de la base.
+    */
+    const data=typeof value==='string'
+      ? value
+      : value&&typeof value.data==='string'
+        ? value.data
+        : null;
+
+    const savedRatio=value&&typeof value==='object'
+      ? Number(value.ratio)
+      : null;
+
+    if(data){
+      bk.cu=data;
+
+      if(Number.isFinite(savedRatio)&&savedRatio>0){
+        bk.ar=savedRatio;
+        coverRatioCache.set(data,savedRatio);
+      }else{
+        await cacheCoverRatioFromDataUrl(data,bk);
+      }
+
+      coverLoadState.set(stateKey,'loaded');
+      scheduleProgressiveCoverRender();
+    }else{
+      coverLoadState.set(stateKey,'empty');
+    }
+  }catch(err){
+    console.warn(
+      `Couverture non chargée pour ${cycle}/${bk.id} :`,
+      err
+    );
+    coverLoadState.set(stateKey,'error');
+  }
+}
+
+function loadProgressiveCoversForBooks(cycle,bklist){
+  if(!Array.isArray(bklist)||!bklist.length)return;
+
+  /*
+    Les demandes sont espacées très légèrement. Firebase les transporte
+    sur la même connexion, mais le navigateur garde le temps d’afficher
+    et d’animer l’interface entre deux décodages.
+  */
+  bklist.forEach((bk,index)=>{
+    setTimeout(()=>{
+      loadProgressiveCover(cycle,bk);
+    },index*25);
+  });
+}
+
+  
+  
+async function loadDataFromFirebase(){
+  if(!firebaseReady){
+    DATA=structuredCloneSafe(DEFAULT_DATA);
+    return;
+  }
+
+  try{
+    /*
+      Seules les notices légères sont chargées ici. Les images placées dans
+      /sax_covers ne bloquent donc plus l’affichage de la bibliothèque.
+    */
+    const snap=await withTimeout(
+      db.ref(DB_ROOT).once('value'),
+      12000,
+      'Chargement de la bibliothèque'
+    );
+
     const val=snap.val();
+
     if(val){
-      // La base fait autorité : on reconstruit DATA depuis Firebase
-      const loaded={};
+      const loaded={1:[],2:[],3:[]};
+
       Object.keys(val).forEach(cycleKey=>{
         loaded[cycleKey]=firebaseObjToArray(val[cycleKey]);
       });
+
       DATA=loaded;
-    } else {
-      // Base vide → premier lancement : on l'amorce avec le catalogue de base
-      DATA=DEFAULT_DATA;
+    }else{
+      DATA=structuredCloneSafe(DEFAULT_DATA);
+
       const seedResult=await seedFirebase(DEFAULT_DATA);
       if(!seedResult.ok){
-        toast('⚠️ Amorçage Firebase échoué :\n'+seedResult.detail,7000);
+        toast(
+          '⚠️ Amorçage Firebase échoué :\n'+seedResult.detail,
+          7000
+        );
       }
     }
   }catch(err){
     console.error('Erreur lecture Firebase, passage en mode local :',err);
-    DATA=DEFAULT_DATA;
-    toast('⚠️ Lecture Firebase échouée :\n'+describeFirebaseError(err),7000);
+    DATA=structuredCloneSafe(DEFAULT_DATA);
+    toast(
+      '⚠️ Lecture Firebase échouée :\n'+describeFirebaseError(err),
+      7000
+    );
   }
 }
+
+function structuredCloneSafe(value){
+  if(typeof structuredClone==='function'){
+    try{
+      return structuredClone(value);
+    }catch(e){}
+  }
+
+  return JSON.parse(JSON.stringify(value));
+}
+
 
 async function seedFirebase(data){
   if(!firebaseReady)return{ok:false,detail:'Firebase non connecté'};
@@ -1480,38 +1804,97 @@ function isFirebaseConnected(timeoutMs=6000){
 // un peu plus de données. Le paramètre est conservé (ignoré) pour ne pas
 // avoir à modifier les points d'appel.
 async function saveBookToFirebase(cycle,book,original){
-  if(!firebaseReady){
-    console.warn('saveBookToFirebase : Firebase non connecté (firebaseReady=false)');
-    return{ok:false,detail:'Firebase non connecté (voir initFirebase)'};
+  if(!firebaseReady||!db){
+    return{
+      ok:false,
+      detail:'Firebase non connecté (voir initFirebase)'
+    };
   }
+
   try{
-    // Étapes affichées directement sur l'écran de chargement (et pas
-    // seulement en console) : si un blocage survient encore, le texte visible
-    // à l'écran au moment du blocage indique exactement l'étape en cause,
-    // sans avoir besoin d'ouvrir les outils de développement.
     showSavingOverlay('Vérification de la connexion…');
-    console.log('[saveBookToFirebase] vérification de connexion…');
-    const connected=await withTimeout(isFirebaseConnected(),8000,'Vérification de connexion');
-    console.log('[saveBookToFirebase] connexion :',connected);
+
+    const connected=await withTimeout(
+      isFirebaseConnected(),
+      8000,
+      'Vérification de connexion'
+    );
+
     if(!connected){
-      return{ok:false,detail:'Pas de connexion à la base de données (vérifie ta connexion internet)'};
+      return{
+        ok:false,
+        detail:'Pas de connexion à la base de données'
+      };
     }
+
     showSavingOverlay('Envoi des données…');
-    console.log('[saveBookToFirebase] écriture en cours…',`${DB_ROOT}/${cycle}/${book.id}`);
+
+    /*
+      On conserve l’image dans l’objet local pour l’affichage, mais elle
+      est retirée de la notice envoyée dans sax_repertoire.
+    */
+    const metadata={...book};
+    const coverData=metadata.cu||null;
+    delete metadata.cu;
+
+    if(coverData){
+      const ratio=
+        Number(book.ar)||
+        coverRatioCache.get(coverData)||
+        await cacheCoverRatioFromDataUrl(coverData,book);
+
+      if(Number.isFinite(ratio)&&ratio>0){
+        metadata.ar=ratio;
+        book.ar=ratio;
+      }
+    }else{
+      delete metadata.ar;
+    }
+
+    // Le champ historique n’est plus utile.
+    delete metadata.or;
+
+    const updates={};
+
+    updates[`${DB_ROOT}/${cycle}/${book.id}`]=metadata;
+
+    /*
+      Si une image est présente, elle est écrite séparément.
+      Si cu vaut null, l’ancienne couverture éventuelle est supprimée.
+    */
+    updates[`${COVERS_ROOT}/${cycle}/${book.id}`]=coverData
+      ? {
+          data:coverData,
+          ratio:metadata.ar||null
+        }
+      : null;
+
     await withTimeout(
-      db.ref(`${DB_ROOT}/${cycle}/${book.id}`).set(book),
-      12000,
+      db.ref().update(updates),
+      18000,
       'Écriture Firebase'
     );
-    console.log('[saveBookToFirebase] écriture terminée avec succès');
+
+    coverLoadState.set(
+      getCoverStateKey(cycle,book.id),
+      coverData?'loaded':'empty'
+    );
+
     return{ok:true,detail:null};
   }catch(err){
-    // 'PERMISSION_DENIED' → vérifier les règles de la Realtime Database
-    // dans la console Firebase (onglet Rules), qui doivent autoriser l'écriture.
-    console.error('Erreur écriture Firebase :',err.code||'',err.message||err);
-    return{ok:false,detail:describeFirebaseError(err)};
+    console.error(
+      'Erreur écriture Firebase :',
+      err.code||'',
+      err.message||err
+    );
+
+    return{
+      ok:false,
+      detail:describeFirebaseError(err)
+    };
   }
 }
+
 
 /* ════ COUVERTURES RÉELLES (encodées en base64 dans la Realtime Database) ═
    Firebase Storage étant un service payant au-delà du quota gratuit,
@@ -1532,48 +1915,181 @@ async function saveBookToFirebase(cycle,book,original){
    au-delà de plusieurs centaines d'images, le chargement initial deviendrait
    plus lourd — largement suffisant pour un usage pédagogique courant.
 ════════════════════════════════════════════════════ */
-function encodeCoverImage(file,maxDim=1000,quality=0.88){
+/* Cache du ratio naturel des couvertures.
+   Clé : chaîne data URL ; valeur : largeur / hauteur. */
+const coverRatioCache=new Map();
+
+function loadImageFromSource(source){
   return new Promise((resolve,reject)=>{
+    const img=new Image();
+
+    img.onload=()=>resolve(img);
+    img.onerror=()=>reject(new Error('Image illisible'));
+    img.src=source;
+  });
+}
+
+async function cacheCoverRatioFromDataUrl(dataUrl,bk){
+  if(!dataUrl)return null;
+
+  const cached=coverRatioCache.get(dataUrl);
+  if(cached){
+    if(bk)bk.ar=cached;
+    return cached;
+  }
+
+  try{
+    const img=await loadImageFromSource(dataUrl);
+    const ratio=img.naturalWidth/img.naturalHeight;
+
+    if(Number.isFinite(ratio)&&ratio>0){
+      coverRatioCache.set(dataUrl,ratio);
+      if(bk)bk.ar=ratio;
+      return ratio;
+    }
+  }catch(err){
+    console.warn('Ratio de couverture non détecté :',err);
+  }
+
+  return null;
+}
+
+function canvasToOptimizedDataUrl(canvas){
+  /*
+    WebP est généralement plus net à poids égal. Si le navigateur ne
+    sait pas produire de WebP, toDataURL renvoie un autre type : on
+    utilise alors explicitement du JPEG.
+  */
+  let result='';
+
+  try{
+    result=canvas.toDataURL('image/webp',0.92);
+  }catch(e){}
+
+  if(!result.startsWith('data:image/webp')){
+    result=canvas.toDataURL('image/jpeg',0.92);
+  }
+
+  return result;
+}
+
+function encodeCoverImage(file,maxDim=1600){
+  return new Promise((resolve,reject)=>{
+    if(!file){
+      reject(new Error('Aucun fichier sélectionné'));
+      return;
+    }
+
+    if(!file.type.startsWith('image/')){
+      reject(new Error('Le fichier sélectionné n’est pas une image'));
+      return;
+    }
+
     const reader=new FileReader();
-    reader.onerror=()=>reject(new Error('Lecture du fichier impossible'));
-    reader.onload=(e)=>{
-      const img=new Image();
-      img.onerror=()=>reject(new Error('Image illisible'));
-      img.onload=()=>{
-        let w=img.width, h=img.height;
-        if(w>h){ if(w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;} }
-        else{ if(h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;} }
-        const cvs=document.createElement('canvas');
-        cvs.width=w;cvs.height=h;
-        cvs.getContext('2d').drawImage(img,0,0,w,h);
-        try{
-          const dataUrl=cvs.toDataURL('image/jpeg',quality);
-          resolve(dataUrl);
-        }catch(err){
-          reject(err);
-        }
-      };
-      img.src=e.target.result;
+
+    reader.onerror=()=>{
+      reject(new Error('Lecture du fichier impossible'));
     };
+
+    reader.onload=async(e)=>{
+      try{
+        const img=await loadImageFromSource(e.target.result);
+
+        let w=img.naturalWidth;
+        let h=img.naturalHeight;
+
+        if(!w||!h){
+          throw new Error('Dimensions de l’image invalides');
+        }
+
+        const ratio=w/h;
+
+        /*
+          Une seule réduction est effectuée, sans recadrage.
+          Les petites images ne sont jamais artificiellement agrandies.
+        */
+        if(Math.max(w,h)>maxDim){
+          const scale=maxDim/Math.max(w,h);
+          w=Math.max(1,Math.round(w*scale));
+          h=Math.max(1,Math.round(h*scale));
+        }
+
+        const cvs=document.createElement('canvas');
+        cvs.width=w;
+        cvs.height=h;
+
+        const ctx=cvs.getContext('2d',{
+          alpha:false,
+          desynchronized:true
+        });
+
+        ctx.imageSmoothingEnabled=true;
+        ctx.imageSmoothingQuality='high';
+
+        // Fond blanc utile pour une éventuelle image contenant de la transparence.
+        ctx.fillStyle='#fff';
+        ctx.fillRect(0,0,w,h);
+        ctx.drawImage(img,0,0,w,h);
+
+        const dataUrl=canvasToOptimizedDataUrl(cvs);
+        coverRatioCache.set(dataUrl,ratio);
+        resolve(dataUrl);
+      }catch(err){
+        reject(err);
+      }
+    };
+
     reader.readAsDataURL(file);
   });
 }
 
+
 async function deleteBookFromFirebase(cycle,id){
-  if(!firebaseReady){
-    console.warn('deleteBookFromFirebase : Firebase non connecté (firebaseReady=false)');
+  if(!firebaseReady||!db){
     return{ok:false,detail:'Firebase non connecté'};
   }
+
   try{
-    const connected=await withTimeout(isFirebaseConnected(),8000,'Vérification de connexion');
-    if(!connected)return{ok:false,detail:'Pas de connexion à la base de données (vérifie ta connexion internet)'};
-    await withTimeout(db.ref(`${DB_ROOT}/${cycle}/${id}`).remove(),12000,'Suppression Firebase');
+    const connected=await withTimeout(
+      isFirebaseConnected(),
+      8000,
+      'Vérification de connexion'
+    );
+
+    if(!connected){
+      return{
+        ok:false,
+        detail:'Pas de connexion à la base de données'
+      };
+    }
+
+    const updates={};
+    updates[`${DB_ROOT}/${cycle}/${id}`]=null;
+    updates[`${COVERS_ROOT}/${cycle}/${id}`]=null;
+
+    await withTimeout(
+      db.ref().update(updates),
+      15000,
+      'Suppression Firebase'
+    );
+
+    coverLoadState.delete(getCoverStateKey(cycle,id));
+
     return{ok:true,detail:null};
   }catch(err){
-    console.error('Erreur suppression Firebase :',err.code||'',err.message||err);
-    return{ok:false,detail:describeFirebaseError(err)};
+    console.error(
+      'Erreur suppression Firebase :',
+      err.code||'',
+      err.message||err
+    );
+
+    return{
+      ok:false,
+      detail:describeFirebaseError(err)
+    };
   }
 }
+
 
 async function updateTagsInFirebase(cycle,bookId,tags){
   if(!firebaseReady){
@@ -1738,104 +2254,162 @@ function getCachedCoverImage(cu,onReady){
 // ou ne charge pas (URL cassée, hors-ligne, etc.).
 function applyRealCoverImage(cvs,bk){
   if(!bk.cu)return;
+
   getCachedCoverImage(bk.cu,(img)=>{
     const ctx=cvs.getContext('2d');
-    ctx.setTransform(1,0,0,1,0,0); // annule le ctx.scale(DPR) laissé par drawCover()
-    const cw=cvs.width, ch=cvs.height;
+    ctx.setTransform(1,0,0,1,0,0);
+
+    const cw=cvs.width;
+    const ch=cvs.height;
+
     ctx.imageSmoothingEnabled=true;
     ctx.imageSmoothingQuality='high';
     ctx.clearRect(0,0,cw,ch);
-    
-    // Largeur réservée à la tranche de pages (voir .bf-edge en CSS) : la photo
-    // ne doit pas s'étendre dessous, elle occupe donc tout le reste du cadre.
-    const dpr=window.devicePixelRatio||2;
-    const edgePx=Math.round(5*dpr);
-    const coverW=cw-edgePx;
-    
-    // 1. Photo en plein cadre sur toute la couverture (hors tranche) : cadrage
-    //    "cover", recadrée au centre pour remplir tout l'espace disponible.
-    const ir=img.width/img.height, cr=coverW/ch;
-    let sx,sy,sw,sh;
-    if(ir>cr){sh=img.height;sw=sh*cr;sx=(img.width-sw)/2;sy=0;}
-    else{sw=img.width;sh=sw/cr;sx=0;sy=(img.height-sh)/2;}
-    ctx.drawImage(img,sx,sy,sw,sh,0,0,coverW,ch);
-    
-    // 2. Tranche de pages : dégradé façon page, cohérent avec la texture
-    //    de tranche superposée par-dessus en CSS (.bf-edge).
-    const edgeGrad=ctx.createLinearGradient(cw-edgePx,0,cw,0);
-    edgeGrad.addColorStop(0,'#c9c0a8');
-    edgeGrad.addColorStop(0.5,'#efe8d8');
-    edgeGrad.addColorStop(1,'#d8d0bd');
-    ctx.fillStyle=edgeGrad;
-    ctx.fillRect(cw-edgePx,0,edgePx,ch);
-    
-    cvs.style.transition='opacity .4s';
+
+    /*
+      Le conteneur a normalement déjà le bon ratio. Le calcul contain
+      constitue néanmoins une sécurité pour les anciennes notices.
+    */
+    const imageRatio=img.naturalWidth/img.naturalHeight;
+    const canvasRatio=cw/ch;
+
+    let dw,dh,dx,dy;
+
+    if(imageRatio>canvasRatio){
+      dw=cw;
+      dh=dw/imageRatio;
+      dx=0;
+      dy=(ch-dh)/2;
+    }else{
+      dh=ch;
+      dw=dh*imageRatio;
+      dx=(cw-dw)/2;
+      dy=0;
+    }
+
+    // Fond discret uniquement dans le cas d’une ancienne dimension incorrecte.
+    ctx.fillStyle=bk.col||'#18243a';
+    ctx.fillRect(0,0,cw,ch);
+
+    ctx.drawImage(
+      img,
+      0,0,img.naturalWidth,img.naturalHeight,
+      dx,dy,dw,dh
+    );
+
+    const ratio=img.naturalWidth/img.naturalHeight;
+    if(Number.isFinite(ratio)&&ratio>0){
+      bk.ar=ratio;
+      coverRatioCache.set(bk.cu,ratio);
+    }
+
+    cvs.style.transition='opacity .3s';
     cvs.style.opacity='0';
-    setTimeout(()=>{cvs.style.opacity='1';},10);
+
+    requestAnimationFrame(()=>{
+      cvs.style.opacity='1';
+    });
   });
 }
+
 
 // Comme applyRealCoverImage(), mais répartit UNE SEULE photo sur deux canvas
 // (tranche + face) de façon continue, comme si la couverture entière lui était
 // dédiée — plutôt que de la limiter à la face seule. Le recadrage "cover" est
 // calculé sur la largeur COMBINÉE (tranche+face, moins la réserve de la tranche
 // de pages), donc moins de rognage est nécessaire qu'en se limitant à la face.
-function applyRealCoverAcrossSpineFace(spineCvs,faceCvs,bk,spineW_css,faceW_css,h_css,edgeReserve_css){
+function applyRealCoverAcrossSpineFace(
+  spineCvs,
+  faceCvs,
+  bk,
+  spineW_css,
+  faceW_css,
+  h_css,
+  edgeReserve_css
+){
   if(!bk.cu)return;
+
   getCachedCoverImage(bk.cu,(img)=>{
-    const dpr=window.devicePixelRatio||2;
-    
-    // Le canvas de la tranche n'a pas encore été mis à l'échelle DPR
-    // (contrairement à celui de la face, déjà traité par drawCover()).
-    spineCvs.width=Math.round(spineW_css*dpr);
-    spineCvs.height=Math.round(h_css*dpr);
+    const dpr=window.devicePixelRatio||1;
+
+    // Le ratio naturel est conservé dans la notice locale.
+    const ratio=img.naturalWidth/img.naturalHeight;
+    if(Number.isFinite(ratio)&&ratio>0){
+      bk.ar=ratio;
+      coverRatioCache.set(bk.cu,ratio);
+    }
+
+    spineCvs.width=Math.max(1,Math.round(spineW_css*dpr));
+    spineCvs.height=Math.max(1,Math.round(h_css*dpr));
     spineCvs.style.width=spineW_css+'px';
     spineCvs.style.height=h_css+'px';
-    
+
     const spineCtx=spineCvs.getContext('2d');
     const faceCtx=faceCvs.getContext('2d');
-    faceCtx.setTransform(1,0,0,1,0,0); // annule le ctx.scale(DPR) laissé par drawCover()
+
     spineCtx.setTransform(1,0,0,1,0,0);
-    [spineCtx,faceCtx].forEach(c=>{c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';});
-    
-    // Recadrage "cover" calculé sur la largeur utile COMBINÉE (tranche + face,
-    // moins la réserve de la tranche de pages à l'extrême droite de la face).
-    const availW_css=spineW_css+faceW_css-edgeReserve_css;
-    const ir=img.width/img.height, cr=availW_css/h_css;
-    let sx,sy,sw,sh;
-    if(ir>cr){sh=img.height;sw=sh*cr;sx=(img.width-sw)/2;sy=0;}
-    else{sw=img.width;sh=sw/cr;sx=0;sy=(img.height-sh)/2;}
-    
-    // Partie tranche (gauche) : la première tranche proportionnelle du recadrage.
-    const spineFrac=spineW_css/availW_css;
-    const spineSrcW=sw*spineFrac;
+    faceCtx.setTransform(1,0,0,1,0,0);
+
+    spineCtx.imageSmoothingEnabled=true;
+    spineCtx.imageSmoothingQuality='high';
+    faceCtx.imageSmoothingEnabled=true;
+    faceCtx.imageSmoothingQuality='high';
+
     spineCtx.clearRect(0,0,spineCvs.width,spineCvs.height);
-    spineCtx.drawImage(img,sx,sy,spineSrcW,sh,0,0,spineCvs.width,spineCvs.height);
-    
-    // Partie face (droite) : le reste, juste après la portion tranche.
-    const faceUsableW_css=faceW_css-edgeReserve_css;
-    const faceSrcX=sx+spineSrcW;
-    const faceSrcW=sw*(faceUsableW_css/availW_css);
-    const faceEdgePx=Math.round(edgeReserve_css*dpr);
     faceCtx.clearRect(0,0,faceCvs.width,faceCvs.height);
-    faceCtx.drawImage(img,faceSrcX,sy,faceSrcW,sh,0,0,faceCvs.width-faceEdgePx,faceCvs.height);
-    
-    // Tranche de pages (bord droit de la face) : dégradé façon page, cohérent
-    // avec la texture de tranche superposée par-dessus en CSS (.bf-edge).
-    const edgeGrad=faceCtx.createLinearGradient(faceCvs.width-faceEdgePx,0,faceCvs.width,0);
-    edgeGrad.addColorStop(0,'#c9c0a8');
-    edgeGrad.addColorStop(0.5,'#efe8d8');
-    edgeGrad.addColorStop(1,'#d8d0bd');
-    faceCtx.fillStyle=edgeGrad;
-    faceCtx.fillRect(faceCvs.width-faceEdgePx,0,faceEdgePx,faceCvs.height);
-    
+
+    /*
+      FACE :
+      l’image complète occupe tout le canvas. Les dimensions du livre ayant
+      déjà le même ratio que l’image, aucun recadrage n’est nécessaire.
+    */
+    faceCtx.drawImage(
+      img,
+      0,0,img.naturalWidth,img.naturalHeight,
+      0,0,faceCvs.width,faceCvs.height
+    );
+
+    /*
+      TRANCHE :
+      on prélève seulement une très fine bande du bord gauche de l’image.
+      Cela ne retire rien à la face, qui conserve toujours l’image complète.
+    */
+    const sampleWidth=Math.max(
+      1,
+      Math.round(img.naturalWidth*0.025)
+    );
+
+    spineCtx.drawImage(
+      img,
+      0,0,sampleWidth,img.naturalHeight,
+      0,0,spineCvs.width,spineCvs.height
+    );
+
+    // Ombres discrètes de reliure.
+    const shade=spineCtx.createLinearGradient(
+      0,0,spineCvs.width,0
+    );
+
+    shade.addColorStop(0,'rgba(255,255,255,.10)');
+    shade.addColorStop(.45,'rgba(0,0,0,.05)');
+    shade.addColorStop(1,'rgba(0,0,0,.38)');
+
+    spineCtx.fillStyle=shade;
+    spineCtx.fillRect(
+      0,0,spineCvs.width,spineCvs.height
+    );
+
     [spineCvs,faceCvs].forEach(c=>{
-      c.style.transition='opacity .4s';
+      c.style.transition='opacity .3s';
       c.style.opacity='0';
-      setTimeout(()=>{c.style.opacity='1';},10);
+
+      requestAnimationFrame(()=>{
+        c.style.opacity='1';
+      });
     });
   });
 }
+
 
 /* ════ CARROUSEL ════════════════════════════════════ */
 const ring=document.getElementById('ring');
@@ -1891,7 +2465,7 @@ function build(bklist){
       el.innerHTML=`<div class="bw">
         <div class="bg" style="left:${(dims.SW+dims.FW)/2}px"></div>
         <div class="b3">
-          <div class="bs${hasCover?' no-seam':''}" style="background:${bk.sp};height:${dims.BH}px">
+          <div class="bs${hasCover?' no-seam':''}" style="background:${bk.sp};width:${dims.SW}px;height:${dims.BH}px">
             ${hasCover
               ? `<canvas class="bs-photo" width="${dims.SW}" height="${dims.BH}" style="width:${dims.SW}px;height:${dims.BH}px"></canvas>`
               : `<div class="bs-shine"></div><div class="bs-t">${bk.a}</div>`}
@@ -2017,8 +2591,22 @@ function buildListView(bklist){
     item.className='list-item';
     
     // Créer le canvas pour la couverture (dimensions inversées en paysage)
-    const isPaysage=bk.or==='paysage';
-    const cw=isPaysage?72:50, ch=isPaysage?50:72;
+    const ratio=Number(bk.ar)||(bk.cu&&coverRatioCache.get(bk.cu))||50/72;
+
+const maxListW=76;
+const maxListH=76;
+
+let cw=maxListH*ratio;
+let ch=maxListH;
+
+if(cw>maxListW){
+  cw=maxListW;
+  ch=cw/ratio;
+}
+
+cw=Math.max(32,Math.round(cw));
+ch=Math.max(32,Math.round(ch));
+
     const cvs=document.createElement('canvas');
     cvs.width=cw;
     cvs.height=ch;
@@ -2167,6 +2755,11 @@ function filter(forceIdx){
     buildListView(books);
     updateInfo(books.length>0 ? books[idx] : null);
   }
+
+  // Les notices sont déjà visibles : les images arrivent ensuite sans
+// bloquer l’ouverture de la bibliothèque.
+loadProgressiveCoversForBooks(cyc,books);
+
   
   // Compteur centralisé ici (après le rendu, pour ne pas être écrasé) :
   // affiche le nombre de résultats, complété par un avertissement si les
@@ -2208,8 +2801,9 @@ function hasDetailedAnalysis(bk){
 
 // Icône "médaille" utilisée partout où l'indicateur doit apparaître
 function analysisBadgeSvg(){
-  return '<svg class="analysis-ic" viewBox="5 3 14 18"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+  return '<svg class="analysis-ic" viewBox="5 3 14 18"><path d="M5 3h14v18l-7-5-7 5V3z"/></svg>';
 }
+
 
 function hashTagText(str){
   let h=0;
@@ -2508,8 +3102,25 @@ function openDetail(bk){
   if(bk.st){ subEl.textContent=bk.st; subEl.style.display=''; }
   else { subEl.textContent=''; subEl.style.display='none'; }
   
-  const isPaysageMini=bk.or==='paysage';
-  const mW=isPaysageMini?84:58, mH=isPaysageMini?58:84;
+  const miniRatio=
+  Number(bk.ar)||
+  (bk.cu&&coverRatioCache.get(bk.cu))||
+  58/84;
+
+const maxMiniW=90;
+const maxMiniH=90;
+
+let mW=maxMiniH*miniRatio;
+let mH=maxMiniH;
+
+if(mW>maxMiniW){
+  mW=maxMiniW;
+  mH=mW/miniRatio;
+}
+
+mW=Math.max(40,Math.round(mW));
+mH=Math.max(40,Math.round(mH));
+
   const hasCoverMini=!!bk.cu;
   
   const mc2=document.createElement('canvas');
@@ -3493,7 +4104,21 @@ loadDataFromFirebase().then(()=>{
   dataReady=true;
   document.getElementById('initialLoading').style.display='none';
   filter();
+
+  // Si la session enseignant était déjà ouverte, la migration peut
+  // commencer après l’affichage de la bibliothèque.
+  if(currentUser){
+    setTimeout(migrateLegacyCovers,800);
+  }
+}).catch(err=>{
+  dataReady=true;
+  document.getElementById('initialLoading').style.display='none';
+  showFatalError(
+    'Chargement initial impossible : '+
+    (err&&err.message?err.message:String(err))
+  );
 });
+
 </script>
 </body>
 </html>
