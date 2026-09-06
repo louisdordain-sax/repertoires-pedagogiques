@@ -307,54 +307,7 @@ html.light .arr{background:rgba(235,242,255,.92);}
    couverture), superposé à deux trames de "feuilles" de fréquences
    différentes (pour éviter un motif trop mécanique/répétitif) et à un
    léger jaunissement papier plutôt qu'un simple gris neutre. */
-/* Fine tranche de pages sur le bord droit.
-   Les lignes horizontales représentent les feuilles empilées. */
-.bf-edge{
-  position:absolute;
-  right:0;
-  top:0;
-  bottom:0;
-  z-index:5;
-  width:4px;
-  pointer-events:none;
 
-  background:
-    /* Feuilles fines et légèrement irrégulières */
-    repeating-linear-gradient(
-      to bottom,
-      rgba(76,65,45,.34) 0,
-      rgba(76,65,45,.34) .45px,
-      rgba(255,252,240,.42) .45px,
-      rgba(255,252,240,.42) 1.15px
-    ),
-
-    /* Quelques séparations plus visibles */
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent 3.4px,
-      rgba(80,67,45,.22) 3.4px,
-      rgba(80,67,45,.22) 3.9px
-    ),
-
-    /* Volume horizontal du bloc de papier */
-    linear-gradient(
-      to right,
-      rgba(70,58,38,.58) 0%,
-      rgba(232,222,198,.96) 28%,
-      rgba(250,245,229,.98) 58%,
-      rgba(184,169,137,.82) 100%
-    );
-
-  background-blend-mode:multiply,multiply,normal;
-
-  box-shadow:
-    inset 1px 0 0 rgba(0,0,0,.5),
-    inset 2px 0 2px rgba(0,0,0,.2),
-    inset -.5px 0 0 rgba(255,255,255,.45);
-
-  opacity:.92;
-}
 
 
 /* Grain papier léger sur l'ensemble de la couverture (face) — un bruit fin
@@ -725,36 +678,7 @@ html.light .intro-ov::before{
 .bc,.bs-photo,.list-item-cover canvas{
   image-rendering:auto;
 }
-.mini-pages-edge{
-  position:absolute;
-  top:0;
-  right:0;
-  bottom:0;
-  z-index:5;
-  width:3px;
-  pointer-events:none;
 
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      rgba(76,65,45,.32) 0,
-      rgba(76,65,45,.32) .4px,
-      rgba(255,252,240,.46) .4px,
-      rgba(255,252,240,.46) 1px
-    ),
-    linear-gradient(
-      to right,
-      rgba(70,58,38,.55),
-      rgba(244,237,218,.97) 48%,
-      rgba(181,166,135,.8)
-    );
-
-  background-blend-mode:multiply,normal;
-
-  box-shadow:
-    inset 1px 0 0 rgba(0,0,0,.42),
-    inset -0.5px 0 0 rgba(255,255,255,.4);
-}
   
   /* Sans tranche gauche, la face représente l’intégralité du livre. */
 .bf{
@@ -783,36 +707,42 @@ html.light .intro-ov::before{
   margin:0;
   vertical-align:top;
 }
-  .list-pages-edge{
+/* Liseré fin représentant les pages sur le bord droit.
+   Les lignes sont verticales, parallèles au bord du livre. */
+.bf-edge,
+.mini-pages-edge,
+.list-pages-edge {
   position:absolute;
   top:0;
   right:0;
   bottom:0;
-  z-index:4;
-  width:3px;
+  z-index:5;
+  width:2px;
   pointer-events:none;
 
   background:
     repeating-linear-gradient(
-      to bottom,
-      rgba(76,65,45,.3) 0,
-      rgba(76,65,45,.3) .4px,
-      rgba(255,252,240,.48) .4px,
-      rgba(255,252,240,.48) 1px
+      to right,
+      rgba(75,63,42,.42) 0,
+      rgba(75,63,42,.42) .35px,
+      rgba(250,245,229,.9) .35px,
+      rgba(250,245,229,.9) .8px
     ),
     linear-gradient(
       to right,
-      rgba(70,58,38,.48),
-      rgba(244,237,218,.97) 48%,
-      rgba(181,166,135,.78)
+      rgba(95,78,50,.6),
+      rgba(242,234,212,.95)
     );
 
   background-blend-mode:multiply,normal;
 
   box-shadow:
-    inset 1px 0 0 rgba(0,0,0,.4),
-    inset -.5px 0 0 rgba(255,255,255,.42);
+    inset 1px 0 0 rgba(0,0,0,.32),
+    inset -.5px 0 0 rgba(255,255,255,.38);
+
+  opacity:.82;
 }
+
 
 </style>
 </head>
@@ -2606,7 +2536,7 @@ function build(bklist){
 
     <div
       class="bf-edge"
-      style="width:${Math.max(3,Math.round(4*getCoverScale()))}px"
+      style="width:${Math.max(1,Math.round(2*getCoverScale()))}px"
       aria-hidden="true"
     ></div>
 
