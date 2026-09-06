@@ -742,6 +742,11 @@ html.light .intro-ov::before{
 
   opacity:.82;
 }
+  
+html,
+body {
+  touch-action: pan-x pan-y;
+}
 
 
 </style>
@@ -4171,7 +4176,21 @@ loadDataFromFirebase().then(()=>{
     (err&&err.message?err.message:String(err))
   );
 });
-  
+
+  document.addEventListener('gesturestart', e => {
+  e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('gesturechange', e => {
+  e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('touchmove', e => {
+  if (e.touches.length > 1) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
 
 </script>
 </body>
