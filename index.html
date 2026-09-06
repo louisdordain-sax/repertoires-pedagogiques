@@ -806,6 +806,17 @@ body {
   overflow-y:auto;
 }
 
+  /* Fenêtre des filtres agrandie */
+#tagFilterOv .mb{
+  width:min(680px,calc(100vw - 32px));
+  max-width:680px;
+  max-height:92vh;
+}
+
+#tagFilterOv .tagfilter-list{
+  max-height:68vh;
+}
+
 
 </style>
 </head>
@@ -835,7 +846,7 @@ body {
       <div class="intro-doc-info">
         <div class="intro-doc-title">Travail sur le Répertoire du saxophone</div>
         <div class="intro-doc-author">Louis Dordain</div>
-        <div class="intro-doc-year">Diplôme d'État 2025-2026</div>
+        <div class="intro-doc-year">Diplôme d'État 2025-2027</div>
       </div>
       <button class="intro-enter" id="introEnter">Entrer →</button>
     </div>
@@ -1059,7 +1070,7 @@ body {
 <!-- Modal filtre par tags -->
 <div class="ov" id="tagFilterOv">
   <div class="mb">
-    <div class="mh3">Filtrer par tags</div>
+    <div class="mh3">Filtrer par tags, métriques, genre, esthétique ou présence d'accompagnement</div>
     <div class="tagfilter-hint">Sélectionne un ou plusieurs tags, genres, esthétiques, accompagnements et/ou métriques — seules les partitions possédant TOUS les éléments cochés seront affichées.</div>
     <div class="tagfilter-list" id="tagFilterList"></div>
     <div class="mfoot">
@@ -1106,7 +1117,7 @@ body {
         <div class="help-step-ic" style="background:rgba(220,70,70,.15);color:#dc4646;"><svg viewBox="5 3 14 18" style="fill:currentColor;stroke:none;width:13px;height:17px;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
         <div class="help-step-body">
           <div class="help-step-ttl">Marque-page rouge</div>
-          <div class="help-step-tx">Il signale les œuvres accompagnées d'une <b>analyse pédagogique plus détaillée</b> — visible sur la couverture et dans la fiche complète.</div>
+          <div class="help-step-tx">Il signale les œuvres accompagnées d'une <b>analyse pédagogique plus détaillée</b> </div>
         </div>
       </div>
     </div>
