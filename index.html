@@ -1756,6 +1756,40 @@ function setYoutubeConsent(value){
 
   document.getElementById('youtubeConsentOv').classList.remove('open');
   updateYoutubeConsentStatus();
+document.getElementById('legalClose').addEventListener(
+  'click',
+  closeLegalInformation
+);
+
+document.getElementById('legalOv').addEventListener('click',e=>{
+  if(e.target===document.getElementById('legalOv')){
+    closeLegalInformation();
+  }
+});
+
+/* Choix depuis la fenêtre légale */
+document.getElementById('legalYoutubeAccept').addEventListener('click',()=>{
+  setYoutubeConsent('accepted');
+});
+
+document.getElementById('legalYoutubeReject').addEventListener('click',()=>{
+  setYoutubeConsent('refused');
+});
+
+/* Choix depuis le bandeau initial */
+document.getElementById('youtubeConsentAccept').addEventListener('click',()=>{
+  setYoutubeConsent('accepted');
+});
+
+document.getElementById('youtubeConsentReject').addEventListener('click',()=>{
+  setYoutubeConsent('refused');
+});
+
+document.getElementById('youtubeConsentMore').addEventListener('click',()=>{
+  openLegalInformation();
+});
+
+updateYoutubeConsentStatus();
 
   /*
     Si une fiche est déjà ouverte, son emplacement vidéo est immédiatement
@@ -1783,8 +1817,16 @@ function updateYoutubeConsentStatus(){
 }
 
 function openYoutubeConsent(){
-  document.getElementById('youtubeConsentOv').classList.add('open');
+  const overlay=document.getElementById('youtubeConsentOv');
+
+  if(!overlay){
+    console.error('Fenêtre #youtubeConsentOv introuvable');
+    return;
+  }
+
+  overlay.classList.add('open');
 }
+
 
 function openLegalInformation(){
   updateYoutubeConsentStatus();
@@ -1894,40 +1936,6 @@ document.getElementById('legalBtn').addEventListener(
 );
 
 /* Fenêtre légale */
-document.getElementById('legalClose').addEventListener(
-  'click',
-  closeLegalInformation
-);
-
-document.getElementById('legalOv').addEventListener('click',e=>{
-  if(e.target===document.getElementById('legalOv')){
-    closeLegalInformation();
-  }
-});
-
-/* Choix depuis la fenêtre légale */
-document.getElementById('legalYoutubeAccept').addEventListener('click',()=>{
-  setYoutubeConsent('accepted');
-});
-
-document.getElementById('legalYoutubeReject').addEventListener('click',()=>{
-  setYoutubeConsent('refused');
-});
-
-/* Choix depuis le bandeau initial */
-document.getElementById('youtubeConsentAccept').addEventListener('click',()=>{
-  setYoutubeConsent('accepted');
-});
-
-document.getElementById('youtubeConsentReject').addEventListener('click',()=>{
-  setYoutubeConsent('refused');
-});
-
-document.getElementById('youtubeConsentMore').addEventListener('click',()=>{
-  openLegalInformation();
-});
-
-updateYoutubeConsentStatus();
 
   
 <!-- Modal détail -->
@@ -5671,15 +5679,13 @@ document.getElementById('introEnter').addEventListener('click',()=>{
   setTimeout(()=>{
     intro.style.display='none';
 
-    /*
-      La demande n'est présentée que si aucun choix n'a encore été
-      enregistré sur cet appareil.
-    */
-    if(!youtubeConsent){
+    // Affiche le choix YouTube uniquement si aucun choix n'a encore été fait.
+    if(youtubeConsent===null){
       openYoutubeConsent();
     }
   },480);
 });
+
 
 
 /* ════ INIT ══════════════════════════════════════════
