@@ -1744,24 +1744,6 @@ body {
 
 /* ════ CONFIDENTIALITÉ ET CONSENTEMENT YOUTUBE ═══════ */
 
-const YOUTUBE_CONSENT_KEY='rp_youtube_consent';
-
-let youtubeConsent=readYoutubeConsent();
-let currentDetailBook=null;
-
-function readYoutubeConsent(){
-  try{
-    const value=localStorage.getItem(YOUTUBE_CONSENT_KEY);
-
-    if(value==='accepted'||value==='refused'){
-      return value;
-    }
-  }catch(err){
-    console.warn('Lecture du choix YouTube impossible :',err);
-  }
-
-  return null;
-}
 
 function setYoutubeConsent(value){
   youtubeConsent=value;
@@ -2751,6 +2733,28 @@ let firebaseReady=false;
 // qui évite d'appeler filter() sur un DATA={} encore vide (ce qui affichait
 // à tort "Aucune partition trouvée", donnant l'impression d'un écran figé).
 let dataReady=false;
+
+  const YOUTUBE_CONSENT_KEY='rp_youtube_consent';
+
+let youtubeConsent=null;
+let currentDetailBook=null;
+
+function readYoutubeConsent(){
+  try{
+    const value=localStorage.getItem(YOUTUBE_CONSENT_KEY);
+
+    if(value==='accepted'||value==='refused'){
+      return value;
+    }
+  }catch(err){
+    console.warn('Lecture du choix YouTube impossible :',err);
+  }
+
+  return null;
+}
+
+youtubeConsent=readYoutubeConsent();
+
 
 // Nœud racine dans la Realtime Database : DOIT correspondre exactement
 // au chemin autorisé dans les règles de sécurité Firebase (onglet Rules).
