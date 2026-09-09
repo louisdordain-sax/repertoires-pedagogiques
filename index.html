@@ -1742,201 +1742,6 @@ body {
   </div>
 </div>
 
-/* ════ CONFIDENTIALITÉ ET CONSENTEMENT YOUTUBE ═══════ */
-
-
-function setYoutubeConsent(value){
-  youtubeConsent=value;
-
-  try{
-    localStorage.setItem(YOUTUBE_CONSENT_KEY,value);
-  }catch(err){
-    console.warn('Enregistrement du choix YouTube impossible :',err);
-  }
-
-  document.getElementById('youtubeConsentOv').classList.remove('open');
-  updateYoutubeConsentStatus();
-document.getElementById('legalClose').addEventListener(
-  'click',
-  closeLegalInformation
-);
-
-document.getElementById('legalOv').addEventListener('click',e=>{
-  if(e.target===document.getElementById('legalOv')){
-    closeLegalInformation();
-  }
-});
-
-/* Choix depuis la fenêtre légale */
-document.getElementById('legalYoutubeAccept').addEventListener('click',()=>{
-  setYoutubeConsent('accepted');
-});
-
-document.getElementById('legalYoutubeReject').addEventListener('click',()=>{
-  setYoutubeConsent('refused');
-});
-
-/* Choix depuis le bandeau initial */
-document.getElementById('youtubeConsentAccept').addEventListener('click',()=>{
-  setYoutubeConsent('accepted');
-});
-
-document.getElementById('youtubeConsentReject').addEventListener('click',()=>{
-  setYoutubeConsent('refused');
-});
-
-document.getElementById('youtubeConsentMore').addEventListener('click',()=>{
-  openLegalInformation();
-});
-
-updateYoutubeConsentStatus();
-
-  /*
-    Si une fiche est déjà ouverte, son emplacement vidéo est immédiatement
-    actualisé selon le nouveau choix.
-  */
-  if(
-    currentDetailBook&&
-    document.getElementById('od').classList.contains('open')
-  ){
-    renderYoutubeArea(currentDetailBook);
-  }
-}
-
-function updateYoutubeConsentStatus(){
-  const status=document.getElementById('youtubeConsentStatus');
-  if(!status)return;
-
-  if(youtubeConsent==='accepted'){
-    status.textContent='Vidéos YouTube autorisées sur cet appareil';
-  }else if(youtubeConsent==='refused'){
-    status.textContent='Vidéos YouTube désactivées sur cet appareil';
-  }else{
-    status.textContent='Aucun choix enregistré';
-  }
-}
-
-function openYoutubeConsent(){
-  const overlay=document.getElementById('youtubeConsentOv');
-
-  if(!overlay){
-    console.error('Fenêtre #youtubeConsentOv introuvable');
-    return;
-  }
-
-  overlay.classList.add('open');
-}
-
-
-function openLegalInformation(){
-  updateYoutubeConsentStatus();
-  document.getElementById('legalOv').classList.add('open');
-}
-
-function closeLegalInformation(){
-  document.getElementById('legalOv').classList.remove('open');
-}
-
-/*
-  Construit la zone vidéo sans jamais charger de contenu provenant de
-  YouTube tant que l'utilisateur ne l'a pas autorisé.
-*/
-function renderYoutubeArea(bk){
-  const ytEl=document.getElementById('myt');
-  ytEl.innerHTML='';
-
-  if(!bk||!bk.yt){
-    ytEl.style.display='none';
-    return;
-  }
-
-  ytEl.style.display='';
-
-  if(youtubeConsent==='accepted'){
-    const iframe=document.createElement('iframe');
-
-    iframe.src=
-      `https://www.youtube-nocookie.com/embed/${encodeURIComponent(bk.yt)}`;
-
-    iframe.title=`Vidéo associée à ${bk.t}`;
-    iframe.allow=
-      'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-
-    iframe.allowFullscreen=true;
-    iframe.loading='lazy';
-    iframe.referrerPolicy='strict-origin-when-cross-origin';
-
-    ytEl.appendChild(iframe);
-    return;
-  }
-
-  const placeholder=document.createElement('div');
-  placeholder.className='youtube-placeholder';
-
-  const icon=document.createElement('div');
-  icon.className='youtube-placeholder-icon';
-  icon.innerHTML=`
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="3"/>
-      <path d="M10 9l5 3-5 3z"/>
-    </svg>
-  `;
-
-  const title=document.createElement('div');
-  title.className='youtube-placeholder-title';
-  title.textContent='Vidéo YouTube non chargée';
-
-  const text=document.createElement('div');
-  text.className='youtube-placeholder-text';
-
-  if(youtubeConsent==='refused'){
-    text.textContent=
-      'Vous avez choisi de ne pas charger les lecteurs YouTube sur cette plateforme.';
-  }else{
-    text.textContent=
-      'Votre autorisation est nécessaire avant de charger le lecteur YouTube.';
-  }
-
-  const actions=document.createElement('div');
-  actions.className='youtube-placeholder-actions';
-
-  const externalLink=document.createElement('a');
-  externalLink.className='youtube-placeholder-link';
-  externalLink.href=
-    `https://www.youtube.com/watch?v=${encodeURIComponent(bk.yt)}`;
-  externalLink.target='_blank';
-  externalLink.rel='noopener noreferrer';
-  externalLink.textContent='Ouvrir sur YouTube ↗';
-
-  const choiceButton=document.createElement('button');
-  choiceButton.type='button';
-  choiceButton.className='youtube-placeholder-choice';
-  choiceButton.textContent=
-    youtubeConsent==='refused'
-      ? 'Modifier mon choix'
-      : 'Choisir';
-
-  choiceButton.addEventListener('click',openYoutubeConsent);
-
-  actions.appendChild(externalLink);
-  actions.appendChild(choiceButton);
-
-  placeholder.appendChild(icon);
-  placeholder.appendChild(title);
-  placeholder.appendChild(text);
-  placeholder.appendChild(actions);
-
-  ytEl.appendChild(placeholder);
-}
-
-/* Bouton de l'en-tête */
-document.getElementById('legalBtn').addEventListener(
-  'click',
-  openLegalInformation
-);
-
-/* Fenêtre légale */
-
   
 <!-- Modal détail -->
 <div class="ov" id="od">
@@ -2763,6 +2568,202 @@ function readYoutubeConsent(){
 
 youtubeConsent=readYoutubeConsent();
 
+  
+
+/* ════ CONFIDENTIALITÉ ET CONSENTEMENT YOUTUBE ═══════ */
+
+
+function setYoutubeConsent(value){
+  youtubeConsent=value;
+
+  try{
+    localStorage.setItem(YOUTUBE_CONSENT_KEY,value);
+  }catch(err){
+    console.warn('Enregistrement du choix YouTube impossible :',err);
+  }
+
+  document.getElementById('youtubeConsentOv').classList.remove('open');
+  updateYoutubeConsentStatus();
+document.getElementById('legalClose').addEventListener(
+  'click',
+  closeLegalInformation
+);
+
+document.getElementById('legalOv').addEventListener('click',e=>{
+  if(e.target===document.getElementById('legalOv')){
+    closeLegalInformation();
+  }
+});
+
+/* Choix depuis la fenêtre légale */
+document.getElementById('legalYoutubeAccept').addEventListener('click',()=>{
+  setYoutubeConsent('accepted');
+});
+
+document.getElementById('legalYoutubeReject').addEventListener('click',()=>{
+  setYoutubeConsent('refused');
+});
+
+/* Choix depuis le bandeau initial */
+document.getElementById('youtubeConsentAccept').addEventListener('click',()=>{
+  setYoutubeConsent('accepted');
+});
+
+document.getElementById('youtubeConsentReject').addEventListener('click',()=>{
+  setYoutubeConsent('refused');
+});
+
+document.getElementById('youtubeConsentMore').addEventListener('click',()=>{
+  openLegalInformation();
+});
+
+updateYoutubeConsentStatus();
+
+  /*
+    Si une fiche est déjà ouverte, son emplacement vidéo est immédiatement
+    actualisé selon le nouveau choix.
+  */
+  if(
+    currentDetailBook&&
+    document.getElementById('od').classList.contains('open')
+  ){
+    renderYoutubeArea(currentDetailBook);
+  }
+}
+
+function updateYoutubeConsentStatus(){
+  const status=document.getElementById('youtubeConsentStatus');
+  if(!status)return;
+
+  if(youtubeConsent==='accepted'){
+    status.textContent='Vidéos YouTube autorisées sur cet appareil';
+  }else if(youtubeConsent==='refused'){
+    status.textContent='Vidéos YouTube désactivées sur cet appareil';
+  }else{
+    status.textContent='Aucun choix enregistré';
+  }
+}
+
+function openYoutubeConsent(){
+  const overlay=document.getElementById('youtubeConsentOv');
+
+  if(!overlay){
+    console.error('Fenêtre #youtubeConsentOv introuvable');
+    return;
+  }
+
+  overlay.classList.add('open');
+}
+
+
+function openLegalInformation(){
+  updateYoutubeConsentStatus();
+  document.getElementById('legalOv').classList.add('open');
+}
+
+function closeLegalInformation(){
+  document.getElementById('legalOv').classList.remove('open');
+}
+
+/*
+  Construit la zone vidéo sans jamais charger de contenu provenant de
+  YouTube tant que l'utilisateur ne l'a pas autorisé.
+*/
+function renderYoutubeArea(bk){
+  const ytEl=document.getElementById('myt');
+  ytEl.innerHTML='';
+
+  if(!bk||!bk.yt){
+    ytEl.style.display='none';
+    return;
+  }
+
+  ytEl.style.display='';
+
+  if(youtubeConsent==='accepted'){
+    const iframe=document.createElement('iframe');
+
+    iframe.src=
+      `https://www.youtube-nocookie.com/embed/${encodeURIComponent(bk.yt)}`;
+
+    iframe.title=`Vidéo associée à ${bk.t}`;
+    iframe.allow=
+      'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+
+    iframe.allowFullscreen=true;
+    iframe.loading='lazy';
+    iframe.referrerPolicy='strict-origin-when-cross-origin';
+
+    ytEl.appendChild(iframe);
+    return;
+  }
+
+  const placeholder=document.createElement('div');
+  placeholder.className='youtube-placeholder';
+
+  const icon=document.createElement('div');
+  icon.className='youtube-placeholder-icon';
+  icon.innerHTML=`
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="3"/>
+      <path d="M10 9l5 3-5 3z"/>
+    </svg>
+  `;
+
+  const title=document.createElement('div');
+  title.className='youtube-placeholder-title';
+  title.textContent='Vidéo YouTube non chargée';
+
+  const text=document.createElement('div');
+  text.className='youtube-placeholder-text';
+
+  if(youtubeConsent==='refused'){
+    text.textContent=
+      'Vous avez choisi de ne pas charger les lecteurs YouTube sur cette plateforme.';
+  }else{
+    text.textContent=
+      'Votre autorisation est nécessaire avant de charger le lecteur YouTube.';
+  }
+
+  const actions=document.createElement('div');
+  actions.className='youtube-placeholder-actions';
+
+  const externalLink=document.createElement('a');
+  externalLink.className='youtube-placeholder-link';
+  externalLink.href=
+    `https://www.youtube.com/watch?v=${encodeURIComponent(bk.yt)}`;
+  externalLink.target='_blank';
+  externalLink.rel='noopener noreferrer';
+  externalLink.textContent='Ouvrir sur YouTube ↗';
+
+  const choiceButton=document.createElement('button');
+  choiceButton.type='button';
+  choiceButton.className='youtube-placeholder-choice';
+  choiceButton.textContent=
+    youtubeConsent==='refused'
+      ? 'Modifier mon choix'
+      : 'Choisir';
+
+  choiceButton.addEventListener('click',openYoutubeConsent);
+
+  actions.appendChild(externalLink);
+  actions.appendChild(choiceButton);
+
+  placeholder.appendChild(icon);
+  placeholder.appendChild(title);
+  placeholder.appendChild(text);
+  placeholder.appendChild(actions);
+
+  ytEl.appendChild(placeholder);
+}
+
+/* Bouton de l'en-tête */
+document.getElementById('legalBtn').addEventListener(
+  'click',
+  openLegalInformation
+);
+
+/* Fenêtre légale */
 
 // Nœud racine dans la Realtime Database : DOIT correspondre exactement
 // au chemin autorisé dans les règles de sécurité Firebase (onglet Rules).
