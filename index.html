@@ -1667,12 +1667,6 @@ body {
         <button class="ibtn" id="helpBtn" title="Mode d'emploi">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </button>
-        <button class="ibtn" id="legalBtn" title="Informations légales et confidentialité">
-          <svg viewBox="0 0 24 24">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          <path d="M9 12l2 2 4-4"/>
-          </svg>
-      </button>
 
         <button class="ibtn" id="lockbtn" title="Connexion enseignant">
           <svg id="lockClosed" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -1910,7 +1904,26 @@ body {
         </div>
       </div>
     </div>
-    <button class="mclose" id="helpClose">Fermer</button>
+<button
+  type="button"
+  class="mclose"
+  id="legalFromHelp"
+  style="
+    margin-bottom:8px;
+    background:var(--tact);
+    color:var(--acc);
+    border-color:var(--acc);
+  "
+>
+  <svg class="btn-ic" viewBox="0 0 24 24">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <path d="M9 12l2 2 4-4"/>
+  </svg>
+  Informations légales et confidentialité
+</button>
+
+<button class="mclose" id="helpClose">Fermer</button>
+
   </div>
 </div>
 
@@ -2727,12 +2740,6 @@ function renderYoutubeArea(bk){
 
   ytEl.appendChild(placeholder);
 }
-
-/* Bouton de l'en-tête */
-document.getElementById('legalBtn').addEventListener(
-  'click',
-  openLegalInformation
-);
 
 /* Fenêtre légale */
 
@@ -5660,6 +5667,12 @@ document.getElementById('introEnter').addEventListener('click',()=>{
 
   /* ════ BOUTONS CONFIDENTIALITÉ / YOUTUBE ════════════ */
 function initPrivacyButtons(){
+  document.getElementById('legalFromHelp')?.addEventListener('click',e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    openLegalInformation();
+  });
+  
   document.getElementById('legalBtn')?.addEventListener(
     'click',
     openLegalInformation
