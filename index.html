@@ -2579,57 +2579,28 @@ function setYoutubeConsent(value){
   try{
     localStorage.setItem(YOUTUBE_CONSENT_KEY,value);
   }catch(err){
-    console.warn('Enregistrement du choix YouTube impossible :',err);
+    console.warn(
+      'Enregistrement du choix YouTube impossible :',
+      err
+    );
   }
 
-  document.getElementById('youtubeConsentOv').classList.remove('open');
+  const consentOv=document.getElementById('youtubeConsentOv');
+
+  if(consentOv){
+    consentOv.classList.remove('open');
+  }
+
   updateYoutubeConsentStatus();
-document.getElementById('legalClose').addEventListener(
-  'click',
-  closeLegalInformation
-);
 
-document.getElementById('legalOv').addEventListener('click',e=>{
-  if(e.target===document.getElementById('legalOv')){
-    closeLegalInformation();
-  }
-});
-
-/* Choix depuis la fenêtre légale */
-document.getElementById('legalYoutubeAccept').addEventListener('click',()=>{
-  setYoutubeConsent('accepted');
-});
-
-document.getElementById('legalYoutubeReject').addEventListener('click',()=>{
-  setYoutubeConsent('refused');
-});
-
-/* Choix depuis le bandeau initial */
-document.getElementById('youtubeConsentAccept').addEventListener('click',()=>{
-  setYoutubeConsent('accepted');
-});
-
-document.getElementById('youtubeConsentReject').addEventListener('click',()=>{
-  setYoutubeConsent('refused');
-});
-
-document.getElementById('youtubeConsentMore').addEventListener('click',()=>{
-  openLegalInformation();
-});
-
-updateYoutubeConsentStatus();
-
-  /*
-    Si une fiche est déjà ouverte, son emplacement vidéo est immédiatement
-    actualisé selon le nouveau choix.
-  */
   if(
-    currentDetailBook&&
+    currentDetailBook &&
     document.getElementById('od').classList.contains('open')
   ){
     renderYoutubeArea(currentDetailBook);
   }
 }
+
 
 function updateYoutubeConsentStatus(){
   const status=document.getElementById('youtubeConsentStatus');
@@ -5686,6 +5657,50 @@ document.getElementById('introEnter').addEventListener('click',()=>{
     }
   },480);
 });
+
+  /* ════ BOUTONS CONFIDENTIALITÉ / YOUTUBE ════════════ */
+function initPrivacyButtons(){
+  document.getElementById('legalBtn')?.addEventListener(
+    'click',
+    openLegalInformation
+  );
+
+  document.getElementById('legalClose')?.addEventListener(
+    'click',
+    closeLegalInformation
+  );
+
+  document.getElementById('legalOv')?.addEventListener('click',e=>{
+    if(e.target===document.getElementById('legalOv')){
+      closeLegalInformation();
+    }
+  });
+
+  document.getElementById('legalYoutubeAccept')?.addEventListener('click',()=>{
+    setYoutubeConsent('accepted');
+  });
+
+  document.getElementById('legalYoutubeReject')?.addEventListener('click',()=>{
+    setYoutubeConsent('refused');
+  });
+
+  document.getElementById('youtubeConsentAccept')?.addEventListener('click',()=>{
+    setYoutubeConsent('accepted');
+  });
+
+  document.getElementById('youtubeConsentReject')?.addEventListener('click',()=>{
+    setYoutubeConsent('refused');
+  });
+
+  document.getElementById('youtubeConsentMore')?.addEventListener('click',()=>{
+    document.getElementById('youtubeConsentOv')?.classList.remove('open');
+    openLegalInformation();
+  });
+
+  updateYoutubeConsentStatus();
+}
+
+initPrivacyButtons();
 
 
 
