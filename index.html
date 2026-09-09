@@ -1597,6 +1597,43 @@ body {
     grid-template-columns:1fr;
   }
 }
+/* ══ SÉLECTEUR DE TONALITÉ / MODE ═══════════════════ */
+
+.tonality-editor{
+  display:grid;
+  grid-template-columns:1.25fr 1fr 1fr;
+  gap:7px;
+  margin-bottom:7px;
+}
+
+.tonality-editor select{
+  min-width:0;
+  margin-bottom:0;
+}
+
+.tonality-editor select:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.tonality-filter-note{
+  width:100%;
+  margin-top:2px;
+  color:var(--c3);
+  font-size:8.5px;
+  font-style:italic;
+  line-height:1.5;
+}
+
+@media(max-width:520px){
+  .tonality-editor{
+    grid-template-columns:1fr 1fr;
+  }
+
+  #aton-kind{
+    grid-column:1 / -1;
+  }
+}
 
 
 </style>
@@ -1818,6 +1855,55 @@ body {
       <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
     </button>
     <input type="hidden" id="amet">
+<div class="fl">Tonalité ou mode</div>
+
+<div class="tonality-editor">
+  <select id="aton-kind">
+    <option value="">Non renseignée</option>
+    <option value="tonality">Majeur ou mineur</option>
+    <option value="mode">Mode</option>
+  </select>
+
+  <select id="aton-root" disabled>
+    <option value="">Note fondamentale</option>
+    <option value="Do">Do</option>
+    <option value="Do♯">Do♯</option>
+    <option value="Ré♭">Ré♭</option>
+    <option value="Ré">Ré</option>
+    <option value="Ré♯">Ré♯</option>
+    <option value="Mi♭">Mi♭</option>
+    <option value="Mi">Mi</option>
+    <option value="Fa">Fa</option>
+    <option value="Fa♯">Fa♯</option>
+    <option value="Sol♭">Sol♭</option>
+    <option value="Sol">Sol</option>
+    <option value="Sol♯">Sol♯</option>
+    <option value="La♭">La♭</option>
+    <option value="La">La</option>
+    <option value="La♯">La♯</option>
+    <option value="Si♭">Si♭</option>
+    <option value="Si">Si</option>
+  </select>
+
+  <select id="aton-quality" disabled>
+    <option value="majeur">Majeur</option>
+    <option value="mineur">Mineur</option>
+  </select>
+
+  <select id="aton-mode" disabled style="display:none;">
+    <option value="ionien">Ionien</option>
+    <option value="dorien">Dorien</option>
+    <option value="phrygien">Phrygien</option>
+    <option value="lydien">Lydien</option>
+    <option value="mixolydien">Mixolydien</option>
+    <option value="éolien">Éolien</option>
+    <option value="locrien">Locrien</option>
+  </select>
+</div>
+
+<input type="hidden" id="aton">
+
+    
     <div class="fl">Couverture réelle (photo/scan, optionnel)</div>
     <div class="cover-upload-row">
       <img
@@ -4151,15 +4237,48 @@ function bookHasAccompagnement(b){
   return !!(b.acc && b.acc.trim() && b.acc.trim()!=='—');
 }
 function bookMatchesFilterValue(b,val){
-  if(val==='accbin::oui')return bookHasAccompagnement(b);
-  if(val==='accbin::non')return !bookHasAccompagnement(b);
-  if(val.startsWith('genre::'))return (b.g||'')===val.slice(7);
-  if(val.startsWith('esth::'))return (b.es||'')===val.slice(6);
-  if((b.tags||[]).includes(val))return true;
-  const mets=(b.met||'').split(',').map(s=>s.trim());
-  if(mets.includes(val))return true;
-  return false;
+  if(val==='accbin::oui'){
+    return bookHasAccompagnement(b);
+  }
+
+  if(val==='accbin::non'){
+    return !bookHasAccompagnement(b);
+  }
+
+  if(val.startsWith('genre::')){
+    return (b.g||'')===val.slice(7);
+  }
+
+  if(val.startsWith('esth::')){
+    return (b.es||'')===val.slice(6);
+  }
+
+  if(val.startsWith('ton::')){
+    const expected=normalizeSearchText(val.slice(5));
+    const actual=String(b.ton||'').trim();
+
+    /*
+      Une pièce sans tonalité renseignée reste volontairement visible.
+      Une pièce ayant une autre tonalité renseignée est exclue.
+    */
+    if(!actual||actual==='—'){
+      return true;
+    }
+
+    return normalizeSearchText(actual)===expected;
+  }
+
+  if((b.tags||[]).includes(val)){
+    return true;
+  }
+
+  const mets=(b.met||'')
+    .split(',')
+    .map(s=>s.trim());
+
+  return mets.includes(val);
 }
+
 
 function filter(forceIdx){
   if(!DATA[cyc]){cyc=1;}
@@ -4174,7 +4293,8 @@ function filter(forceIdx){
   const previousActiveId=books[idx]?books[idx].id:null;
   
   let result=q
-    ? all.filter(b=>[b.t,b.a,b.ed,b.g,b.nv,b.desc||'',b.bio||'',b.met||'',...(b.tags||[])].some(s=>normalizeSearchText(s).includes(q)))
+    ? all.filter(b=>[b.t,b.a,b.ed,b.g,b.nv,b.ton||'',b.desc||'',b.bio||'',b.met||'', ...(b.tags||[])].some(s=>normalizeSearchText(s).includes(q)))
+
     : all;
   
   // Filtre par tags/métriques actifs : la notice doit posséder TOUS les
@@ -4319,6 +4439,27 @@ function getAllEsthForCycle(){
   return Array.from(set).sort((a,b)=>a.localeCompare(b,'fr'));
 }
 
+  function getAllTonalitiesForCycle(){
+  const valuesByKey=new Map();
+
+  (DATA[cyc]||[]).forEach(b=>{
+    const value=String(b.ton||'').trim();
+
+    if(!value||value==='—')return;
+
+    const key=normalizeSearchText(value);
+
+    if(!valuesByKey.has(key)){
+      valuesByKey.set(key,value);
+    }
+  });
+
+  return Array.from(valuesByKey.values()).sort((a,b)=>
+    a.localeCompare(b,'fr',{sensitivity:'base'})
+  );
+}
+
+
 function renderTagFilterPanel(){
   const listEl=document.getElementById('tagFilterList');
   listEl.innerHTML='';
@@ -4370,9 +4511,29 @@ function renderTagFilterPanel(){
   // reconnaissable au premier coup d'oeil, et la valeur stockée dans
   // activeTagFilters est préfixée pour rester distincte des tags/métriques
   // (voir bookMatchesFilterValue).
-  renderPrefixedPillSection(listEl,'Genre','genre::',getAllGenresForCycle(),"Aucun genre pour ce cycle pour l'instant.",265,55);
-  renderPrefixedPillSection(listEl,'Esthétique','esth::',getAllEsthForCycle(),"Aucune esthétique pour ce cycle pour l'instant.",25,55);
-  renderAccompagnementFilterSection(listEl);
+  renderPrefixedPillSection(
+  listEl,
+  'Genre',
+  'genre::',
+  getAllGenresForCycle(),
+  "Aucun genre pour ce cycle pour l'instant.",
+  265,
+  55
+);
+
+renderPrefixedPillSection(
+  listEl,
+  'Esthétique',
+  'esth::',
+  getAllEsthForCycle(),
+  "Aucune esthétique pour ce cycle pour l'instant.",
+  25,
+  55
+);
+
+renderTonalityFilterSection(listEl);
+renderAccompagnementFilterSection(listEl);
+
 
   // ── Section Métriques (toutes, sans attendre qu'elles soient utilisées) ──
   const metTitle=document.createElement('div');
@@ -4453,6 +4614,92 @@ function renderPrefixedPillSection(listEl,title,prefix,values,emptyMsg,hueBase=1
   listEl.appendChild(row);
 }
 
+function renderTonalityFilterSection(listEl){
+  const values=getAllTonalitiesForCycle();
+
+  const secTitle=document.createElement('div');
+  secTitle.className='tagfilter-section-title';
+  secTitle.style.marginTop='14px';
+  secTitle.textContent='Tonalité ou mode';
+  listEl.appendChild(secTitle);
+
+  if(!values.length){
+    const empty=document.createElement('div');
+    empty.className='tagfilter-empty';
+    empty.textContent=
+      "Aucune tonalité n'est encore renseignée pour ce cycle.";
+
+    listEl.appendChild(empty);
+    return;
+  }
+
+  const row=document.createElement('div');
+  row.className='tagfilter-row';
+
+  values.forEach(value=>{
+    const filterValue='ton::'+value;
+    const h=hashTagText(value);
+    const hue=105+(h%55);
+    const sat=45+(h%18);
+    const textLight=dark
+      ? 68+(h%12)
+      : 30+(h%10);
+
+    const bgAlpha=dark?0.16:0.10;
+
+    const pill=document.createElement('span');
+
+    pill.className=
+      'tag-pill'+
+      (activeTagFilters.includes(filterValue)?' selected':'');
+
+    pill.textContent=value;
+    pill.style.cursor='pointer';
+    pill.style.color=
+      `hsl(${hue},${sat}%,${textLight}%)`;
+
+    pill.style.borderColor=
+      `hsla(${hue},${sat}%,${textLight}%,.4)`;
+
+    pill.style.background=
+      `hsla(${hue},${sat}%,50%,${bgAlpha})`;
+
+    pill.addEventListener('click',()=>{
+      /*
+        Une seule tonalité peut être sélectionnée à la fois.
+        Cliquer sur la tonalité déjà sélectionnée la désactive.
+      */
+      const wasSelected=
+        activeTagFilters.includes(filterValue);
+
+      activeTagFilters=
+        activeTagFilters.filter(
+          item=>!item.startsWith('ton::')
+        );
+
+      if(!wasSelected){
+        activeTagFilters.push(filterValue);
+      }
+
+      updateFilterBadge();
+      filter(0);
+      renderTagFilterPanel();
+    });
+
+    row.appendChild(pill);
+  });
+
+  listEl.appendChild(row);
+
+  const note=document.createElement('div');
+  note.className='tonality-filter-note';
+  note.textContent=
+    'Les pièces dont la tonalité n’est pas encore renseignée restent affichées.';
+
+  listEl.appendChild(note);
+}
+
+  
 // Section Accompagnement : un choix BINAIRE (présence ou non d'un
 // accompagnement renseigné), pas un choix par type d'accompagnement — c'est
 // la demande explicite : "avec accompagnement" / "sans accompagnement".
@@ -4645,6 +4892,7 @@ if(hasCoverMini){
     <div class="mf"><div class="mfl">Année</div><div class="mfv">${bk.y}</div></div>
     <div class="mf"><div class="mfl">Niveau</div><div class="mfv">${bk.nv}</div></div>
     <div class="mf"><div class="mfl">Genre</div><div class="mfv">${bk.g}</div></div>
+    <div class="mf"><div class="mfl">Tonalité / mode</div><div class="mfv">${escapeHtml(bk.ton||'—')}</div></div>
     <div class="mf"><div class="mfl">Esthétique</div><div class="mfv">${bk.es||'—'}</div></div>
     <div class="mf"><div class="mfl">Effectif</div><div class="mfv">${bk.ef||'—'}</div></div>
     <div class="mf" style="grid-column:1 / -1;"><div class="mfl">Métrique(s)</div><div class="mfv" id="mmet-display">—</div></div>
@@ -4872,6 +5120,7 @@ document.getElementById('oeditfull').onclick=(e)=>{
   document.getElementById('aac').value=(bk.acc==='—')?'':(bk.acc||'');
   document.getElementById('avol').value=bk.vol||'';
   loadMetricValue(bk.met);
+  loadTonalityValue(bk.ton);
   document.getElementById('aor').value=bk.or==='paysage'?'paysage':'portrait';
   resetCoverUploadUI();
   if(bk.cu){
@@ -5057,6 +5306,7 @@ document.getElementById('abtn').onclick=(e)=>{
   setOasvLabel('Ajouter');
   document.getElementById('ac').value=cyc;
   loadMetricValue('');
+  loadTonalityValue('');
   populateFieldSuggestions();
   document.getElementById('oa').classList.add('open');
 };
@@ -5305,6 +5555,7 @@ function closeAddModal(){
   ['at','ast','au','ae','ay','an','ag2','aes','aef','aac','avol','amet-custom','ayt','abio','ad'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('aor').value='portrait';
   loadMetricValue('');
+  loadTonalityValue('');
   document.getElementById('oa-title').textContent='Ajouter une partition';
   setOasvLabel('Ajouter');
   editingBook=null;
@@ -5329,6 +5580,124 @@ document.getElementById('oa').onclick=(e)=>{
 
 document.querySelector('.ambox')?.addEventListener('click',(e)=>{e.stopPropagation();});
 
+  /* ════ TONALITÉ ET MODES ═════════════════════════════ */
+
+const TONALITY_MODES=[
+  'ionien',
+  'dorien',
+  'phrygien',
+  'lydien',
+  'mixolydien',
+  'éolien',
+  'locrien'
+];
+
+function syncTonalityField(){
+  const kind=document.getElementById('aton-kind').value;
+  const rootEl=document.getElementById('aton-root');
+  const qualityEl=document.getElementById('aton-quality');
+  const modeEl=document.getElementById('aton-mode');
+  const hiddenEl=document.getElementById('aton');
+
+  const active=kind==='tonality'||kind==='mode';
+
+  rootEl.disabled=!active;
+
+  qualityEl.style.display=kind==='tonality'?'':'none';
+  qualityEl.disabled=kind!=='tonality';
+
+  modeEl.style.display=kind==='mode'?'':'none';
+  modeEl.disabled=kind!=='mode';
+
+  if(!active||!rootEl.value){
+    hiddenEl.value='';
+    return;
+  }
+
+  if(kind==='tonality'){
+    hiddenEl.value=`${rootEl.value} ${qualityEl.value}`;
+  }else{
+    hiddenEl.value=`${rootEl.value} ${modeEl.value}`;
+  }
+}
+
+function getTonalityValue(){
+  syncTonalityField();
+  return document.getElementById('aton').value.trim();
+}
+
+function loadTonalityValue(value){
+  const kindEl=document.getElementById('aton-kind');
+  const rootEl=document.getElementById('aton-root');
+  const qualityEl=document.getElementById('aton-quality');
+  const modeEl=document.getElementById('aton-mode');
+  const hiddenEl=document.getElementById('aton');
+
+  kindEl.value='';
+  rootEl.value='';
+  qualityEl.value='majeur';
+  modeEl.value='ionien';
+  hiddenEl.value='';
+
+  const clean=String(value||'').trim();
+
+  if(!clean||clean==='—'){
+    syncTonalityField();
+    return;
+  }
+
+  const normalized=normalizeSearchText(clean);
+
+  const foundMode=TONALITY_MODES.find(mode=>
+    normalized.endsWith(' '+normalizeSearchText(mode))
+  );
+
+  if(foundMode){
+    const suffixLength=foundMode.length;
+    const root=clean.slice(0,clean.length-suffixLength).trim();
+
+    kindEl.value='mode';
+    rootEl.value=root;
+    modeEl.value=foundMode;
+    syncTonalityField();
+    return;
+  }
+
+  const qualityMatch=clean.match(/^(.+)\s+(majeur|mineur)$/i);
+
+  if(qualityMatch){
+    kindEl.value='tonality';
+    rootEl.value=qualityMatch[1].trim();
+    qualityEl.value=normalizeSearchText(qualityMatch[2])==='mineur'
+      ? 'mineur'
+      : 'majeur';
+
+    syncTonalityField();
+    return;
+  }
+
+  /*
+    Compatibilité avec une éventuelle ancienne valeur qui ne respecterait
+    pas exactement le format attendu.
+  */
+  hiddenEl.value=clean;
+}
+
+[
+  'aton-kind',
+  'aton-root',
+  'aton-quality',
+  'aton-mode'
+].forEach(id=>{
+  document.getElementById(id).addEventListener(
+    'change',
+    syncTonalityField
+  );
+});
+
+syncTonalityField();
+
+  
 document.getElementById('oasv').onclick=async(e)=>{
   e.stopPropagation();
   
@@ -5348,6 +5717,7 @@ document.getElementById('oasv').onclick=async(e)=>{
   const acc=document.getElementById('aac').value.trim()||'—';
   const vol=document.getElementById('avol').value.trim()||null;
   const met=document.getElementById('amet').value.trim()||'—';
+  const ton=getTonalityValue()||null;
   const or_=document.getElementById('aor').value||'portrait';
   const ytRaw=document.getElementById('ayt').value.trim();
   const yt=extractYoutubeId(ytRaw);
@@ -5403,7 +5773,8 @@ document.getElementById('oasv').onclick=async(e)=>{
         cu=null;
       }
       
-      const updated={...bookBeingEdited,t,st,a,ed,y,nv,g,es,ef,acc,vol,met,or:or_,cu,yt,bio,desc,col:cl,sp};
+      const updated={...bookBeingEdited,t,st,a,ed,y,nv,g,es,ef,acc,vol,met,ton,or:or_,cu,yt,bio,desc,col:cl,sp};
+
       
       if(DATA[originalCycle])DATA[originalCycle]=DATA[originalCycle].filter(b=>b.id!==updated.id);
       if(!DATA[c])DATA[c]=[];
@@ -5458,7 +5829,7 @@ document.getElementById('oasv').onclick=async(e)=>{
         }
       }
       
-      const nb={id:newId,t,st,a,ed,y,nv,g,es,ef,acc,vol,met,or:or_,col:cl,sp,cu,yt,bio,tags:[],desc};
+      const nb={id:newId,t,st,a,ed,y,nv,g,es,ef,acc,vol,met,ton,or:or_,col:cl,sp,cu,yt,bio,tags:[],desc};
       
       if(!DATA[c])DATA[c]=[];
       DATA[c].unshift(nb);
