@@ -1635,6 +1635,87 @@ body {
   }
 }
 
+  /* ══ ARTICLES DES INFORMATIONS LÉGALES ═══════════════ */
+
+.legal-articles{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  margin-bottom:20px;
+}
+
+.legal-article{
+  position:relative;
+  padding:16px 15px;
+  border:.5px solid var(--bd1);
+  border-radius:12px;
+  background:var(--tbg);
+}
+
+.legal-article-number{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:7px;
+  padding:3px 10px;
+  border:.5px solid var(--bd2);
+  border-radius:99px;
+  background:var(--tact);
+  color:var(--acc);
+  font-family:var(--mono);
+  font-size:8px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+.legal-article-title{
+  margin:0 0 11px;
+  color:var(--c1);
+  font-size:13px;
+  font-weight:650;
+  line-height:1.4;
+}
+
+.legal-article .legal-content{
+  padding:0;
+}
+
+.legal-article .legal-content p{
+  margin-bottom:10px;
+}
+
+.legal-article .legal-content p:last-child{
+  margin-bottom:0;
+}
+
+.legal-article .legal-content ul{
+  margin:5px 0 12px 19px;
+}
+
+.legal-article .legal-content li{
+  margin-bottom:5px;
+}
+
+@media(min-width:900px){
+  .legal-article{
+    padding:19px 18px;
+  }
+
+  .legal-article-number{
+    font-size:9px;
+  }
+
+  .legal-article-title{
+    font-size:15px;
+  }
+
+  .legal-article .legal-content{
+    font-size:12.5px;
+    line-height:1.75;
+  }
+}
+
 
 </style>
 </head>
@@ -2029,13 +2110,16 @@ body {
 </div>
 
 <!-- Informations légales et politique de confidentialité -->
+<!-- Informations légales et politique de confidentialité -->
 <div class="ov" id="legalOv">
   <div class="mb legal-box">
+
     <div class="legal-header">
       <div>
         <div class="mh3" style="margin-bottom:4px;">
           Informations légales et confidentialité
         </div>
+
         <div class="legal-subtitle">
           Informations relatives à l’utilisation de la plateforme
         </div>
@@ -2049,140 +2133,236 @@ body {
       </div>
     </div>
 
-    <div class="legal-sections">
+    <div class="legal-articles">
 
-      <details class="legal-section" open>
-        <summary>Éditeur de la plateforme</summary>
+      <!-- ARTICLE 1 -->
+      <section class="legal-article">
+        <div class="legal-article-number">Article 1</div>
+        <h4 class="legal-article-title">
+          Éditeur et responsable de publication
+        </h4>
+
         <div class="legal-content">
           <p>
-            Cette plateforme pédagogique est éditée par
-            <strong>LouisDordain</strong>.
+            La présente plateforme pédagogique est éditée et placée sous la
+            responsabilité de :
           </p>
 
           <dl class="legal-list">
             <div>
-              <dt>Responsable de publication</dt>
-              <dd>Louis Dordain</dd>
+              <dt>Éditeur</dt>
+              <dd>
+                <strong>[NOM ET PRÉNOM — À MODIFIER]</strong>
+              </dd>
             </div>
+
+            <div>
+              <dt>Responsable de publication</dt>
+              <dd>
+                <strong>[NOM ET PRÉNOM — À MODIFIER]</strong>
+              </dd>
+            </div>
+
+            <div>
+              <dt>Adresse ou établissement</dt>
+              <dd>
+                [ADRESSE POSTALE OU NOM DE L’ÉTABLISSEMENT — À MODIFIER]
+              </dd>
+            </div>
+
             <div>
               <dt>Adresse électronique</dt>
-              <dd>louisdordain@gmail.com</dd>
-            </div>
-            <div>
-              <dt>Hébergement</dt>
-              <dd>GitHub</dd>
+              <dd>
+                <a href="mailto:[ADRESSE EMAIL — À MODIFIER]">
+                  [ADRESSE EMAIL — À MODIFIER]
+                </a>
+              </dd>
             </div>
           </dl>
-        </div>
-      </details>
 
-      <details class="legal-section">
-        <summary>Objet de la plateforme</summary>
+          <p>
+            La plateforme est hébergée par
+            <strong>GitHub Pages</strong>, service proposé par GitHub, Inc.,
+            88 Colin P. Kelly Jr. Street, San Francisco, California 94107,
+            États-Unis.
+          </p>
+
+          <p>
+            Certaines fonctionnalités techniques, notamment la base de données
+            et l’authentification de l’espace enseignant, utilisent les services
+            Firebase proposés par Google.
+          </p>
+        </div>
+      </section>
+
+      <!-- ARTICLE 2 -->
+      <section class="legal-article">
+        <div class="legal-article-number">Article 2</div>
+        <h4 class="legal-article-title">
+          Objet de la plateforme
+        </h4>
+
         <div class="legal-content">
           <p>
             Cette plateforme propose une base de données pédagogique consacrée
-            au répertoire du saxophone. Elle permet de consulter des notices,
-            des informations bibliographiques, des analyses pédagogiques et
-            des références vers des ressources extérieures.
+            au répertoire du saxophone. Elle permet notamment de consulter des
+            notices bibliographiques, des informations musicales, des
+            caractéristiques techniques, des analyses pédagogiques et des
+            références vers des ressources extérieures.
           </p>
 
           <p>
-            Aucune partition ni reproduction intégrale d’œuvre musicale
-            protégée n’est mise à disposition sur cette plateforme.
+            La plateforme constitue un outil pédagogique évolutif destiné à
+            faciliter l’exploration du répertoire et à accompagner le travail
+            des élèves et de l’enseignant.
+          </p>
+
+          <p>
+            Aucune partition complète ni reproduction intégrale d’une œuvre
+            musicale protégée n’est proposée au téléchargement ou mise à
+            disposition directement sur cette plateforme.
           </p>
         </div>
-      </details>
+      </section>
 
-      <details class="legal-section">
-        <summary>Données personnelles</summary>
+      <!-- ARTICLE 3 -->
+      <section class="legal-article">
+        <div class="legal-article-number">Article 3</div>
+        <h4 class="legal-article-title">
+          Données personnelles et données techniques
+        </h4>
+
         <div class="legal-content">
           <p>
-            La consultation publique de la bibliothèque ne nécessite pas la
-            création d’un compte utilisateur.
+            La consultation publique de la bibliothèque ne nécessite aucune
+            création de compte et aucun formulaire destiné à recueillir
+            l’identité des visiteurs n’est proposé.
           </p>
 
           <p>
-            L’espace d’administration est réservé à l’enseignant. Son adresse
-            électronique et ses informations d’authentification sont traitées
-            par Firebase Authentication afin de sécuriser les fonctions
-            d’ajout, de modification et de suppression.
+            La plateforme ne collecte pas directement les noms, coordonnées,
+            résultats scolaires ou autres informations personnelles des élèves
+            et des visiteurs.
           </p>
 
           <p>
-            Des données techniques strictement nécessaires au fonctionnement,
-            à la sécurité et à l’hébergement du service peuvent être traitées
-            par l’hébergeur et par les services Firebase utilisés par la
-            plateforme.
+            L’espace d’administration est exclusivement réservé à l’enseignant.
+            L’adresse électronique utilisée pour la connexion et les
+            informations d’authentification correspondantes sont traitées par
+            <strong>Firebase Authentication</strong> afin de sécuriser les
+            opérations d’ajout, de modification et de suppression des notices.
           </p>
 
-          <dl class="legal-list">
-            <div>
-              <dt>Responsable du traitement</dt>
-              <dd>Louis Dordain</dd>
-            </div>
-            <div>
-              <dt>Contact relatif aux données</dt>
-              <dd>louisdordain@gmail.com</dd>
-            </div>
-            <div>
-              <dt>Durée de conservation</dt>
-              <dd>jusqu'à la suppression de la plateforme ou la demande de suppression des données</dd>
-            </div>
-          </dl>
+          <p>
+            Comme pour tout service accessible sur Internet, des informations
+            techniques peuvent néanmoins être traitées automatiquement par les
+            prestataires assurant l’hébergement, la sécurité et le
+            fonctionnement de la plateforme. Ces informations peuvent notamment
+            comprendre l’adresse IP, la date et l’heure de consultation, le type
+            de navigateur, le système d’exploitation ou les journaux techniques
+            nécessaires à la sécurité du service.
+          </p>
+
+          <p>
+            Ces données techniques ne sont pas utilisées par l’éditeur de la
+            plateforme à des fins publicitaires, commerciales ou de profilage.
+            Leur durée de conservation dépend des politiques techniques et de
+            sécurité appliquées par GitHub, Google et Firebase.
+          </p>
+
+          <p>
+            Pour toute question concernant ces traitements ou pour demander
+            l’accès, la rectification ou la suppression d’une information vous
+            concernant, vous pouvez écrire à :
+            <a href="mailto:[ADRESSE EMAIL — À MODIFIER]">
+              [ADRESSE EMAIL — À MODIFIER]
+            </a>.
+          </p>
         </div>
-      </details>
+      </section>
 
-      <details class="legal-section">
-        <summary>Stockage local sur l’appareil</summary>
+      <!-- ARTICLE 4 -->
+      <section class="legal-article">
+        <div class="legal-article-number">Article 4</div>
+        <h4 class="legal-article-title">
+          Stockage local sur l’appareil
+        </h4>
+
         <div class="legal-content">
           <p>
-            La plateforme utilise le stockage local du navigateur uniquement
-            pour mémoriser certains réglages :
+            La plateforme utilise le stockage local du navigateur afin de
+            mémoriser uniquement certains réglages de fonctionnement :
           </p>
 
           <ul>
-            <li>le thème clair ou sombre sélectionné ;</li>
-            <li>le choix effectué concernant l’affichage des vidéos YouTube.</li>
+            <li>le thème clair ou sombre sélectionné par l’utilisateur ;</li>
+            <li>
+              le choix effectué concernant l’affichage des vidéos YouTube.
+            </li>
           </ul>
 
           <p>
-            Ces informations restent enregistrées sur l’appareil utilisé et
-            peuvent être supprimées en effaçant les données du site dans les
-            réglages du navigateur.
+            Ces informations restent enregistrées sur l’appareil utilisé. Elles
+            ne permettent pas à l’éditeur d’identifier personnellement
+            l’utilisateur et ne sont pas exploitées à des fins publicitaires.
+          </p>
+
+          <p>
+            Elles peuvent être supprimées à tout moment en effaçant les données
+            du site depuis les réglages du navigateur.
           </p>
         </div>
-      </details>
+      </section>
 
-      <details class="legal-section">
-        <summary>Vidéos YouTube</summary>
+      <!-- ARTICLE 5 -->
+      <section class="legal-article">
+        <div class="legal-article-number">Article 5</div>
+        <h4 class="legal-article-title">
+          Vidéos et contenus YouTube
+        </h4>
+
         <div class="legal-content">
           <p>
-            Certaines notices peuvent contenir une vidéo hébergée par YouTube,
-            service proposé par Google.
+            Certaines notices peuvent proposer une vidéo hébergée par YouTube,
+            service fourni par Google.
           </p>
 
           <p>
-            Aucun aperçu YouTube n’est chargé avant l’accord de
-            l’utilisateur. En cas d’acceptation, la vidéo est intégrée à partir
-            du domaine
-            <strong>youtube-nocookie.com</strong>, en mode de confidentialité
-            renforcée.
-          </p>
-
-          <p>
-            Malgré ce mode, Google peut traiter certaines informations
-            techniques, notamment l’adresse IP, les caractéristiques du
-            navigateur et les interactions avec le lecteur vidéo.
-          </p>
-
-          <p>
-            En cas de refus, aucun lecteur YouTube n’est chargé. Un simple lien
-            permet néanmoins d’ouvrir volontairement la vidéo sur le site de
+            Aucun lecteur YouTube n’est chargé automatiquement avant que
+            l’utilisateur ait exprimé son choix. Tant que l’autorisation n’a pas
+            été donnée, la plateforme n’insère aucune iframe provenant de
             YouTube.
           </p>
 
           <p>
-            Pour plus d’informations :
+            En cas d’autorisation, le lecteur est intégré à partir du domaine
+            <strong>youtube-nocookie.com</strong>, correspondant au mode de
+            confidentialité renforcée proposé par YouTube.
+          </p>
+
+          <p>
+            Malgré l’utilisation de ce mode, Google peut traiter certaines
+            informations techniques, telles que l’adresse IP, les
+            caractéristiques du navigateur et les interactions effectuées avec
+            le lecteur vidéo.
+          </p>
+
+          <p>
+            En cas de refus, aucun lecteur YouTube n’est chargé. Un simple lien
+            externe peut néanmoins permettre à l’utilisateur d’ouvrir
+            volontairement la vidéo sur le site de YouTube. Cette ouverture
+            entraîne alors une navigation vers un service extérieur soumis à
+            ses propres conditions d’utilisation et à sa propre politique de
+            confidentialité.
+          </p>
+
+          <p>
+            Le choix concernant YouTube peut être modifié à tout moment depuis
+            les boutons situés au bas de cette fenêtre.
+          </p>
+
+          <p>
+            Pour plus d’informations, vous pouvez consulter la
             <a
               href="https://policies.google.com/privacy?hl=fr"
               target="_blank"
@@ -2192,64 +2372,151 @@ body {
             </a>.
           </p>
         </div>
-      </details>
+      </section>
 
-      <details class="legal-section">
-        <summary>Images de couverture</summary>
+      <!-- ARTICLE 6 -->
+      <section class="legal-article">
+        <div class="legal-article-number">Article 6</div>
+        <h4 class="legal-article-title">
+          Images de couverture
+        </h4>
+
         <div class="legal-content">
           <p>
-            Les conditions d’utilisation et les crédits des images de
-            couverture devront être indiqués selon la provenance et la licence
-            de chaque visuel utilisé.
+            Les images de couverture éventuellement affichées dans la
+            bibliothèque sont utilisées exclusivement afin d’identifier et
+            d’illustrer les ouvrages référencés dans un contexte pédagogique et
+            documentaire.
           </p>
 
-          <p class="legal-warning">
-            Cette partie doit être complétée avant la diffusion publique de la
-            plateforme.
+          <p>
+            Ces images restent la propriété de leurs auteurs, éditeurs,
+            photographes ou ayants droit respectifs. Leur présence sur la
+            plateforme n’emporte aucun transfert de droit de propriété
+            intellectuelle.
+          </p>
+
+          <p>
+            L’éditeur de la plateforme s’engage à utiliser uniquement des
+            visuels dont l’utilisation est autorisée ou justifiée dans ce
+            contexte, et à ajouter les crédits nécessaires lorsque ceux-ci sont
+            connus ou requis.
+          </p>
+
+          <p>
+            Toute personne estimant qu’une image porte atteinte à ses droits
+            peut demander son retrait en écrivant à :
+            <a href="mailto:[ADRESSE EMAIL — À MODIFIER]">
+              [ADRESSE EMAIL — À MODIFIER]
+            </a>.
           </p>
         </div>
-      </details>
+      </section>
 
-      <details class="legal-section">
-        <summary>Propriété intellectuelle</summary>
+      <!-- ARTICLE 7 -->
+      <section class="legal-article">
+        <div class="legal-article-number">Article 7</div>
+        <h4 class="legal-article-title">
+          Propriété intellectuelle
+        </h4>
+
         <div class="legal-content">
           <p>
-            La structure de la plateforme, ses textes originaux, ses analyses
-            pédagogiques et ses éléments graphiques sont protégés par les
-            règles applicables à la propriété intellectuelle.
+            La structure générale de la plateforme, son interface, ses textes
+            originaux, ses analyses pédagogiques, ses notices et ses éléments
+            graphiques sont protégés par les règles applicables à la propriété
+            intellectuelle.
           </p>
 
           <p>
-            Les titres d’œuvres, noms d’auteurs, noms d’éditeurs, marques et
-            ressources externes restent la propriété de leurs titulaires
-            respectifs.
+            Sauf autorisation préalable, leur reproduction intégrale, leur
+            modification ou leur réutilisation dans un autre service public ou
+            commercial n’est pas autorisée.
+          </p>
+
+          <p>
+            Les titres d’œuvres, noms de compositeurs, noms d’auteurs, noms
+            d’éditeurs, marques, images et ressources extérieures mentionnés sur
+            la plateforme restent la propriété de leurs titulaires respectifs.
+          </p>
+
+          <p>
+            Les liens vers des ressources extérieures, notamment YouTube, sont
+            proposés à titre documentaire et pédagogique. L’éditeur de la
+            plateforme n’est pas responsable du contenu, de la disponibilité ou
+            des pratiques de confidentialité de ces services tiers.
           </p>
         </div>
-      </details>
-      
+      </section>
+
+      <!-- ARTICLE 8 -->
+      <section class="legal-article">
+        <div class="legal-article-number">Article 8</div>
+        <h4 class="legal-article-title">
+          Responsabilité et mise à jour
+        </h4>
+
+        <div class="legal-content">
+          <p>
+            Les informations présentes sur la plateforme sont fournies dans un
+            objectif pédagogique et documentaire. Malgré le soin apporté à leur
+            rédaction, elles peuvent comporter des erreurs, des omissions ou
+            des informations devenues obsolètes.
+          </p>
+
+          <p>
+            L’éditeur se réserve la possibilité de corriger, compléter ou
+            modifier les contenus et les présentes informations légales à tout
+            moment.
+          </p>
+
+          <p>
+            Dernière mise à jour :
+            <strong>[DATE DE MISE À JOUR — À MODIFIER]</strong>.
+          </p>
+        </div>
+      </section>
+
     </div>
 
+    <!-- Réglage du consentement YouTube -->
     <div class="legal-youtube-settings">
       <div>
-        <div class="legal-youtube-title">Préférence YouTube</div>
+        <div class="legal-youtube-title">
+          Préférence YouTube
+        </div>
+
         <div class="legal-youtube-status" id="youtubeConsentStatus">
           Aucun choix enregistré
         </div>
       </div>
 
       <div class="legal-youtube-buttons">
-        <button type="button" class="privacy-secondary" id="legalYoutubeReject">
+        <button
+          type="button"
+          class="privacy-secondary"
+          id="legalYoutubeReject"
+        >
           Refuser
         </button>
-        <button type="button" class="privacy-primary" id="legalYoutubeAccept">
+
+        <button
+          type="button"
+          class="privacy-primary"
+          id="legalYoutubeAccept"
+        >
           Autoriser
         </button>
       </div>
     </div>
 
-    <button class="mclose" id="legalClose">Fermer</button>
+    <button type="button" class="mclose" id="legalClose">
+      Fermer
+    </button>
+
   </div>
 </div>
+
 <!-- Choix initial concernant les vidéos YouTube -->
 <div
   class="privacy-sheet"
