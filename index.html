@@ -1635,86 +1635,207 @@ body {
   }
 }
 
-  /* ══ ARTICLES DES INFORMATIONS LÉGALES ═══════════════ */
+ /* ══ PAGE LÉGALE — PRÉSENTATION TEXTUELLE ET AÉRÉE ══ */
 
-.legal-articles{
+/* Les articles ne sont plus présentés sous forme de cartes */
+#legalOv .legal-articles{
   display:flex;
   flex-direction:column;
-  gap:18px;
+  gap:0;
   margin-bottom:20px;
 }
 
-.legal-article{
+#legalOv .legal-article{
   position:relative;
-  padding:16px 15px;
-  border:.5px solid var(--bd1);
-  border-radius:12px;
-  background:var(--tbg);
+  margin:0;
+  padding:0 0 26px;
+
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
 }
 
-.legal-article-number{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  margin-bottom:7px;
-  padding:3px 10px;
-  border:.5px solid var(--bd2);
-  border-radius:99px;
-  background:var(--tact);
-  color:var(--acc);
+/* Séparation horizontale entre les articles */
+#legalOv .legal-article + .legal-article{
+  padding-top:26px;
+  border-top:1px solid var(--bd1) !important;
+}
+
+/* Numéro d’article sans pastille ni conteneur */
+#legalOv .legal-article-number{
+  display:block;
+  width:auto;
+  height:auto;
+  margin:0 0 5px;
+  padding:0;
+
+  border:0 !important;
+  border-radius:0;
+  background:transparent !important;
+
+  color:var(--acc2);
   font-family:var(--mono);
-  font-size:8px;
-  font-weight:700;
-  letter-spacing:1px;
+  font-size:8.5px;
+  font-weight:600;
+  letter-spacing:1.3px;
+  line-height:1.4;
   text-transform:uppercase;
 }
 
-.legal-article-title{
-  margin:0 0 11px;
+/* Titres des articles */
+#legalOv .legal-article-title{
+  margin:0 0 12px;
   color:var(--c1);
-  font-size:13px;
+  font-size:14px;
   font-weight:650;
   line-height:1.4;
 }
 
-.legal-article .legal-content{
+/* Texte des articles */
+#legalOv .legal--content{
   padding:0;
+  color:var(--c2);
+  font-size:11px;
+  line-height:1.8;
+  text-align:justify;
+  hyphens:auto;
+  -webkit-hyphens:auto;
 }
 
-.legal-article .legal-content p{
-  margin-bottom:10px;
+#legalOv .legal-content p{
+  margin:0 0 11px;
 }
 
-.legal-article .legal-content p:last-child{
+#legalOv .legal-content p:last-child{
   margin-bottom:0;
 }
 
-.legal-article .legal-content ul{
-  margin:5px 0 12px 19px;
+#legalOv .legal-content ul{
+  margin:7px 0 12px 20px;
 }
 
-.legal-article .legal-content li{
+#legalOv .legal-content li{
   margin-bottom:5px;
 }
 
-@media(min-width:900px){
-  .legal-article{
-    padding:19px 18px;
+#legalOv .legal-content strong{
+  color:var(--c1);
+  font-weight:600;
+}
+
+/* ══ ARTICLE 1 — INFORMATIONS AVEC SÉPARATEURS ══ */
+
+#legalOv .legal-list{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  margin:13px 0 4px;
+  padding:0;
+}
+
+/* Chaque information occupe sa propre ligne */
+#legalOv .legal-list > div{
+  display:grid;
+  grid-template-columns:minmax(150px, .75fr) 1.25fr;
+  align-items:start;
+  gap:18px;
+
+  margin:0;
+  padding:11px 0;
+
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+
+/* Ligne entre chaque information, sauf après la dernière */
+#legalOv .legal-list > div:not(:last-child){
+  border-bottom:1px solid var(--bd1) !important;
+}
+
+#legalOv .legal-list dt{
+  margin:0;
+  color:var(--c3);
+  font-family:var(--mono);
+  font-size:8.5px;
+  font-weight:500;
+  line-height:1.5;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+}
+
+#legalOv .legal-list dd{
+  margin:0;
+  color:var(--c1);
+  font-size:10.8px;
+  line-height:1.6;
+  overflow-wrap:anywhere;
+}
+
+/* Liens */
+#legalOv .legal-content a{
+  color:var(--acc);
+  text-decoration:none;
+  border-bottom:.5px solid var(--bd2);
+}
+
+/* Avertissement sans carte */
+#legalOv .legal-warning{
+  margin-top:10px;
+  padding:10px 0;
+
+  color:#e4a15b;
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0 !important;
+
+  font-style:italic;
+}
+
+/* Préférence YouTube également présentée sans conteneur */
+#legalOv .legal-youtube-settings{
+  margin:0 0 18px;
+  padding:20px 0 0;
+
+  border:0 !important;
+  border-top:1px solid var(--bd1) !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+
+/* Adaptation mobile */
+@media(max-width:520px){
+  #legalOv .legal-article{
+    padding-bottom:22px;
   }
 
-  .legal-article-number{
-    font-size:9px;
+  #legalOv .legal-article + .legal-article{
+    padding-top:22px;
   }
 
-  .legal-article-title{
-    font-size:15px;
+  #legalOv .legal-list > div{
+    grid-template-columns:1fr;
+    gap:3px;
+    padding:10px 0;
   }
 
-  .legal-article .legal-content{
-    font-size:12.5px;
-    line-height:1.75;
+  #legalOv .legal-list dt{
+    font-size:8px;
+  }
+
+  #legalOv .legal-list dd{
+    font-size:10.5px;
+  }
+
+  #legalOv .legal-youtube-settings{
+    align-items:stretch;
+    flex-direction:column;
   }
 }
+
   
 /* Flèches extérieures et toujours accessibles sur ordinateur */
 @media (min-width:900px) and (hover:hover) and (pointer:fine){
@@ -1743,11 +1864,11 @@ body {
   }
 
   .arr.l{
-    left:-34px;
+    left:-50px;
   }
 
   .arr.r{
-    right:-34px;
+    right:-50px;
   }
 
   /* Pleinement visibles quand on approche du carrousel
@@ -2233,16 +2354,13 @@ body {
             <div>
               <dt>Responsable de publication</dt>
               <dd>
-                <strong><Louis Dordain</strong>
+                <strong>Louis Dordain</strong>
               </dd>
-            </div>
+             </div>
 
             <div>
               <dt>Adresse électronique</dt>
-              <dd>
-                <a href="mailto:louisdordain@gmail.com">
-                  louisdordain@gmail.com
-                </a>
+              <dd><a href="mailto:louisdordain@gmail.com">louisdordain@gmail.com</a>
               </dd>
             </div>
           </dl>
