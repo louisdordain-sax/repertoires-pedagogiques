@@ -1716,16 +1716,79 @@ body {
   }
 }
   
-/* Flèches du carrousel légèrement déportées sur ordinateur */
+/* Flèches extérieures et toujours accessibles sur ordinateur */
 @media (min-width:900px) and (hover:hover) and (pointer:fine){
+
+  .app,
+  .mid,
+  .cw{
+    overflow:visible;
+  }
+
+  .arr{
+    z-index:30;
+
+    /* Les boutons restent cliquables même hors du carrousel */
+    visibility:visible;
+    pointer-events:auto;
+
+    /* Discrets au repos */
+    opacity:.42;
+
+    transition:
+      opacity .2s,
+      border-color .2s,
+      color .2s,
+      box-shadow .2s;
+  }
+
   .arr.l{
-    left:-50px;
+    left:-34px;
   }
 
   .arr.r{
-    right:-50px;
+    right:-34px;
+  }
+
+  /* Pleinement visibles quand on approche du carrousel
+     ou que l'on survole directement une flèche */
+  .cw:hover .arr,
+  .arr:hover{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
   }
 }
+/* Séparateurs entre les informations de l’article 1 */
+.legal-article .legal-list{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  margin:10px 0 12px;
+}
+
+.legal-article .legal-list > div{
+  display:grid;
+  grid-template-columns:minmax(150px,.7fr) 1.3fr;
+  gap:12px;
+  padding:9px 0;
+  border-top:none;
+}
+
+/* Ligne à partir de la deuxième information */
+.legal-article .legal-list > div + div{
+  border-top:.5px solid var(--bd1);
+}
+
+/* Adaptation sur smartphone */
+@media(max-width:520px){
+  .legal-article .legal-list > div{
+    grid-template-columns:1fr;
+    gap:3px;
+    padding:9px 0;
+  }
+}
+
 
 
 </style>
@@ -2389,13 +2452,6 @@ body {
             photographes ou ayants droit respectifs. Leur présence sur la
             plateforme n’emporte aucun transfert de droit de propriété
             intellectuelle.
-          </p>
-
-          <p>
-            L’éditeur de la plateforme s’engage à utiliser uniquement des
-            visuels dont l’utilisation est autorisée ou justifiée dans ce
-            contexte, et à ajouter les crédits nécessaires lorsque ceux-ci sont
-            connus ou requis.
           </p>
 
           <p>
