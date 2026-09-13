@@ -531,6 +531,30 @@ html.light .hashtags-suggestions{background:rgba(237,241,250,.35);}
 }
 .cover-upload-remove:hover{color:#dc4646;}
 
+<div class="fl">Informations relatives à la couverture</div>
+
+<input
+  type="text"
+  id="acucr"
+  placeholder="Crédit : photographe, éditeur ou ayant droit…"
+  maxlength="200"
+>
+
+<input
+  type="url"
+  id="acus"
+  placeholder="Source : https://…"
+  maxlength="500"
+>
+
+<input
+  type="text"
+  id="acul"
+  placeholder="Licence ou autorisation : CC BY, avec autorisation…"
+  maxlength="200"
+>
+
+  
 /* ══ BANNIÈRE D'ERREUR GLOBALE ═══════════════════════
    Affiche toute erreur JavaScript inattendue directement à l'écran,
    sans avoir besoin d'accès à la console du navigateur (utile sur
@@ -1930,7 +1954,27 @@ body {
 #tagFilterOv .metric-chip:hover{
   transform:translateY(-1px) !important;
 }
-  
+
+  .cover-credit{
+  width:100%;
+  max-width:110px;
+  margin-top:7px;
+  color:var(--c3);
+  font-size:7.5px;
+  font-family:var(--mono);
+  line-height:1.45;
+  white-space:pre-line;
+  overflow-wrap:anywhere;
+  text-align:left;
+}
+
+@media(min-width:900px){
+  .cover-credit{
+    max-width:130px;
+    font-size:8.5px;
+  }
+}
+
   
 </style>
 </head>
@@ -5302,8 +5346,32 @@ wrap.style.cssText=`
 
 wrap.appendChild(coverWrap);
 
-document.getElementById('mmini').innerHTML='';
-document.getElementById('mmini').appendChild(wrap);
+const miniHost=document.getElementById('mmini');
+
+miniHost.innerHTML='';
+miniHost.appendChild(wrap);
+
+const coverInfos=[];
+
+if(bk.cuc){
+  coverInfos.push(`Crédit : ${bk.cuc}`);
+}
+
+if(bk.cus){
+  coverInfos.push(`Source : ${bk.cus}`);
+}
+
+if(bk.cul){
+  coverInfos.push(`Licence : ${bk.cul}`);
+}
+
+if(coverInfos.length){
+  const creditEl=document.createElement('div');
+  creditEl.className='cover-credit';
+  creditEl.textContent=coverInfos.join('\n');
+  miniHost.appendChild(creditEl);
+}
+
 
 if(hasCoverMini){
   applyRealCoverImage(mc2,bk);
@@ -5546,6 +5614,10 @@ document.getElementById('oeditfull').onclick=(e)=>{
   loadTonalityValue(bk.ton);
   document.getElementById('aor').value=bk.or==='paysage'?'paysage':'portrait';
   resetCoverUploadUI();
+  document.getElementById('acucr').value=bk.cuc||'';
+  document.getElementById('acus').value=bk.cus||'';
+  document.getElementById('acul').value=bk.cul||'';
+
   if(bk.cu){
     document.getElementById('acu-preview').src=bk.cu;
     document.getElementById('acu-preview').style.display='';
@@ -5975,7 +6047,7 @@ function populateFieldSuggestions(){
 
 function closeAddModal(){
   document.getElementById('oa').classList.remove('open');
-  ['at','ast','au','ae','ay','an','ag2','aes','aef','aac','avol','amet-custom','ayt','abio','ad'].forEach(id=>document.getElementById(id).value='');
+  ['at','ast','au','ae','ay','an','ag2','aes','aef','aac','avol','amet-custom','ayt','abio','ad','acucr','acus','acul'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('aor').value='portrait';
   loadMetricValue('');
   loadTonalityValue('');
@@ -6141,6 +6213,9 @@ document.getElementById('oasv').onclick=async(e)=>{
   const vol=document.getElementById('avol').value.trim()||null;
   const met=document.getElementById('amet').value.trim()||'—';
   const ton=getTonalityValue()||null;
+  const cuc=document.getElementById('acucr').value.trim()||null;
+  const cus=document.getElementById('acus').value.trim()||null;
+  const cul=document.getElementById('acul').value.trim()||null;
   const or_=document.getElementById('aor').value||'portrait';
   const ytRaw=document.getElementById('ayt').value.trim();
   const yt=extractYoutubeId(ytRaw);
@@ -6195,10 +6270,8 @@ document.getElementById('oasv').onclick=async(e)=>{
       } else if(coverRemoveRequested){
         cu=null;
       }
-      
-      const updated={...bookBeingEdited,t,st,a,ed,y,nv,g,es,ef,acc,vol,met,ton,or:or_,cu,yt,bio,desc,col:cl,sp};
+      const updated={...bookBeingEdited,t,st,a,ed,y,nv,g,es,ef,acc,vol,met,ton,cuc,cus,cul,or:or_,cu,yt,bio,desc,col:cl,sp};
 
-      
       if(DATA[originalCycle])DATA[originalCycle]=DATA[originalCycle].filter(b=>b.id!==updated.id);
       if(!DATA[c])DATA[c]=[];
       DATA[c].unshift(updated);
@@ -6252,7 +6325,8 @@ document.getElementById('oasv').onclick=async(e)=>{
         }
       }
       
-      const nb={id:newId,t,st,a,ed,y,nv,g,es,ef,acc,vol,met,ton,or:or_,col:cl,sp,cu,yt,bio,tags:[],desc};
+      const nb={id:newId,t,st,a,ed,y,nv,g,es,ef,acc,vol,met,ton,cuc,cus,cul,or:or_,col:cl,sp,cu,yt,bio,tags:[],desc};
+
       
       if(!DATA[c])DATA[c]=[];
       DATA[c].unshift(nb);
