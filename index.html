@@ -1637,6 +1637,52 @@ body {
   }
 }
 
+.tonality-selected{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:2px 0 9px;
+}
+
+.tonality-selected:empty{
+  display:none;
+}
+
+.tonality-selected-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:5px 9px 5px 11px;
+  border-radius:99px;
+  border:.5px solid var(--acc);
+  background:var(--tact);
+  color:var(--acc);
+  font-size:10px;
+  font-family:var(--mono);
+}
+
+.tonality-selected-remove{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:16px;
+  height:16px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:rgba(255,255,255,.08);
+  color:currentColor;
+  cursor:pointer;
+  font-size:13px;
+  line-height:1;
+}
+
+.tonality-selected-remove:hover{
+  background:#dc4646;
+  color:#fff;
+}
+
+
 /* Flèches extérieures et toujours accessibles sur ordinateur */
 @media (min-width:900px) and (hover:hover) and (pointer:fine){
 
@@ -2146,7 +2192,7 @@ body {
     <div class="fl">Titre *</div><input type="text" id="at" placeholder="50 Études Faciles…" maxlength="200">
     <div class="fl">Sous-titre (optionnel)</div><input type="text" id="ast" placeholder="Vol. 1…" maxlength="120">
     <div class="ag">
-      <div><div class="fl">Auteur *</div><input type="text" id="au" placeholder="Guy Lacour" maxlength="150"></div>
+      <div><div class="fl">Auteur *</div><input type="text" id="au" placeholder="Guy Lacour" maxlength="150">list="au-list"><datalist id="au-list"></datalist></div>
       <div><div class="fl">Éditeur</div><input type="text" id="ae" placeholder="Billaudot" maxlength="100" list="ae-list"><datalist id="ae-list"></datalist></div>
     </div>
     <div class="ag">
@@ -2157,7 +2203,7 @@ body {
 
     <div class="ag">
       <div><div class="fl">Niveau</div><input type="text" id="an" placeholder="Débutant" maxlength="80"></div>
-      <div><div class="fl">Type de composition</div><input type="text" id="ag2" placeholder="Études…" maxlength="80" list="ag2-list"><datalist id="ag2-list"></datalist></div>
+      <div><div class="fl">Type de composition</div><input type="text" id="ag2" placeholder="Études…" maxlength="200" list="ag2-list"><datalist id="ag2-list"></datalist></div>
     </div>
     <div class="ag">
       <div><div class="fl">Esthétique</div><input type="text" id="aes" placeholder="Romantique, impressionniste…" maxlength="80" list="aes-list"><datalist id="aes-list"></datalist></div>
@@ -2172,12 +2218,11 @@ body {
       <span id="metricSummaryText">Aucune métrique sélectionnée</span>
       <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
     </button>
-    <input type="hidden" id="amet">
-<div class="fl">Tonalité ou mode</div>
+    <input type="hidden" id="amet"><div class="fl">Tonalités ou modes</div>
 
 <div class="tonality-editor">
   <select id="aton-kind">
-    <option value="">Non renseignée</option>
+    <option value="">Choisir un type</option>
     <option value="tonality">Majeur ou mineur</option>
     <option value="mode">Mode</option>
   </select>
@@ -2219,7 +2264,26 @@ body {
   </select>
 </div>
 
+<button
+  type="button"
+  class="metric-summary-btn"
+  id="aton-add"
+>
+  <span>Ajouter cette tonalité ou ce mode</span>
+
+  <svg viewBox="0 0 24 24">
+    <line x1="12" y1="5" x2="12" y2="19"/>
+    <line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+</button>
+
+<div
+  class="tonality-selected"
+  id="aton-selected"
+></div>
+
 <input type="hidden" id="aton">
+
 
     
     <div class="fl">Couverture réelle (photo/scan, optionnel)</div>
@@ -4718,27 +4782,35 @@ function bookMatchesFilterValue(b,val){
   }
 
   if(val.startsWith('genre::')){
-    return (b.g||'')===val.slice(7);
-  }
+  const expected=normalizeSearchText(val.slice(7));
+
+  return splitCompositionTypes(b.g).some(type=>
+    normalizeSearchText(type)===expected
+  );
+}
+
 
   if(val.startsWith('esth::')){
     return (b.es||'')===val.slice(6);
   }
 
   if(val.startsWith('ton::')){
-    const expected=normalizeSearchText(val.slice(5));
-    const actual=String(b.ton||'').trim();
+  const expected=normalizeSearchText(val.slice(5));
+  const actualValues=splitTonalityValues(b.ton);
 
-    /*
-      Une pièce sans tonalité renseignée reste volontairement visible.
-      Une pièce ayant une autre tonalité renseignée est exclue.
-    */
-    if(!actual||actual==='—'){
-      return true;
-    }
-
-    return normalizeSearchText(actual)===expected;
+  /*
+    Les pièces sans tonalité renseignée restent visibles,
+    comme dans le fonctionnement actuel.
+  */
+  if(!actualValues.length){
+    return true;
   }
+
+  return actualValues.some(value=>
+    normalizeSearchText(value)===expected
+  );
+}
+
 
   if((b.tags||[]).includes(val)){
     return true;
@@ -4901,10 +4973,23 @@ function getAllTagsForCycle(){
 // au cycle, triée alphabétiquement). L'accompagnement, lui, n'a pas besoin
 // de cette collecte : c'est un choix binaire avec/sans (voir plus bas).
 function getAllGenresForCycle(){
-  const set=new Set();
-  (DATA[cyc]||[]).forEach(b=>{if(b.g&&b.g.trim()&&b.g!=='—')set.add(b.g.trim());});
-  return Array.from(set).sort((a,b)=>a.localeCompare(b,'fr'));
+  const valuesByKey=new Map();
+
+  (DATA[cyc]||[]).forEach(book=>{
+    splitCompositionTypes(book.g).forEach(type=>{
+      const key=normalizeSearchText(type);
+
+      if(!valuesByKey.has(key)){
+        valuesByKey.set(key,type);
+      }
+    });
+  });
+
+  return Array.from(valuesByKey.values()).sort((a,b)=>
+    a.localeCompare(b,'fr',{sensitivity:'base'})
+  );
 }
+
 function getAllEsthForCycle(){
   const set=new Set();
   (DATA[cyc]||[]).forEach(b=>{if(b.es&&b.es.trim()&&b.es!=='—')set.add(b.es.trim());});
@@ -4914,22 +4999,23 @@ function getAllEsthForCycle(){
   function getAllTonalitiesForCycle(){
   const valuesByKey=new Map();
 
-  (DATA[cyc]||[]).forEach(b=>{
-    const value=String(b.ton||'').trim();
+  (DATA[cyc]||[]).forEach(book=>{
+    splitTonalityValues(book.ton).forEach(value=>{
+      const key=normalizeSearchText(value);
 
-    if(!value||value==='—')return;
-
-    const key=normalizeSearchText(value);
-
-    if(!valuesByKey.has(key)){
-      valuesByKey.set(key,value);
-    }
+      if(!valuesByKey.has(key)){
+        valuesByKey.set(key,value);
+      }
+    });
   });
 
   return Array.from(valuesByKey.values()).sort((a,b)=>
-    a.localeCompare(b,'fr',{sensitivity:'base'})
+    a.localeCompare(b,'fr',{
+      sensitivity:'base'
+    })
   );
 }
+
 
 
 function renderTagFilterPanel(){
@@ -5379,7 +5465,15 @@ if(hasCoverMini){
   applyRealCoverImage(mc2,bk);
 }
 
-  
+  const tonalityValues=splitTonalityValues(bk.ton);
+
+const tonalityFieldHtml=tonalityValues.length
+  ? `
+    ${tonalityFieldHtml}
+
+  `
+  : '';
+
   document.getElementById('mgrid').innerHTML=`
     <div class="mf"><div class="mfl">Éditeur</div><div class="mfv">${bk.ed}</div></div>
     <div class="mf"><div class="mfl">Année</div><div class="mfv">${bk.y}</div></div>
@@ -5599,6 +5693,27 @@ document.getElementById('oeditfull').onclick=(e)=>{
   
   editingBook=bk;
   editingOriginalCycle=cyc;
+  function splitCompositionTypes(value){
+  return String(value||'')
+    .split(',')
+    .map(item=>item.trim())
+    .filter(item=>item && item!=='—');
+}
+
+function normalizeCompositionTypes(value){
+  const valuesByKey=new Map();
+
+  splitCompositionTypes(value).forEach(item=>{
+    const key=normalizeSearchText(item);
+
+    if(!valuesByKey.has(key)){
+      valuesByKey.set(key,item);
+    }
+  });
+
+  return Array.from(valuesByKey.values()).join(', ');
+}
+
   populateFieldSuggestions();
   
   document.getElementById('at').value=bk.t||'';
@@ -6026,27 +6141,52 @@ document.getElementById('metricOv').onclick=(e)=>{
 
 function populateFieldSuggestions(){
   const fields=[
+    {key:'a',listId:'au-list'},
     {key:'ed',listId:'ae-list'},
-    {key:'g', listId:'ag2-list'},
+    {key:'g',listId:'ag2-list',commaSeparated:true},
     {key:'es',listId:'aes-list'},
-    {key:'vol',listId:'avol-list'},
+    {key:'vol',listId:'avol-list'}
   ];
-  fields.forEach(({key,listId})=>{
-    const values=new Set();
-    [1,2,3].forEach(c=>{
-      (DATA[c]||[]).forEach(b=>{
-        const v=b[key];
-        if(v && v!=='—') values.add(v);
+
+  fields.forEach(({key,listId,commaSeparated})=>{
+    const valuesByKey=new Map();
+
+    [1,2,3].forEach(cycle=>{
+      (DATA[cycle]||[]).forEach(book=>{
+        const rawValue=book[key];
+
+        if(!rawValue || rawValue==='—')return;
+
+        const values=commaSeparated
+          ? String(rawValue).split(',')
+          : [String(rawValue)];
+
+        values.forEach(value=>{
+          const clean=value.trim();
+
+          if(!clean || clean==='—')return;
+
+          const normalized=normalizeSearchText(clean);
+
+          if(!valuesByKey.has(normalized)){
+            valuesByKey.set(normalized,clean);
+          }
+        });
       });
     });
+
     const listEl=document.getElementById(listId);
     if(!listEl)return;
-    listEl.innerHTML=Array.from(values)
-      .sort((a,b)=>a.localeCompare(b,'fr'))
-      .map(v=>`<option value="${v.replace(/"/g,'&quot;')}">`)
+
+    listEl.innerHTML=Array.from(valuesByKey.values())
+      .sort((a,b)=>a.localeCompare(b,'fr',{
+        sensitivity:'base'
+      }))
+      .map(value=>`<option value="${escapeHtml(value)}">`)
       .join('');
   });
 }
+
 
 function closeAddModal(){
   document.getElementById('oa').classList.remove('open');
@@ -6092,98 +6232,207 @@ const TONALITY_MODES=[
   'mixolydien',
   'éolien',
   'locrien'
+];const TONALITY_MODES=[
+  'ionien',
+  'dorien',
+  'phrygien',
+  'lydien',
+  'mixolydien',
+  'éolien',
+  'locrien'
 ];
 
-function syncTonalityField(){
+let selectedTonalities=[];
+
+function splitTonalityValues(value){
+  return String(value||'')
+    .split(',')
+    .map(item=>item.trim())
+    .filter(item=>item && item!=='—');
+}
+
+function syncTonalityControls(){
   const kind=document.getElementById('aton-kind').value;
   const rootEl=document.getElementById('aton-root');
   const qualityEl=document.getElementById('aton-quality');
   const modeEl=document.getElementById('aton-mode');
-  const hiddenEl=document.getElementById('aton');
 
-  const active=kind==='tonality'||kind==='mode';
+  const active=
+    kind==='tonality'||
+    kind==='mode';
 
   rootEl.disabled=!active;
 
-  qualityEl.style.display=kind==='tonality'?'':'none';
-  qualityEl.disabled=kind!=='tonality';
+  qualityEl.style.display=
+    kind==='tonality'?'':'none';
 
-  modeEl.style.display=kind==='mode'?'':'none';
-  modeEl.disabled=kind!=='mode';
+  qualityEl.disabled=
+    kind!=='tonality';
 
-  if(!active||!rootEl.value){
-    hiddenEl.value='';
-    return;
+  modeEl.style.display=
+    kind==='mode'?'':'none';
+
+  modeEl.disabled=
+    kind!=='mode';
+}
+
+function getTonalityDraft(){
+  const kind=document.getElementById('aton-kind').value;
+  const root=document.getElementById('aton-root').value;
+
+  if(!kind||!root){
+    return '';
   }
 
   if(kind==='tonality'){
-    hiddenEl.value=`${rootEl.value} ${qualityEl.value}`;
-  }else{
-    hiddenEl.value=`${rootEl.value} ${modeEl.value}`;
+    const quality=
+      document.getElementById('aton-quality').value;
+
+    return `${root} ${quality}`;
   }
+
+  if(kind==='mode'){
+    const mode=
+      document.getElementById('aton-mode').value;
+
+    return `${root} ${mode}`;
+  }
+
+  return '';
+}
+
+function syncTonalityHiddenField(){
+  document.getElementById('aton').value=
+    selectedTonalities.join(', ');
+}
+
+function resetTonalitySelectors(){
+  document.getElementById('aton-kind').value='';
+  document.getElementById('aton-root').value='';
+  document.getElementById('aton-quality').value='majeur';
+  document.getElementById('aton-mode').value='ionien';
+
+  syncTonalityControls();
+}
+
+function renderSelectedTonalities(){
+  const container=
+    document.getElementById('aton-selected');
+
+  container.innerHTML='';
+
+  selectedTonalities.forEach((value,index)=>{
+    const chip=document.createElement('span');
+    chip.className='tonality-selected-chip';
+
+    const text=document.createElement('span');
+    text.textContent=value;
+
+    const remove=document.createElement('button');
+    remove.type='button';
+    remove.className='tonality-selected-remove';
+    remove.setAttribute(
+      'aria-label',
+      `Retirer ${value}`
+    );
+    remove.textContent='×';
+
+    remove.addEventListener('click',()=>{
+      selectedTonalities.splice(index,1);
+      syncTonalityHiddenField();
+      renderSelectedTonalities();
+    });
+
+    chip.appendChild(text);
+    chip.appendChild(remove);
+    container.appendChild(chip);
+  });
+}
+
+function addTonalityDraft(showWarning=true){
+  const value=getTonalityDraft();
+
+  if(!value){
+    if(showWarning){
+      toast(
+        'Choisis un type et une note fondamentale.'
+      );
+    }
+
+    return false;
+  }
+
+  const key=normalizeSearchText(value);
+
+  const alreadyExists=selectedTonalities.some(item=>
+    normalizeSearchText(item)===key
+  );
+
+  if(!alreadyExists){
+    selectedTonalities.push(value);
+  }
+
+  syncTonalityHiddenField();
+  renderSelectedTonalities();
+  resetTonalitySelectors();
+
+  return true;
 }
 
 function getTonalityValue(){
-  syncTonalityField();
-  return document.getElementById('aton').value.trim();
+  /*
+    Si l’utilisateur a préparé une tonalité sans appuyer sur
+    « Ajouter », elle est quand même prise en compte au moment
+    de l’enregistrement.
+  */
+  const draft=getTonalityDraft();
+
+  if(draft){
+    addTonalityDraft(false);
+  }
+
+  syncTonalityHiddenField();
+
+  return document
+    .getElementById('aton')
+    .value
+    .trim();
 }
 
 function loadTonalityValue(value){
-  const kindEl=document.getElementById('aton-kind');
-  const rootEl=document.getElementById('aton-root');
-  const qualityEl=document.getElementById('aton-quality');
-  const modeEl=document.getElementById('aton-mode');
-  const hiddenEl=document.getElementById('aton');
+  const valuesByKey=new Map();
 
-  kindEl.value='';
-  rootEl.value='';
-  qualityEl.value='majeur';
-  modeEl.value='ionien';
-  hiddenEl.value='';
+  splitTonalityValues(value).forEach(item=>{
+    const key=normalizeSearchText(item);
 
-  const clean=String(value||'').trim();
+    if(!valuesByKey.has(key)){
+      valuesByKey.set(key,item);
+    }
+  });
 
-  if(!clean||clean==='—'){
-    syncTonalityField();
-    return;
-  }
+  selectedTonalities=
+    Array.from(valuesByKey.values());
 
-  const normalized=normalizeSearchText(clean);
+  syncTonalityHiddenField();
+  renderSelectedTonalities();
+  resetTonalitySelectors();
+}
 
-  const foundMode=TONALITY_MODES.find(mode=>
-    normalized.endsWith(' '+normalizeSearchText(mode))
+document
+  .getElementById('aton-kind')
+  .addEventListener(
+    'change',
+    syncTonalityControls
   );
 
-  if(foundMode){
-    const suffixLength=foundMode.length;
-    const root=clean.slice(0,clean.length-suffixLength).trim();
+document
+  .getElementById('aton-add')
+  .addEventListener('click',()=>{
+    addTonalityDraft(true);
+  });
 
-    kindEl.value='mode';
-    rootEl.value=root;
-    modeEl.value=foundMode;
-    syncTonalityField();
-    return;
-  }
+syncTonalityControls();
 
-  const qualityMatch=clean.match(/^(.+)\s+(majeur|mineur)$/i);
-
-  if(qualityMatch){
-    kindEl.value='tonality';
-    rootEl.value=qualityMatch[1].trim();
-    qualityEl.value=normalizeSearchText(qualityMatch[2])==='mineur'
-      ? 'mineur'
-      : 'majeur';
-
-    syncTonalityField();
-    return;
-  }
-
-  /*
-    Compatibilité avec une éventuelle ancienne valeur qui ne respecterait
-    pas exactement le format attendu.
-  */
-  hiddenEl.value=clean;
-}
 
 [
   'aton-kind',
@@ -6213,7 +6462,7 @@ document.getElementById('oasv').onclick=async(e)=>{
   const ed=document.getElementById('ae').value.trim()||'—';
   const y=parseInt(document.getElementById('ay').value)||new Date().getFullYear();
   const nv=document.getElementById('an').value.trim()||'—';
-  const g=document.getElementById('ag2').value.trim()||'—';
+  const g=normalizeCompositionTypes(document.getElementById('ag2').value)||'—';
   const es=document.getElementById('aes').value.trim()||'—';
   const ef=document.getElementById('aef').value.trim()||'—';
   const acc=document.getElementById('aac').value.trim()||'—';
