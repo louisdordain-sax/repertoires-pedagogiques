@@ -6426,19 +6426,7 @@ document
 syncTonalityControls();
 
 
-[
-  'aton-kind',
-  'aton-root',
-  'aton-quality',
-  'aton-mode'
-].forEach(id=>{
-  document.getElementById(id).addEventListener(
-    'change',
-    syncTonalityField
-  );
-});
 
-syncTonalityField();
 
   
 document.getElementById('oasv').onclick=async(e)=>{
