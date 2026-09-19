@@ -2065,7 +2065,7 @@ body {
           <circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="2"/>
           <line x1="14" y1="14" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        <input class="srch" id="srch" type="text" placeholder="Titre, auteur, éditeur, genre, caractéristiques…" autocomplete="off" spellcheck="false">
+        <input class="srch" id="srch" type="text" placeholder="Titre, auteur, éditeur, type de composition, caractéristiques…" autocomplete="off" spellcheck="false">
         <button class="srch-clear" id="srch-clear"><svg class="btn-ic" style="margin-right:0;width:11px;height:11px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <button class="ibtn" id="tagFilterBtn" title="Filtrer par tags" style="position:relative;">
@@ -2179,7 +2179,7 @@ body {
 
     <div class="ag">
       <div><div class="fl">Niveau</div><input type="text" id="an" placeholder="Débutant" maxlength="80"></div>
-      <div><div class="fl">Genre</div><input type="text" id="ag2" placeholder="Études…" maxlength="80" list="ag2-list"><datalist id="ag2-list"></datalist></div>
+      <div><div class="fl">Type de composition</div><input type="text" id="ag2" placeholder="Études…" maxlength="80" list="ag2-list"><datalist id="ag2-list"></datalist></div>
     </div>
     <div class="ag">
       <div><div class="fl">Esthétique</div><input type="text" id="aes" placeholder="Romantique, impressionniste…" maxlength="80" list="aes-list"><datalist id="aes-list"></datalist></div>
@@ -2279,8 +2279,8 @@ body {
 <!-- Modal filtre par tags -->
 <div class="ov" id="tagFilterOv">
   <div class="mb">
-    <div class="mh3">Filtrer par tags, métriques, genre, esthétique ou présence d'accompagnement</div>
-    <div class="tagfilter-hint">Sélectionne un ou plusieurs tags, genres, esthétiques, accompagnements et/ou métriques — seules les partitions possédant TOUS les éléments cochés seront affichées.</div>
+    <div class="mh3">Filtrer par tags, métriques, type de composition, esthétique ou présence d'accompagnement</div>
+    <div class="tagfilter-hint">Sélectionne un ou plusieurs tags, types de compositions, esthétiques, accompagnements et/ou métriques — seules les partitions possédant TOUS les éléments cochés seront affichées.</div>
     <div class="tagfilter-list" id="tagFilterList"></div>
     <div class="mfoot">
       <button class="bcnl" id="tagFilterClear">Réinitialiser</button>
@@ -2305,7 +2305,7 @@ body {
         <div class="help-step-ic"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><line x1="14" y1="14" x2="20" y2="20"/></svg></div>
         <div class="help-step-body">
           <div class="help-step-ttl">Rechercher</div>
-          <div class="help-step-tx">Tape un titre, un auteur, un éditeur, un genre ou une caractéristique. Une croix apparaît pour tout effacer d'un geste.</div>
+          <div class="help-step-tx">Tape un titre, un auteur, un éditeur, un type de composition ou une caractéristique. Une croix apparaît pour tout effacer d'un geste.</div>
         </div>
       </div>
       <div class="help-step">
@@ -3058,7 +3058,7 @@ function wrapText(ctx,text,maxW,font){
 // justement ce '…' qui se faisait retirer — le texte "réel" ne rétrécissait
 // donc jamais, la condition de largeur restait vraie indéfiniment, et la
 // boucle tournait à l'infini (100% CPU, page figée) dès qu'un sous-titre (ou
-// un genre) était juste assez long pour nécessiter une troncature. Ici, on
+// un type de composition) était juste assez long pour nécessiter une troncature. Ici, on
 // tronque toujours la chaîne D'ORIGINE (sans l'ellipse), qui raccourcit donc
 // réellement à chaque itération et finit forcément par tenir ou par atteindre
 // la limite basse — plus jamais de boucle infinie possible.
@@ -4982,10 +4982,10 @@ function renderTagFilterPanel(){
   // (voir bookMatchesFilterValue).
   renderPrefixedPillSection(
   listEl,
-  'Genre',
-  'genre::',
+  'Type de composition',
+  'type de composition::',
   getAllGenresForCycle(),
-  "Aucun genre pour ce cycle pour l'instant.",
+  "Aucun pour ce cycle pour l'instant.",
   265,
   55
 );
@@ -5382,7 +5382,7 @@ if(hasCoverMini){
     <div class="mf"><div class="mfl">Éditeur</div><div class="mfv">${bk.ed}</div></div>
     <div class="mf"><div class="mfl">Année</div><div class="mfv">${bk.y}</div></div>
     <div class="mf"><div class="mfl">Niveau</div><div class="mfv">${bk.nv}</div></div>
-    <div class="mf"><div class="mfl">Genre</div><div class="mfv">${bk.g}</div></div>
+    <div class="mf"><div class="mfl">Type de composition</div><div class="mfv">${bk.g}</div></div>
     <div class="mf"><div class="mfl">Tonalité / mode</div><div class="mfv">${escapeHtml(bk.ton||'—')}</div></div>
     <div class="mf"><div class="mfl">Esthétique</div><div class="mfv">${bk.es||'—'}</div></div>
     <div class="mf"><div class="mfl">Effectif</div><div class="mfv">${bk.ef||'—'}</div></div>
