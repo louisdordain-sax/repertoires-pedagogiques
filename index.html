@@ -808,6 +808,7 @@ body {
   overflow-y:auto;
 }
 
+
   /* Fenêtre des filtres agrandie */
 #tagFilterOv .mb{
   width:min(680px,calc(100vw - 32px));
@@ -1999,6 +2000,105 @@ body {
   }
 }
 
+#tagManageOv {
+  z-index: 230;
+}
+
+.tag-manage-box {
+  width: min(760px, 94vw);
+  max-height: 86vh;
+  overflow: auto;
+}
+
+.tag-manage-hint {
+  margin: 0 0 18px;
+  color: #677489;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.tag-manage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tag-manage-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) auto auto auto;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid #dce3ed;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.tag-manage-input {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid #c9d3df;
+  border-radius: 7px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+}
+
+.tag-manage-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.tag-manage-count {
+  min-width: 72px;
+  color: #6b7280;
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.tag-manage-save,
+.tag-manage-delete {
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.tag-manage-save {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.tag-manage-delete {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.tag-manage-empty {
+  padding: 24px;
+  color: #6b7280;
+  text-align: center;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+}
+
+@media (max-width: 650px) {
+  .tag-manage-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tag-manage-input {
+    grid-column: 1 / -1;
+  }
+
+  .tag-manage-count {
+    text-align: left;
+  }
+}
+
   
 </style>
 </head>
@@ -2172,9 +2272,26 @@ body {
 <div class="tag-memory-list" id="ot-tag-memory"></div>
     <div class="fl" style="font-size:8px;color:var(--c3);margin-top:8px;">💡 Exemples : études, technique, virtuose, lyrique, français, contemporain, etc.</div>
     <div class="mfoot"><button class="bcnl" id="otcl">Annuler</button><button class="bsav" id="otsv"><svg class="btn-ic" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Enregistrer</button></div>
+    <button type="button" class="mclose" id="manageTagsBtn">Gérer le référentiel des tags</button>
   </div>
 </div>
 
+<div class="ov" id="tagManageOv">
+  <div class="mb tag-manage-box">
+    <button type="button" class="mx" id="tagManageClose" aria-label="Fermer">×</button>
+
+    <h2>Gestion des tags</h2>
+
+    <p class="tag-manage-hint">
+      Toute modification sera appliquée à l’ensemble des notices des trois cycles.
+      Si le nouveau nom existe déjà, les deux tags seront fusionnés.
+    </p>
+
+    <div class="tag-manage-list" id="tagManageList"></div>
+  </div>
+</div>
+
+  
 <!-- Modal sélection des métriques -->
 <div class="ov" id="metricOv">
   <div class="mb ambox">
@@ -2225,6 +2342,7 @@ body {
     <option value="">Choisir un type</option>
     <option value="tonality">Majeur ou mineur</option>
     <option value="mode">Mode</option>
+    <option value="modal">Modal (mode non précisé)</option>
   </select>
 
   <select id="aton-root" disabled>
@@ -5607,6 +5725,318 @@ function getAllStoredTags(){
   );
 }
 
+const tagManageOv = document.getElementById('tagManageOv');
+const tagManageList = document.getElementById('tagManageList');
+const manageTagsBtn = document.getElementById('manageTagsBtn');
+const tagManageClose = document.getElementById('tagManageClose');
+
+function getGlobalTagUsage() {
+  const usage = new Map();
+
+  [1, 2, 3].forEach(cycle => {
+    (DATA[cycle] || []).forEach(book => {
+      const seenInBook = new Set();
+
+      (book.tags || []).forEach(rawTag => {
+        const tag = cleanTagValue(rawTag);
+        const key = getTagKey(tag);
+
+        if (!tag || !key || seenInBook.has(key)) return;
+
+        seenInBook.add(key);
+
+        if (!usage.has(key)) {
+          usage.set(key, {
+            key,
+            label: tag,
+            count: 0
+          });
+        }
+
+        usage.get(key).count += 1;
+      });
+    });
+  });
+
+  return [...usage.values()].sort((a, b) =>
+    a.label.localeCompare(b.label, 'fr', {
+      sensitivity: 'base'
+    })
+  );
+}
+
+function renderGlobalTagManager() {
+  if (!tagManageList) return;
+
+  tagManageList.innerHTML = '';
+
+  const tags = getGlobalTagUsage();
+
+  if (!tags.length) {
+    const empty = document.createElement('div');
+    empty.className = 'tag-manage-empty';
+    empty.textContent = 'Aucun tag n’est actuellement enregistré.';
+    tagManageList.appendChild(empty);
+    return;
+  }
+
+  tags.forEach(tagInfo => {
+    const row = document.createElement('div');
+    row.className = 'tag-manage-row';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'tag-manage-input';
+    input.value = tagInfo.label;
+    input.setAttribute('aria-label', `Modifier le tag ${tagInfo.label}`);
+
+    const count = document.createElement('div');
+    count.className = 'tag-manage-count';
+    count.textContent =
+      `${tagInfo.count} notice${tagInfo.count > 1 ? 's' : ''}`;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.className = 'tag-manage-save';
+    saveBtn.textContent = 'Renommer';
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'tag-manage-delete';
+    deleteBtn.textContent = 'Supprimer';
+
+    saveBtn.addEventListener('click', async () => {
+      const newTag = cleanTagValue(input.value);
+
+      if (!newTag) {
+        toast('Veuillez saisir un nom de tag.');
+        input.focus();
+        return;
+      }
+
+      if (newTag.includes(',')) {
+        toast('Un tag ne peut pas contenir de virgule.');
+        input.focus();
+        return;
+      }
+
+      const existingDestination = getGlobalTagUsage().find(item =>
+        item.key === getTagKey(newTag) &&
+        item.key !== tagInfo.key
+      );
+
+      if (existingDestination) {
+        const confirmed = confirm(
+          `Le tag « ${existingDestination.label} » existe déjà.\n\n` +
+          `Voulez-vous fusionner « ${tagInfo.label} » avec ce tag ?`
+        );
+
+        if (!confirmed) return;
+      }
+
+      await mutateGlobalTag(tagInfo.label, newTag);
+    });
+
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        saveBtn.click();
+      }
+    });
+
+    deleteBtn.addEventListener('click', async () => {
+      const confirmed = confirm(
+        `Supprimer le tag « ${tagInfo.label} » des ` +
+        `${tagInfo.count} notice${tagInfo.count > 1 ? 's' : ''} concernée${tagInfo.count > 1 ? 's' : ''} ?\n\n` +
+        `Cette action est irréversible.`
+      );
+
+      if (!confirmed) return;
+
+      await mutateGlobalTag(tagInfo.label, null);
+    });
+
+    row.append(input, count, saveBtn, deleteBtn);
+    tagManageList.appendChild(row);
+  });
+}
+
+function buildMutatedTagList(tags, oldKey, replacement) {
+  const result = [];
+  const seen = new Set();
+
+  (tags || []).forEach(rawTag => {
+    const currentTag = cleanTagValue(rawTag);
+    const currentKey = getTagKey(currentTag);
+
+    const finalTag =
+      currentKey === oldKey
+        ? replacement
+        : currentTag;
+
+    if (!finalTag) return;
+
+    const finalKey = getTagKey(finalTag);
+
+    if (!finalKey || seen.has(finalKey)) return;
+
+    seen.add(finalKey);
+    result.push(finalTag);
+  });
+
+  return result;
+}
+
+async function mutateGlobalTag(oldTag, newTag = null) {
+  if (!currentUser) {
+    toast('Vous devez être connecté pour modifier les tags.');
+    return;
+  }
+
+  if (!firebaseReady || !db) {
+    toast('La base de données est indisponible.');
+    return;
+  }
+
+  const oldKey = getTagKey(oldTag);
+  const replacement = newTag === null
+    ? null
+    : cleanTagValue(newTag);
+
+  if (!oldKey) return;
+
+  const updates = {};
+  const localChanges = [];
+
+  [1, 2, 3].forEach(cycle => {
+    (DATA[cycle] || []).forEach(book => {
+      const currentTags = Array.isArray(book.tags) ? book.tags : [];
+
+      const containsOldTag = currentTags.some(tag =>
+        getTagKey(tag) === oldKey
+      );
+
+      if (!containsOldTag) return;
+
+      const nextTags = buildMutatedTagList(
+        currentTags,
+        oldKey,
+        replacement
+      );
+
+      updates[`${DB_ROOT}/${cycle}/${book.id}/tags`] = nextTags;
+
+      localChanges.push({
+        book,
+        tags: nextTags
+      });
+    });
+  });
+
+  if (!localChanges.length) {
+    toast('Ce tag n’est utilisé dans aucune notice.');
+    renderGlobalTagManager();
+    return;
+  }
+
+  try {
+    showSavingOverlay();
+
+    const connected = await waitForFirebaseConnection(5000);
+
+    if (!connected) {
+      throw new Error('Connexion Firebase indisponible.');
+    }
+
+    await withTimeout(
+      db.ref().update(updates),
+      10000,
+      'La sauvegarde des tags a pris trop de temps.'
+    );
+
+    localChanges.forEach(change => {
+      change.book.tags = change.tags;
+    });
+
+    /*
+     * Les filtres sont remis à zéro afin d’éviter qu’un ancien
+     * nom de tag reste actif après un renommage ou une suppression.
+     */
+    activeTagFilters = [];
+
+    if (typeof updateFilterBadge === 'function') {
+      updateFilterBadge();
+    }
+
+    if (typeof filter === 'function') {
+      filter();
+    }
+
+    /*
+     * Si la fiche dont les tags sont ouverts a été modifiée,
+     * le champ de la modale est actualisé.
+     */
+    if (currentBookForTags) {
+      const tagsField = document.getElementById('ot-tags');
+
+      if (tagsField) {
+        tagsField.value = (currentBookForTags.tags || []).join(', ');
+      }
+    }
+
+    if (typeof renderStoredTags === 'function') {
+      renderStoredTags();
+    }
+
+    renderGlobalTagManager();
+
+    toast(
+      replacement
+        ? `Tag « ${oldTag} » renommé en « ${replacement} ».`
+        : `Tag « ${oldTag} » supprimé.`
+    );
+  } catch (error) {
+    console.error('Erreur de modification globale des tags :', error);
+    toast(error.message || 'Impossible de modifier les tags.');
+  } finally {
+    hideSavingOverlay();
+  }
+}
+
+manageTagsBtn?.addEventListener('click', () => {
+  if (!currentUser) {
+    toast('Vous devez être connecté pour gérer les tags.');
+    return;
+  }
+
+  renderGlobalTagManager();
+  tagManageOv.classList.add('open');
+});
+
+tagManageClose?.addEventListener('click', () => {
+  tagManageOv.classList.remove('open');
+  renderStoredTags();
+});
+
+tagManageOv?.addEventListener('click', event => {
+  if (event.target === tagManageOv) {
+    tagManageOv.classList.remove('open');
+    renderStoredTags();
+  }
+});
+
+document.addEventListener('keydown', event => {
+  if (
+    event.key === 'Escape' &&
+    tagManageOv?.classList.contains('open')
+  ) {
+    tagManageOv.classList.remove('open');
+    renderStoredTags();
+  }
+});
+
+
+  
 /* Lit le contenu du champ et retire les doublons */
 function getTagsFromEditor(){
   const storedTags=getAllStoredTags();
@@ -6251,55 +6681,44 @@ function splitTonalityValues(value){
     .filter(item=>item && item!=='—');
 }
 
-function syncTonalityControls(){
-  const kind=document.getElementById('aton-kind').value;
-  const rootEl=document.getElementById('aton-root');
-  const qualityEl=document.getElementById('aton-quality');
-  const modeEl=document.getElementById('aton-mode');
+function syncTonalityControls() {
+  const kind = document.getElementById('aton-kind').value;
+  const rootEl = document.getElementById('aton-root');
+  const qualityEl = document.getElementById('aton-quality');
+  const modeEl = document.getElementById('aton-mode');
 
-  const active=
-    kind==='tonality'||
-    kind==='mode';
+  const needsRoot = kind === 'tonality' || kind === 'mode';
 
-  rootEl.disabled=!active;
+  rootEl.disabled = !needsRoot;
 
-  qualityEl.style.display=
-    kind==='tonality'?'':'none';
-
-  qualityEl.disabled=
-    kind!=='tonality';
-
-  modeEl.style.display=
-    kind==='mode'?'':'none';
-
-  modeEl.disabled=
-    kind!=='mode';
+  qualityEl.style.display = kind === 'tonality' ? '' : 'none';
+  modeEl.style.display = kind === 'mode' ? '' : 'none';
 }
 
-function getTonalityDraft(){
-  const kind=document.getElementById('aton-kind').value;
-  const root=document.getElementById('aton-root').value;
 
-  if(!kind||!root){
-    return '';
+function getTonalityDraft() {
+  const kind = document.getElementById('aton-kind').value;
+  const root = document.getElementById('aton-root').value;
+
+  if (kind === 'modal') {
+    return 'Modal';
   }
 
-  if(kind==='tonality'){
-    const quality=
-      document.getElementById('aton-quality').value;
+  if (!kind || !root) return '';
 
-    return `${root} ${quality}`;
+  if (kind === 'tonality') {
+    const quality = document.getElementById('aton-quality').value;
+    return quality ? `${root} ${quality}` : '';
   }
 
-  if(kind==='mode'){
-    const mode=
-      document.getElementById('aton-mode').value;
-
-    return `${root} ${mode}`;
+  if (kind === 'mode') {
+    const mode = document.getElementById('aton-mode').value;
+    return mode ? `${root} ${mode}` : '';
   }
 
   return '';
 }
+
 
 function syncTonalityHiddenField(){
   document.getElementById('aton').value=
