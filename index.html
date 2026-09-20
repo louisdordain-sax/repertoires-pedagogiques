@@ -5942,7 +5942,7 @@ async function mutateGlobalTag(oldTag, newTag = null) {
   try {
     showSavingOverlay();
 
-    const connected = await waitForFirebaseConnection(5000);
+    const connected = await waitForFirebaseConnected(5000);
 
     if (!connected) {
       throw new Error('Connexion Firebase indisponible.');
