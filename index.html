@@ -2192,7 +2192,7 @@ body {
     <div class="fl">Titre *</div><input type="text" id="at" placeholder="50 Études Faciles…" maxlength="200">
     <div class="fl">Sous-titre (optionnel)</div><input type="text" id="ast" placeholder="Vol. 1…" maxlength="120">
     <div class="ag">
-      <div><div class="fl">Auteur *</div><input type="text" id="au" placeholder="Guy Lacour" maxlength="150">list="au-list"><datalist id="au-list"></datalist></div>
+      <div><div class="fl">Auteur *</div><input type="text" id="au" placeholder="Guy Lacour" maxlength="150" list="au-list"><datalist id="au-list"></datalist></div>
       <div><div class="fl">Éditeur</div><input type="text" id="ae" placeholder="Billaudot" maxlength="100" list="ae-list"><datalist id="ae-list"></datalist></div>
     </div>
     <div class="ag">
@@ -4972,6 +4972,28 @@ function getAllTagsForCycle(){
 // cycle affiché (mêmes principes que getAllTagsForCycle : dynamique, propre
 // au cycle, triée alphabétiquement). L'accompagnement, lui, n'a pas besoin
 // de cette collecte : c'est un choix binaire avec/sans (voir plus bas).
+
+  function splitCompositionTypes(value){
+  return String(value||'')
+    .split(',')
+    .map(item=>item.trim())
+    .filter(item=>item && item!=='—');
+}
+
+function normalizeCompositionTypes(value){
+  const valuesByKey=new Map();
+
+  splitCompositionTypes(value).forEach(item=>{
+    const key=normalizeSearchText(item);
+
+    if(!valuesByKey.has(key)){
+      valuesByKey.set(key,item);
+    }
+  });
+
+  return Array.from(valuesByKey.values()).join(', ');
+}
+  
 function getAllGenresForCycle(){
   const valuesByKey=new Map();
 
@@ -5467,19 +5489,24 @@ if(hasCoverMini){
 
   const tonalityValues=splitTonalityValues(bk.ton);
 
-const tonalityFieldHtml=tonalityValues.length
+const tonalityFieldHtml = tonalityValues.length
   ? `
-    ${tonalityFieldHtml}
-
+    <div class="mf">
+      <div class="mfl">Tonalités / modes</div>
+      <div class="mfv">
+        ${tonalityValues.map(escapeHtml).join(', ')}
+      </div>
+    </div>
   `
   : '';
+
 
   document.getElementById('mgrid').innerHTML=`
     <div class="mf"><div class="mfl">Éditeur</div><div class="mfv">${bk.ed}</div></div>
     <div class="mf"><div class="mfl">Année</div><div class="mfv">${bk.y}</div></div>
     <div class="mf"><div class="mfl">Niveau</div><div class="mfv">${bk.nv}</div></div>
     <div class="mf"><div class="mfl">Type de composition</div><div class="mfv">${bk.g}</div></div>
-    <div class="mf"><div class="mfl">Tonalité / mode</div><div class="mfv">${escapeHtml(bk.ton||'—')}</div></div>
+    ${tonalityFieldHtml}
     <div class="mf"><div class="mfl">Esthétique</div><div class="mfv">${bk.es||'—'}</div></div>
     <div class="mf"><div class="mfl">Effectif</div><div class="mfv">${bk.ef||'—'}</div></div>
     <div class="mf" style="grid-column:1 / -1;"><div class="mfl">Métrique(s)</div><div class="mfv" id="mmet-display">—</div></div>
@@ -5693,26 +5720,7 @@ document.getElementById('oeditfull').onclick=(e)=>{
   
   editingBook=bk;
   editingOriginalCycle=cyc;
-  function splitCompositionTypes(value){
-  return String(value||'')
-    .split(',')
-    .map(item=>item.trim())
-    .filter(item=>item && item!=='—');
-}
-
-function normalizeCompositionTypes(value){
-  const valuesByKey=new Map();
-
-  splitCompositionTypes(value).forEach(item=>{
-    const key=normalizeSearchText(item);
-
-    if(!valuesByKey.has(key)){
-      valuesByKey.set(key,item);
-    }
-  });
-
-  return Array.from(valuesByKey.values()).join(', ');
-}
+  
 
   populateFieldSuggestions();
   
