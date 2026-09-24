@@ -4668,80 +4668,79 @@ function build(bklist) {
   ring.innerHTML = '';
 
   const dotsEl = document.getElementById('dots');
-  const em = document.getElementById('empty');
-  const cs = document.getElementById('cs');
-
   dotsEl.innerHTML = '';
 
   if (!bklist.length) {
-    em.classList.add('on');
-    cs.style.visibility = 'hidden';
-    dotsEl.style.display = 'none';
+    const emptyEl = document.getElementById('empty');
+
+    if (emptyEl) {
+      emptyEl.style.display = 'block';
+    }
+
     updateInfo(null);
     return;
   }
 
-  em.classList.remove('on');
-  cs.style.visibility = '';
-  dotsEl.style.display = '';
+  const emptyEl = document.getElementById('empty');
 
-  if (idx >= bklist.length) {
-    idx = 0;
+  if (emptyEl) {
+    emptyEl.style.display = 'none';
   }
 
   const n = bklist.length;
   const step = 360 / n;
-  const R = getR(n);
+  const R = computeRadius(n);
 
   bklist.forEach((bk, i) => {
     try {
       const el = document.createElement('div');
-      el.className = 'ci' + (i === idx ? ' act' : '');
+      el.className = 'ci';
 
       const dims = getBookDims(bk);
-      const { tx, ty } = getBookTransformOffsets(dims);
+      const offsets = computeCoverOffsets(dims.FW, dims.BH);
 
       el.style.transform =
-        n === 1
-          ? `translateX(${tx}px) translateY(${ty}px)`
-          : `rotateY(${i * step}deg) translateZ(${R}px)
-             translateX(${tx}px) translateY(${ty}px)`;
+        `translate(-50%, -50%) rotateY(${i * step}deg) translateZ(${R}px)`;
 
-      const hasCover = Boolean(bk.cu);
+      el.dataset.key = bk.key;
+      el.dataset.index = String(i);
+
+      const hasCover = Boolean(
+        bk.cu &&
+        String(bk.cu).trim() &&
+        !String(bk.cu).startsWith('data:image/')
+      );
 
       el.innerHTML = `
-        <div class="bw" style="width:${dims.w}px;height:${dims.h}px">
+        <div class="bw" style="
+          width:${dims.FW}px;
+          height:${dims.BH}px;
+          margin-left:${offsets.marginLeft}px;
+          margin-top:${offsets.marginTop}px;
+        ">
           <div class="bg"></div>
-
           <div class="b3">
-            <div class="bf">
+            <div class="bf" style="
+              width:${dims.FW}px;
+              height:${dims.BH}px;
+            ">
               ${
                 hasCover
                   ? `<img
                        class="bc real-cover-img"
                        alt=""
                        draggable="false"
-                       style="
-                         width:100%;
-                         height:100%;
-                         display:block;
-                         object-fit:cover;
-                       "
                      >`
-                  : `<canvas
-                       class="bc"
-                       width="${dims.w * 2}"
-                       height="${dims.h * 2}"
-                     ></canvas>`
+                  : `<canvas class="bc"></canvas>`
               }
 
-              <div class="bf-grain"></div>
-              <div class="bf-shine"></div>
-              <div class="bf-edge"></div>
+              <div class="grain"></div>
+              <div class="shine"></div>
+              <div class="edge"></div>
 
               ${
-                bk.badge
-                  ? `<div class="cover-badge">${esc(bk.badge)}</div>`
+                hasDetailedAnalysis(bk)
+                  ? '<span class="badge">Analyse</span>'
                   : ''
               }
             </div>
@@ -4753,45 +4752,73 @@ function build(bklist) {
 
       if (hasCover) {
         coverEl.src = bk.cu;
+        coverEl.alt = `Couverture de ${bk.t || 'la ressource'}`;
+        coverEl.loading = 'eager';
+        coverEl.decoding = 'async';
 
         coverEl.addEventListener('error', () => {
-          console.warn('Image de couverture invalide :', bk.title);
-        });
+          console.warn('Couverture inaccessible :', bk.cu);
+
+          const canvas = document.createElement('canvas');
+          canvas.className = 'bc';
+
+          coverEl.replaceWith(canvas);
+          drawCover(canvas, bk);
+        }, { once: true });
       } else {
         drawCover(coverEl, bk);
       }
 
       el.addEventListener('click', () => {
-        if (i === idx) {
-          openDetail(bklist[i]);
-        } else {
-          goto(i);
+        const visibleIndex = filtered.findIndex(item => item.key === bk.key);
+
+        if (visibleIndex < 0) {
+          return;
         }
+
+        idx = visibleIndex;
+        updateTarget();
+        rotate();
+        restartAuto();
       });
 
       ring.appendChild(el);
 
-      const dot = document.createElement('div');
+      const dot = document.createElement('button');
+      dot.type = 'button';
       dot.className = 'dot' + (i === idx ? ' act' : '');
-      dot.addEventListener('click', () => goto(i));
+      dot.setAttribute(
+        'aria-label',
+        `Aller à ${bk.t || `la ressource ${i + 1}`}`
+      );
+
+      dot.addEventListener('click', () => {
+        idx = i;
+        updateTarget();
+        rotate();
+        restartAuto();
+      });
+
       dotsEl.appendChild(dot);
     } catch (err) {
-      console.error(
-        `Erreur lors de la création du livre "${bk.title}" :`,
-        err
-      );
+      console.error('Erreur de construction de la carte :', bk, err);
     }
   });
 
   ring.style.transition = 'none';
+
   totalDeg = -idx * step;
-  rotate();
+  currentDeg = totalDeg;
+
+  ring.style.transform =
+    `translateZ(-${R}px) rotateY(${currentDeg}deg)`;
 
   requestAnimationFrame(() => {
-    ring.style.transition = '';
+    requestAnimationFrame(() => {
+      ring.style.transition = '';
+      updateInfo(bklist[idx] || null);
+    });
   });
-
-  updateInfo(bklist[idx]);
 }
 
 
@@ -7363,14 +7390,24 @@ loadDataFromFirebase().then(()=>{
   if(currentUser){
     setTimeout(migrateLegacyCovers,800);
   }
-}).catch(err=>{
-  dataReady=true;
-  document.getElementById('initialLoading').style.display='none';
+}).catch(err => {
+  dataReady = true;
+
+  const loadingEl = document.getElementById('initialLoading');
+
+  if (loadingEl) {
+    loadingEl.style.display = 'none';
+  }
+
+  console.error('Erreur complète du chargement initial :', err);
+  console.error(err.stack);
+
   showFatalError(
-    'Chargement initial impossible : '+
-    (err&&err.message?err.message:String(err))
+    'Chargement initial impossible : ' +
+    (err.stack || err.message || String(err))
   );
 });
+
 
   document.addEventListener('gesturestart', e => {
   e.preventDefault();
