@@ -4664,7 +4664,7 @@ function getR(n){
 }
 
 
-function build(bklist){
+function build(bklist) {
   ring.innerHTML = '';
 
   const dotsEl = document.getElementById('dots');
@@ -4673,22 +4673,21 @@ function build(bklist){
 
   dotsEl.innerHTML = '';
 
-  if(!bklist.length){
-    em.style.display = 'block';
-    cs.style.display = 'none';
-    document.getElementById('ctitle').textContent = 'Aucun résultat';
-    document.getElementById('cdesc').textContent =
-      'Aucune partition ne correspond aux filtres sélectionnés.';
-    document.getElementById('count').textContent = '0 résultat';
+  if (!bklist.length) {
+    em.classList.add('on');
+    cs.style.visibility = 'hidden';
+    dotsEl.style.display = 'none';
+    updateInfo(null);
     return;
   }
 
-  em.style.display = 'none';
-  cs.style.display = '';
-  document.getElementById('count').textContent =
-    `${bklist.length} résultat${bklist.length > 1 ? 's' : ''}`;
+  em.classList.remove('on');
+  cs.style.visibility = '';
+  dotsEl.style.display = '';
 
-  if(idx >= bklist.length) idx = 0;
+  if (idx >= bklist.length) {
+    idx = 0;
+  }
 
   const n = bklist.length;
   const step = 360 / n;
@@ -4697,75 +4696,90 @@ function build(bklist){
   bklist.forEach((bk, i) => {
     try {
       const el = document.createElement('div');
-      el.className = 'book';
-      el.dataset.i = i;
+      el.className = 'ci' + (i === idx ? ' act' : '');
 
-      const ang = i * step;
-      el.style.transform = n === 1
-        ? 'rotateY(0deg) translateZ(0px)'
-        : `rotateY(${ang}deg) translateZ(${R}px)`;
+      const dims = getBookDims(bk);
+      const { tx, ty } = getBookTransformOffsets(dims);
 
-      const dims = getDims(bk);
+      el.style.transform =
+        n === 1
+          ? `translateX(${tx}px) translateY(${ty}px)`
+          : `rotateY(${i * step}deg) translateZ(${R}px)
+             translateX(${tx}px) translateY(${ty}px)`;
+
       const hasCover = Boolean(bk.cu);
 
       el.innerHTML = `
-        <div class="book-face" style="width:${dims.FW}px;height:${dims.BH}px">
-          ${
-            hasCover
-              ? `<img class="bc real-cover-img"
-                      alt=""
-                      style="width:${dims.FW}px;height:${dims.BH}px">`
-              : `<canvas class="bc"
-                         width="${dims.FW}"
-                         height="${dims.BH}"
-                         style="width:${dims.FW}px;height:${dims.BH}px"></canvas>`
-          }
+        <div class="bw" style="width:${dims.w}px;height:${dims.h}px">
+          <div class="bg"></div>
 
-          <div class="grain"></div>
-          <div class="shine"></div>
-          <div class="book-edge"></div>
+          <div class="b3">
+            <div class="bf">
+              ${
+                hasCover
+                  ? `<img
+                       class="bc real-cover-img"
+                       alt=""
+                       draggable="false"
+                       style="
+                         width:100%;
+                         height:100%;
+                         display:block;
+                         object-fit:cover;
+                       "
+                     >`
+                  : `<canvas
+                       class="bc"
+                       width="${dims.w * 2}"
+                       height="${dims.h * 2}"
+                     ></canvas>`
+              }
 
-          ${
-            hasDetailedAnalysis(bk)
-              ? '<div class="analysis-badge" title="Analyse détaillée disponible">Analyse</div>'
-              : ''
-          }
+              <div class="bf-grain"></div>
+              <div class="bf-shine"></div>
+              <div class="bf-edge"></div>
+
+              ${
+                bk.badge
+                  ? `<div class="cover-badge">${esc(bk.badge)}</div>`
+                  : ''
+              }
+            </div>
+          </div>
         </div>
       `;
 
       const coverEl = el.querySelector('.bc');
 
-      if(hasCover){
+      if (hasCover) {
         coverEl.src = bk.cu;
-        coverEl.alt = `Couverture de ${bk.t || 'la partition'}`;
-        coverEl.decoding = 'async';
-        coverEl.draggable = false;
-      }else{
+
+        coverEl.addEventListener('error', () => {
+          console.warn('Image de couverture invalide :', bk.title);
+        });
+      } else {
         drawCover(coverEl, bk);
       }
 
       el.addEventListener('click', () => {
-        if(i === idx){
-          openBook(bk);
-        }else{
+        if (i === idx) {
+          openDetail(bklist[i]);
+        } else {
           goto(i);
         }
       });
 
       ring.appendChild(el);
 
-      const dot = document.createElement('button');
-      dot.type = 'button';
-      dot.className = 'dot';
-      dot.setAttribute('aria-label', `Afficher ${bk.t || `la partition ${i + 1}`}`);
-
-      if(i === idx) dot.classList.add('active');
-
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (i === idx ? ' act' : '');
       dot.addEventListener('click', () => goto(i));
       dotsEl.appendChild(dot);
-
-    }catch(err){
-      console.error(`Erreur lors de la création du livre ${i}`, err, bk);
+    } catch (err) {
+      console.error(
+        `Erreur lors de la création du livre "${bk.title}" :`,
+        err
+      );
     }
   });
 
@@ -4774,13 +4788,12 @@ function build(bklist){
   rotate();
 
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      ring.style.transition = '';
-    });
+    ring.style.transition = '';
   });
 
   updateInfo(bklist[idx]);
 }
+
 
 function rotate(){
   const n=books.length;
