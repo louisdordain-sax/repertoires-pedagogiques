@@ -2139,6 +2139,42 @@ body {
   -webkit-backface-visibility: hidden;
 }
 
+   .real-cover-img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 1;
+  filter: none;
+  border-radius: inherit;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Les effets ne doivent jamais bloquer les clics. */
+.bf-grain,
+.bf-shine,
+.bf-edge,
+.bg {
+  pointer-events: none;
+}
+
+/* Pas de voile artificiel sur les vraies couvertures. */
+.bf.real-cover .bf-grain,
+.bf.real-cover .bf-shine {
+  display: none;
+}
+
+/* La carte entière reste cliquable. */
+.ci {
+  pointer-events: auto;
+  cursor: pointer;
+}
+ 
+    
 </style>
 </head>
 <body>
@@ -4668,107 +4704,76 @@ function build(bklist) {
   ring.innerHTML = '';
 
   const dotsEl = document.getElementById('dots');
-  const emptyEl = document.getElementById('empty');
-  const carouselEl = document.getElementById('cs');
+  if (dotsEl) dotsEl.innerHTML = '';
 
-  if (!dotsEl || !emptyEl || !carouselEl) {
-    console.error('Éléments du carrousel introuvables', {
-      ring,
-      dotsEl,
-      emptyEl,
-      carouselEl
-    });
+  const n = bklist.length;
+  if (!n) {
+    updateInfo();
     return;
   }
 
-  dotsEl.innerHTML = '';
+  idx = Math.max(0, Math.min(idx, n - 1));
 
-  if (!bklist.length) {
-    emptyEl.classList.add('on');
-    carouselEl.style.visibility = 'hidden';
-    dotsEl.style.display = 'none';
-    updateInfo(null);
-    return;
-  }
-
-  emptyEl.classList.remove('on');
-  carouselEl.style.visibility = 'visible';
-  dotsEl.style.display = 'flex';
-
-  if (idx >= bklist.length) idx = 0;
-  if (idx < 0) idx = 0;
-
-  n = bklist.length;
-  step = 360 / n;
-  R = getR(n);
+  const step = 360 / n;
+  const R = getR(n);
+  const dims = getBookDims(viewMode);
+  const offsets = getBookTransformOffsets(viewMode, dims);
 
   bklist.forEach((bk, i) => {
     try {
       const el = document.createElement('div');
+
+      /* Important : le CSS attend bien la classe "act" */
       el.className = 'ci' + (i === idx ? ' act' : '');
+      el.dataset.index = String(i);
 
-      const dims = getBookDims(bk);
-      const offsets = getBookTransformOffsets(dims);
-
-      const tx = offsets.tx;
-      const ty = offsets.ty;
-
+      el.style.width = `${dims.FW}px`;
+      el.style.height = `${dims.BH}px`;
+      el.style.marginLeft = `${offsets.marginLeft}px`;
+      el.style.marginTop = `${offsets.marginTop}px`;
       el.style.transform =
-        n === 1
-          ? `translateX(${tx}px) translateY(${ty}px)`
-          : `rotateY(${i * step}deg) translateZ(${R}px) translateX(${tx}px) translateY(${ty}px)`;
+        `rotateY(${i * step}deg) translateZ(${R}px) ` +
+        `translateX(${offsets.translateX}px) ` +
+        `translateY(${offsets.translateY}px)`;
 
       const hasCover = Boolean(bk.cu);
 
+      const coverMarkup = hasCover
+        ? `
+          <img
+            class="bc real-cover-img"
+            alt=""
+            draggable="false"
+            decoding="async"
+          >
+        `
+        : `
+          <canvas
+            class="bc"
+            width="${dims.FW}"
+            height="${dims.BH}"
+            style="width:${dims.FW}px;height:${dims.BH}px"
+          ></canvas>
+        `;
+
       el.innerHTML = `
         <div class="bw">
-          <div class="bg"
-               style="width:${dims.GW}px;height:${dims.GH}px">
+          <div class="bg" style="left:${dims.FW / 2}px"></div>
 
-            <div class="b3"
-                 style="
-                   --book-w:${dims.FW}px;
-                   --book-h:${dims.BH}px;
-                   --book-d:${dims.DEPTH}px;
-                   --book-top-w:${dims.TOP_W}px;
-                   --book-top-h:${dims.TOP_H}px;
-                   --book-right-w:${dims.RIGHT_W}px;
-                   --book-right-h:${dims.RIGHT_H}px;
-                 ">
+          <div class="b3">
+            <div
+              class="bf${hasCover ? ' real-cover' : ''}"
+              style="width:${dims.FW}px;height:${dims.BH}px"
+            >
+              ${coverMarkup}
 
-              <div class="bf ${hasCover ? 'real-cover' : ''}"
-                   style="width:${dims.FW}px;height:${dims.BH}px">
+              <div class="bf-grain"></div>
+              <div class="bf-shine"></div>
 
-                ${
-                  hasCover
-                    ? `<img
-                         class="bc real-cover-img"
-                         src="${bk.cu}"
-                         alt="Couverture de ${String(bk.t || '').replace(/"/g, '&quot;')}"
-                         decoding="async"
-                         draggable="false"
-                       >`
-                    : `<canvas class="bc"></canvas>`
-                }
-
-                <div class="bf-grain"></div>
-                <div class="bf-shine"></div>
-                <div class="bf-edge"></div>
-
-                ${
-                  hasDetailedAnalysis(bk)
-                    ? `<div class="cover-badge"
-                            title="Analyse détaillée disponible">Analyse</div>`
-                    : ''
-                }
-              </div>
-
-              <div class="bs s1"></div>
-              <div class="bs s2"></div>
-              <div class="bs s3"></div>
-              <div class="bs s4"></div>
-              <div class="bs s5"></div>
-
+              <div
+                class="bf-edge"
+                style="width:${dims.FW}px;height:${dims.BH}px"
+              ></div>
             </div>
           </div>
         </div>
@@ -4776,68 +4781,75 @@ function build(bklist) {
 
       const coverEl = el.querySelector('.bc');
 
-if (hasCover) {
-  coverEl.src = bk.cu;
-  coverEl.alt = `Couverture de ${bk.t || ''}`;
-  coverEl.decoding = 'async';
-  coverEl.draggable = false;
-} else {
-  drawCover(coverEl, bk);
-}
+      if (hasCover && coverEl instanceof HTMLImageElement) {
+        /*
+         * Pas de loading="lazy" dans un carrousel 3D :
+         * certains navigateurs considèrent les couvertures comme invisibles.
+         */
+        coverEl.src = bk.cu;
+        coverEl.style.width = `${dims.FW}px`;
+        coverEl.style.height = `${dims.BH}px`;
+        coverEl.style.pointerEvents = 'none';
 
-el.addEventListener('click', (ev) => {
-  ev.stopPropagation();
+        coverEl.onerror = () => {
+          const fallback = document.createElement('canvas');
 
-  if (dragged) {
-    dragged = false;
-    return;
-  }
+          fallback.className = 'bc';
+          fallback.width = dims.FW;
+          fallback.height = dims.BH;
+          fallback.style.width = `${dims.FW}px`;
+          fallback.style.height = `${dims.BH}px`;
+          fallback.style.pointerEvents = 'none';
 
-  selectedBook = bk;
-  openModal(bk);
+          coverEl.replaceWith(fallback);
+          drawCover(fallback, bk);
+        };
+      } else if (coverEl instanceof HTMLCanvasElement) {
+        drawCover(coverEl, bk);
+      }
 
-  clearTimeout(st);
-  st = setTimeout(() => {
-    auto = true;
-  }, 15000);
-});
+      el.addEventListener('click', () => {
+        clearTimeout(st);
 
-ring.appendChild(el);
+        if (i === idx) {
+          openDetail(bklist[i]);
+        } else {
+          goto(i);
+        }
+      });
 
-const d = document.createElement('div');
-d.className = 'dot' + (i === active ? ' on' : '');
+      ring.appendChild(el);
 
-d.addEventListener('click', () => {
-  setActive(i);
-  auto = false;
+      if (dotsEl) {
+        const dot = document.createElement('button');
 
-  clearTimeout(st);
-  st = setTimeout(() => {
-    auto = true;
-  }, 15000);
-});
+        dot.type = 'button';
+        dot.className = 'dot' + (i === idx ? ' act' : '');
+        dot.setAttribute('aria-label', `Aller au livre ${i + 1}`);
 
-dotsEl.appendChild(d);
+        dot.addEventListener('click', event => {
+          event.stopPropagation();
+          goto(i);
+        });
 
-} catch (err) {
-  console.error('Erreur lors de la création du livre :', bk, err);
-}
-
+        dotsEl.appendChild(dot);
+      }
+    } catch (error) {
+      console.error(`Erreur pendant la création du livre ${i}:`, error, bk);
+    }
   });
+
+  totalDeg = -idx * step;
 
   ring.style.transition = 'none';
-  totalDeg = -idx * step;
-  rotate(totalDeg, false);
+  rotate();
 
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      ring.style.transition = '';
-    });
+    ring.style.transition = '';
   });
 
-  updateInfo(bklist[idx]);
+  updateInfo();
 }
-
 
 function rotate(){
   const n=books.length;
