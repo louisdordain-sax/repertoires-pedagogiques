@@ -4664,69 +4664,70 @@ function getR(n){
 }
 
 
-function build(bklist) {
+function build(bklist){
   ring.innerHTML = '';
-  dotsEl.innerHTML = '';
-  books = [];
 
-  if (!bklist.length) {
-    empty.style.display = 'block';
-    ring.style.display = 'none';
-    dotsEl.style.display = 'none';
+  const dotsEl = document.getElementById('dots');
+  const em = document.getElementById('empty');
+  const cs = document.getElementById('cs');
+
+  dotsEl.innerHTML = '';
+
+  if(!bklist.length){
+    em.style.display = 'block';
+    cs.style.display = 'none';
+    document.getElementById('ctitle').textContent = 'Aucun résultat';
+    document.getElementById('cdesc').textContent =
+      'Aucune partition ne correspond aux filtres sélectionnés.';
+    document.getElementById('count').textContent = '0 résultat';
     return;
   }
 
-  empty.style.display = 'none';
-  ring.style.display = 'block';
-  dotsEl.style.display = 'flex';
+  em.style.display = 'none';
+  cs.style.display = '';
+  document.getElementById('count').textContent =
+    `${bklist.length} résultat${bklist.length > 1 ? 's' : ''}`;
+
+  if(idx >= bklist.length) idx = 0;
 
   const n = bklist.length;
-  const radius = Math.min(640, 260 + n * 24);
-  const dims = getDims();
+  const step = 360 / n;
+  const R = getR(n);
 
   bklist.forEach((bk, i) => {
     try {
-      const angle = i * 360 / n;
-
-      const el = document.createElement('article');
+      const el = document.createElement('div');
       el.className = 'book';
       el.dataset.i = i;
-      el.setAttribute('role', 'button');
-      el.setAttribute('tabindex', '0');
-      el.setAttribute('aria-label', `Ouvrir ${bk.t}`);
 
-      el.style.width = `${dims.W}px`;
-      el.style.height = `${dims.H}px`;
-      el.style.transform =
-        `rotateY(${angle}deg) translateZ(${radius}px)`;
+      const ang = i * step;
+      el.style.transform = n === 1
+        ? 'rotateY(0deg) translateZ(0px)'
+        : `rotateY(${ang}deg) translateZ(${R}px)`;
 
+      const dims = getDims(bk);
       const hasCover = Boolean(bk.cu);
 
       el.innerHTML = `
-        <div class="stack" style="width:${dims.W}px;height:${dims.H}px">
+        <div class="book-face" style="width:${dims.FW}px;height:${dims.BH}px">
           ${
             hasCover
-              ? `<img class="bc real-cover-img" alt="">`
-              : `<canvas
-                   class="bc"
-                   width="${dims.FW}"
-                   height="${dims.BH}"
-                   style="width:${dims.FW}px;height:${dims.BH}px"
-                 ></canvas>`
+              ? `<img class="bc real-cover-img"
+                      alt=""
+                      style="width:${dims.FW}px;height:${dims.BH}px">`
+              : `<canvas class="bc"
+                         width="${dims.FW}"
+                         height="${dims.BH}"
+                         style="width:${dims.FW}px;height:${dims.BH}px"></canvas>`
           }
 
-          <div class="meta">
-            <h2>${esc(bk.t)}</h2>
-            <p>${esc(bk.a)}</p>
-          </div>
+          <div class="grain"></div>
+          <div class="shine"></div>
+          <div class="book-edge"></div>
 
           ${
-            bk.hasDetailedAnalysis
-              ? `<span class="analysis-badge"
-                       title="Analyse détaillée disponible"
-                       aria-label="Analyse détaillée disponible">
-                   ${analysisBadgeSvg()}
-                 </span>`
+            hasDetailedAnalysis(bk)
+              ? '<div class="analysis-badge" title="Analyse détaillée disponible">Analyse</div>'
               : ''
           }
         </div>
@@ -4734,54 +4735,51 @@ function build(bklist) {
 
       const coverEl = el.querySelector('.bc');
 
-      if (hasCover) {
+      if(hasCover){
         coverEl.src = bk.cu;
-        coverEl.alt = `Couverture de ${bk.t}`;
-        coverEl.loading = 'lazy';
+        coverEl.alt = `Couverture de ${bk.t || 'la partition'}`;
         coverEl.decoding = 'async';
         coverEl.draggable = false;
-      } else {
+      }else{
         drawCover(coverEl, bk);
       }
 
       el.addEventListener('click', () => {
-        goto(i);
-        setTimeout(() => {
-          window.location.href =
-            `livre.html?id=${encodeURIComponent(bk.id)}`;
-        }, 250);
-      });
-
-      el.addEventListener('keydown', event => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          window.location.href =
-            `livre.html?id=${encodeURIComponent(bk.id)}`;
+        if(i === idx){
+          openBook(bk);
+        }else{
+          goto(i);
         }
       });
 
       ring.appendChild(el);
-      books.push(el);
 
       const dot = document.createElement('button');
       dot.type = 'button';
       dot.className = 'dot';
-      dot.setAttribute('aria-label', `Aller à ${bk.t}`);
+      dot.setAttribute('aria-label', `Afficher ${bk.t || `la partition ${i + 1}`}`);
+
+      if(i === idx) dot.classList.add('active');
+
       dot.addEventListener('click', () => goto(i));
       dotsEl.appendChild(dot);
 
-    } catch (err) {
-      console.warn('Livre ignoré à cause d’une erreur :', bk, err);
+    }catch(err){
+      console.error(`Erreur lors de la création du livre ${i}`, err, bk);
     }
   });
 
-  ring.style.setProperty('--radius', `${radius}px`);
-
-  if (current >= books.length) {
-    current = 0;
-  }
-
+  ring.style.transition = 'none';
+  totalDeg = -idx * step;
   rotate();
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      ring.style.transition = '';
+    });
+  });
+
+  updateInfo(bklist[idx]);
 }
 
 function rotate(){
