@@ -4776,49 +4776,53 @@ function build(bklist) {
 
       const coverEl = el.querySelector('.bc');
 
-      if (hasCover && coverEl instanceof HTMLImageElement) {
-        coverEl.addEventListener('error', () => {
-          console.warn('Couverture impossible à charger :', bk.cu);
+if (hasCover) {
+  coverEl.src = bk.cu;
+  coverEl.alt = `Couverture de ${bk.t || ''}`;
+  coverEl.decoding = 'async';
+  coverEl.draggable = false;
+} else {
+  drawCover(coverEl, bk);
+}
 
-          const fallbackCanvas = document.createElement('canvas');
-          fallbackCanvas.className = 'bc';
-          fallbackCanvas.style.width = `${dims.FW}px`;
-          fallbackCanvas.style.height = `${dims.BH}px`;
+el.addEventListener('click', (ev) => {
+  ev.stopPropagation();
 
-          coverEl.replaceWith(fallbackCanvas);
-          drawCover(fallbackCanvas, bk);
-        }, { once: true });
-      } else if (coverEl instanceof HTMLCanvasElement) {
-        drawCover(coverEl, bk);
-      }
+  if (dragged) {
+    dragged = false;
+    return;
+  }
 
-      let st;
+  selectedBook = bk;
+  openModal(bk);
 
-      el.addEventListener('mouseenter', () => {
-        clearTimeout(st);
-        el.classList.add('hov');
-      });
+  clearTimeout(st);
+  st = setTimeout(() => {
+    auto = true;
+  }, 15000);
+});
 
-      el.addEventListener('mouseleave', () => {
-        clearTimeout(st);
-        st = setTimeout(() => el.classList.remove('hov'), 40);
-      });
+ring.appendChild(el);
 
-      el.addEventListener('click', e => {
-        if (e.target.closest('a, button')) return;
-        goto(i);
-      });
+const d = document.createElement('div');
+d.className = 'dot' + (i === active ? ' on' : '');
 
-      ring.appendChild(el);
+d.addEventListener('click', () => {
+  setActive(i);
+  auto = false;
 
-      const dot = document.createElement('div');
-      dot.className = 'dot' + (i === idx ? ' act' : '');
-      dot.addEventListener('click', () => goto(i));
-      dotsEl.appendChild(dot);
+  clearTimeout(st);
+  st = setTimeout(() => {
+    auto = true;
+  }, 15000);
+});
 
-    } catch (error) {
-      console.error('Erreur de création du livre :', bk, error);
-    }
+dotsEl.appendChild(d);
+
+} catch (err) {
+  console.error('Erreur lors de la création du livre :', bk, err);
+}
+
   });
 
   ring.style.transition = 'none';
