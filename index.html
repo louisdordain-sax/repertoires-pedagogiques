@@ -4668,81 +4668,107 @@ function build(bklist) {
   ring.innerHTML = '';
 
   const dotsEl = document.getElementById('dots');
+  const emptyEl = document.getElementById('empty');
+  const carouselEl = document.getElementById('cs');
+
+  if (!dotsEl || !emptyEl || !carouselEl) {
+    console.error('Éléments du carrousel introuvables', {
+      ring,
+      dotsEl,
+      emptyEl,
+      carouselEl
+    });
+    return;
+  }
+
   dotsEl.innerHTML = '';
 
   if (!bklist.length) {
-    const emptyEl = document.getElementById('empty');
-
-    if (emptyEl) {
-      emptyEl.style.display = 'block';
-    }
-
+    emptyEl.classList.add('on');
+    carouselEl.style.visibility = 'hidden';
+    dotsEl.style.display = 'none';
     updateInfo(null);
     return;
   }
 
-  const emptyEl = document.getElementById('empty');
+  emptyEl.classList.remove('on');
+  carouselEl.style.visibility = 'visible';
+  dotsEl.style.display = 'flex';
 
-  if (emptyEl) {
-    emptyEl.style.display = 'none';
-  }
+  if (idx >= bklist.length) idx = 0;
+  if (idx < 0) idx = 0;
 
-  const n = bklist.length;
-  const step = 360 / n;
-  const R = computeRadius(n);
+  n = bklist.length;
+  step = 360 / n;
+  R = getR(n);
 
   bklist.forEach((bk, i) => {
     try {
       const el = document.createElement('div');
-      el.className = 'ci';
+      el.className = 'ci' + (i === idx ? ' act' : '');
 
       const dims = getBookDims(bk);
-      const offsets = computeCoverOffsets(dims.FW, dims.BH);
+      const offsets = getBookTransformOffsets(dims);
+
+      const tx = offsets.tx;
+      const ty = offsets.ty;
 
       el.style.transform =
-        `translate(-50%, -50%) rotateY(${i * step}deg) translateZ(${R}px)`;
+        n === 1
+          ? `translateX(${tx}px) translateY(${ty}px)`
+          : `rotateY(${i * step}deg) translateZ(${R}px) translateX(${tx}px) translateY(${ty}px)`;
 
-      el.dataset.key = bk.key;
-      el.dataset.index = String(i);
-
-      const hasCover = Boolean(
-        bk.cu &&
-        String(bk.cu).trim() &&
-        !String(bk.cu).startsWith('data:image/')
-      );
+      const hasCover = Boolean(bk.cu);
 
       el.innerHTML = `
-        <div class="bw" style="
-          width:${dims.FW}px;
-          height:${dims.BH}px;
-          margin-left:${offsets.marginLeft}px;
-          margin-top:${offsets.marginTop}px;
-        ">
-          <div class="bg"></div>
-          <div class="b3">
-            <div class="bf" style="
-              width:${dims.FW}px;
-              height:${dims.BH}px;
-            ">
-              ${
-                hasCover
-                  ? `<img
-                       class="bc real-cover-img"
-                       alt=""
-                       draggable="false"
-                     >`
-                  : `<canvas class="bc"></canvas>`
-              }
+        <div class="bw">
+          <div class="bg"
+               style="width:${dims.GW}px;height:${dims.GH}px">
 
-              <div class="grain"></div>
-              <div class="shine"></div>
-              <div class="edge"></div>
+            <div class="b3"
+                 style="
+                   --book-w:${dims.FW}px;
+                   --book-h:${dims.BH}px;
+                   --book-d:${dims.DEPTH}px;
+                   --book-top-w:${dims.TOP_W}px;
+                   --book-top-h:${dims.TOP_H}px;
+                   --book-right-w:${dims.RIGHT_W}px;
+                   --book-right-h:${dims.RIGHT_H}px;
+                 ">
 
-              ${
-                hasDetailedAnalysis(bk)
-                  ? '<span class="badge">Analyse</span>'
-                  : ''
-              }
+              <div class="bf ${hasCover ? 'real-cover' : ''}"
+                   style="width:${dims.FW}px;height:${dims.BH}px">
+
+                ${
+                  hasCover
+                    ? `<img
+                         class="bc real-cover-img"
+                         src="${bk.cu}"
+                         alt="Couverture de ${String(bk.t || '').replace(/"/g, '&quot;')}"
+                         decoding="async"
+                         draggable="false"
+                       >`
+                    : `<canvas class="bc"></canvas>`
+                }
+
+                <div class="bf-grain"></div>
+                <div class="bf-shine"></div>
+                <div class="bf-edge"></div>
+
+                ${
+                  hasDetailedAnalysis(bk)
+                    ? `<div class="cover-badge"
+                            title="Analyse détaillée disponible">Analyse</div>`
+                    : ''
+                }
+              </div>
+
+              <div class="bs s1"></div>
+              <div class="bs s2"></div>
+              <div class="bs s3"></div>
+              <div class="bs s4"></div>
+              <div class="bs s5"></div>
+
             </div>
           </div>
         </div>
@@ -4750,75 +4776,62 @@ function build(bklist) {
 
       const coverEl = el.querySelector('.bc');
 
-      if (hasCover) {
-        coverEl.src = bk.cu;
-        coverEl.alt = `Couverture de ${bk.t || 'la ressource'}`;
-        coverEl.loading = 'eager';
-        coverEl.decoding = 'async';
-
+      if (hasCover && coverEl instanceof HTMLImageElement) {
         coverEl.addEventListener('error', () => {
-          console.warn('Couverture inaccessible :', bk.cu);
+          console.warn('Couverture impossible à charger :', bk.cu);
 
-          const canvas = document.createElement('canvas');
-          canvas.className = 'bc';
+          const fallbackCanvas = document.createElement('canvas');
+          fallbackCanvas.className = 'bc';
+          fallbackCanvas.style.width = `${dims.FW}px`;
+          fallbackCanvas.style.height = `${dims.BH}px`;
 
-          coverEl.replaceWith(canvas);
-          drawCover(canvas, bk);
+          coverEl.replaceWith(fallbackCanvas);
+          drawCover(fallbackCanvas, bk);
         }, { once: true });
-      } else {
+      } else if (coverEl instanceof HTMLCanvasElement) {
         drawCover(coverEl, bk);
       }
 
-      el.addEventListener('click', () => {
-        const visibleIndex = filtered.findIndex(item => item.key === bk.key);
+      let st;
 
-        if (visibleIndex < 0) {
-          return;
-        }
+      el.addEventListener('mouseenter', () => {
+        clearTimeout(st);
+        el.classList.add('hov');
+      });
 
-        idx = visibleIndex;
-        updateTarget();
-        rotate();
-        restartAuto();
+      el.addEventListener('mouseleave', () => {
+        clearTimeout(st);
+        st = setTimeout(() => el.classList.remove('hov'), 40);
+      });
+
+      el.addEventListener('click', e => {
+        if (e.target.closest('a, button')) return;
+        goto(i);
       });
 
       ring.appendChild(el);
 
-      const dot = document.createElement('button');
-      dot.type = 'button';
+      const dot = document.createElement('div');
       dot.className = 'dot' + (i === idx ? ' act' : '');
-      dot.setAttribute(
-        'aria-label',
-        `Aller à ${bk.t || `la ressource ${i + 1}`}`
-      );
-
-      dot.addEventListener('click', () => {
-        idx = i;
-        updateTarget();
-        rotate();
-        restartAuto();
-      });
-
+      dot.addEventListener('click', () => goto(i));
       dotsEl.appendChild(dot);
-    } catch (err) {
-      console.error('Erreur de construction de la carte :', bk, err);
+
+    } catch (error) {
+      console.error('Erreur de création du livre :', bk, error);
     }
   });
 
   ring.style.transition = 'none';
-
   totalDeg = -idx * step;
-  currentDeg = totalDeg;
-
-  ring.style.transform =
-    `translateZ(-${R}px) rotateY(${currentDeg}deg)`;
+  rotate(totalDeg, false);
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       ring.style.transition = '';
-      updateInfo(bklist[idx] || null);
     });
   });
+
+  updateInfo(bklist[idx]);
 }
 
 
