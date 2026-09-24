@@ -4664,111 +4664,124 @@ function getR(n){
 }
 
 
-function build(bklist){
-  ring.innerHTML='';
-  const dotsEl=document.getElementById('dots');
-  dotsEl.innerHTML='';
-  const em=document.getElementById('empty');
-  const cs=document.getElementById('cs');
-  
-  if(!bklist.length){
-    em.classList.add('on');
-    cs.style.visibility='hidden';
-    dotsEl.style.display='none';
-    updateInfo(null);
+function build(bklist) {
+  ring.innerHTML = '';
+  dotsEl.innerHTML = '';
+  books = [];
+
+  if (!bklist.length) {
+    empty.style.display = 'block';
+    ring.style.display = 'none';
+    dotsEl.style.display = 'none';
     return;
   }
-  
-  em.classList.remove('on');
-  cs.style.visibility='';
-  dotsEl.style.display='';
 
-  const n=bklist.length;
-  const step=360/n;
-  const R=getR(n);
+  empty.style.display = 'none';
+  ring.style.display = 'block';
+  dotsEl.style.display = 'flex';
 
-  bklist.forEach((bk,i)=>{
+  const n = bklist.length;
+  const radius = Math.min(640, 260 + n * 24);
+  const dims = getDims();
+
+  bklist.forEach((bk, i) => {
     try {
-      const el=document.createElement('div');
-      el.className='ci'+(i===idx?' act':'');
+      const angle = i * 360 / n;
 
-      const dims=getBookDims(bk);
-      const{tx,ty}=getBookTransformOffsets(dims);
+      const el = document.createElement('article');
+      el.className = 'book';
+      el.dataset.i = i;
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('aria-label', `Ouvrir ${bk.t}`);
 
-      el.style.transform = n===1
-        ? `translateX(${tx}px) translateY(${ty}px)`
-        : `rotateY(${i*step}deg) translateZ(${R}px) translateX(${tx}px) translateY(${ty}px)`;
+      el.style.width = `${dims.W}px`;
+      el.style.height = `${dims.H}px`;
+      el.style.transform =
+        `rotateY(${angle}deg) translateZ(${radius}px)`;
 
-      const hasCover=!!bk.cu;
-      el.innerHTML=`<div class="bw">
-        <div class="bg" style="left:${dims.FW/2}px"></div>
-        <div class="b3">
-<div class="bf${hasCover?' real-cover':''}" style="width:${dims.FW}px;height:${dims.BH}px">
+      const hasCover = Boolean(bk.cu);
 
-    ${hasCover
-  ? `<img class="bc real-cover-img" alt="">`
-  : `<canvas class="bc" width="${dims.FW}" height="${dims.BH}"
-      style="position:absolute;inset:0;width:100%;height:100%"></canvas>`
-}
+      el.innerHTML = `
+        <div class="stack" style="width:${dims.W}px;height:${dims.H}px">
+          ${
+            hasCover
+              ? `<img class="bc real-cover-img" alt="">`
+              : `<canvas
+                   class="bc"
+                   width="${dims.FW}"
+                   height="${dims.BH}"
+                   style="width:${dims.FW}px;height:${dims.BH}px"
+                 ></canvas>`
+          }
 
+          <div class="meta">
+            <h2>${esc(bk.t)}</h2>
+            <p>${esc(bk.a)}</p>
+          </div>
 
-    <div class="bf-grain"></div>
-    <div class="bf-shine"></div>
-
-    <div
-      class="bf-edge"
-      style="width:${Math.max(1,Math.round(2*getCoverScale()))}px"
-      aria-hidden="true"
-    ></div>
-
-    ${hasDetailedAnalysis(bk)
-      ? `<div class="cover-badge" title="Analyse pédagogique détaillée">${analysisBadgeSvg()}</div>`
-      : ''}
-  </div>
- </div>
-</div>`;
+          ${
+            bk.hasDetailedAnalysis
+              ? `<span class="analysis-badge"
+                       title="Analyse détaillée disponible"
+                       aria-label="Analyse détaillée disponible">
+                   ${analysisBadgeSvg()}
+                 </span>`
+              : ''
+          }
+        </div>
+      `;
 
       const coverEl = el.querySelector('.bc');
 
-if (hasCover) {coverEl.src = bk.cu;coverEl.alt = `Couverture de ${bk.t}`; coverEl.decoding = 'async';coverEl.draggable = false;} 
-else {drawCover(coverEl, bk);}
+      if (hasCover) {
+        coverEl.src = bk.cu;
+        coverEl.alt = `Couverture de ${bk.t}`;
+        coverEl.loading = 'lazy';
+        coverEl.decoding = 'async';
+        coverEl.draggable = false;
+      } else {
+        drawCover(coverEl, bk);
+      }
 
-      el.addEventListener('click',()=>{
-        clearTimeout(st); // voir le commentaire dans goto()
-        if(i===idx) openDetail(bklist[i]);
-        else goto(i);
+      el.addEventListener('click', () => {
+        goto(i);
+        setTimeout(() => {
+          window.location.href =
+            `livre.html?id=${encodeURIComponent(bk.id)}`;
+        }, 250);
       });
-      
-      ring.appendChild(el);
 
-      const d=document.createElement('div');
-      d.className='dot'+(i===idx?' act':'');
-      d.onclick=()=>goto(i);
-         dotsEl.appendChild(d);
+      el.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          window.location.href =
+            `livre.html?id=${encodeURIComponent(bk.id)}`;
+        }
+      });
+
+      ring.appendChild(el);
+      books.push(el);
+
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'dot';
+      dot.setAttribute('aria-label', `Aller à ${bk.t}`);
+      dot.addEventListener('click', () => goto(i));
+      dotsEl.appendChild(dot);
 
     } catch (err) {
-      console.error('Erreur de rendu pour le livre', bk, err);
+      console.warn('Livre ignoré à cause d’une erreur :', bk, err);
     }
-
   });
 
-  // Aligne la rotation sur l'élément marqué actif (idx), plutôt que de
-  // toujours revenir à 0 — sinon un rebuild (redimensionnement, ajout,
-  // etc.) survenant pendant que idx≠0 désynchronise le visuel de l'état.
-  //
-  // Le nombre de livres (donc l'angle par élément) change à chaque rebuild,
-  // même quand il s'agit "du même" livre actif (ex. recherche effacée) :
-  // sans précaution, le carrousel ferait une rotation animée pour rien.
-  // On désactive donc la transition le temps de ce repositionnement —
-  // il devient instantané — puis on la restaure pour les navigations
-  // manuelles suivantes (clic, flèche, swipe), qui doivent rester animées.
-  ring.style.transition='none';
-  totalDeg=-idx*step;
+  ring.style.setProperty('--radius', `${radius}px`);
+
+  if (current >= books.length) {
+    current = 0;
+  }
+
   rotate();
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{ring.style.transition='';});
-  });
-  updateInfo(bklist[idx]);
 }
 
 function rotate(){
