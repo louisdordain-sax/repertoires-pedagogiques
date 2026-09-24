@@ -2099,6 +2099,31 @@ body {
   }
 }
 
+  .analysis-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.analysis-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex: 0 0 auto;
+  appearance: auto;
+  -webkit-appearance: checkbox;
+  accent-color: var(--acc);
+}
+
+.analysis-toggle span {
+  font-size: 14px;
+}
+
   
 </style>
 </head>
@@ -2460,6 +2485,12 @@ body {
   </div>
 </div>
 
+  <label class="analysis-toggle">
+  <input type="checkbox" id="aanalysis">
+  <span>Afficher le marque-page « analyse détaillée »</span>
+</label>
+
+  
 <!-- Modal filtre par tags -->
 <div class="ov" id="tagFilterOv">
   <div class="mb">
@@ -5042,9 +5073,19 @@ loadProgressiveCoversForBooks(cyc,books);
 ════════════════════════════════════════════════════ */
 const DETAILED_ANALYSIS_THRESHOLD=150; // caractères
 
-function hasDetailedAnalysis(bk){
-  return !!(bk.desc && bk.desc.trim().length>=DETAILED_ANALYSIS_THRESHOLD);
+function hasDetailedAnalysis(bk) {
+  // Si un choix manuel a été enregistré, il est prioritaire
+  if (typeof bk.analysisDetailed === "boolean") {
+    return bk.analysisDetailed;
+  }
+
+  // Compatibilité avec les anciennes œuvres
+  return !!(
+    bk.desc &&
+    bk.desc.trim().length >= DETAILED_ANALYSIS_THRESHOLD
+  );
 }
+
 
 // Icône "médaille" utilisée partout où l'indicateur doit apparaître
 function analysisBadgeSvg(){
@@ -6182,6 +6223,8 @@ document.getElementById('oeditfull').onclick=(e)=>{
   document.getElementById('ayt').value=bk.yt?`https://www.youtube.com/watch?v=${bk.yt}`:'';
   document.getElementById('abio').value=bk.bio||'';
   document.getElementById('ad').value=bk.desc||'';
+  document.getElementById("aanalysis").checked =
+  hasDetailedAnalysis(bk);
   
   document.getElementById('oa-title').textContent='Modifier la partition';
   setOasvLabel('Enregistrer');
@@ -6353,6 +6396,7 @@ document.getElementById('abtn').onclick=(e)=>{
   e.stopPropagation();
   editingBook=null;
   editingOriginalCycle=null;
+  document.getElementById('aanalysis').checked = false;
   document.getElementById('oa-title').textContent='Ajouter une partition';
   setOasvLabel('Ajouter');
   document.getElementById('ac').value=cyc;
@@ -6629,7 +6673,8 @@ function populateFieldSuggestions(){
 function closeAddModal(){
   document.getElementById('oa').classList.remove('open');
   ['at','ast','au','ae','ay','an','ag2','aes','aef','aac','avol','amet-custom','ayt','abio','ad','acucr','acus','acul'].forEach(id=>{
-  const field=document.getElementById(id);
+ document.getElementById("aanalysis").checked = false;
+ const field=document.getElementById(id);
   if(field)field.value='';
 });
 ;
@@ -6885,6 +6930,7 @@ document.getElementById('oasv').onclick=async(e)=>{
   const ytInvalid=(ytRaw && !yt); // une URL a été saisie mais non reconnue
   const bio=document.getElementById('abio').value.trim();
   const desc=document.getElementById('ad').value.trim();
+  const analysisDetailed =document.getElementById('aanalysis')?.checked ?? false;
   const cols={1:['#1a3e72','#0d2448'],2:['#1e4a78','#102e50'],3:['#1a285a','#0e183a']};
   
   // On capture l'état d'édition ET l'état de la couverture AVANT de fermer
@@ -6933,7 +6979,7 @@ document.getElementById('oasv').onclick=async(e)=>{
       } else if(coverRemoveRequested){
         cu=null;
       }
-      const updated={...bookBeingEdited,t,st,a,ed,y,nv,g,es,ef,acc,vol,met,ton,cuc,cus,cul,or:or_,cu,yt,bio,desc,col:cl,sp};
+      const updated={...bookBeingEdited,t,st,a,ed,y,nv,g,es,ef,acc,vol,met,ton,cuc,cus,cul,or:or_,cu,yt,bio,desc,analysisDetailed,col:cl,sp};
 
       if(DATA[originalCycle])DATA[originalCycle]=DATA[originalCycle].filter(b=>b.id!==updated.id);
       if(!DATA[c])DATA[c]=[];
@@ -6988,7 +7034,7 @@ document.getElementById('oasv').onclick=async(e)=>{
         }
       }
       
-      const nb={id:newId,t,st,a,ed,y,nv,g,es,ef,acc,vol,met,ton,cuc,cus,cul,or:or_,col:cl,sp,cu,yt,bio,tags:[],desc};
+      const nb={id:newId,t,st,a,ed,y,nv,g,es,ef,acc,vol,met,ton,cuc,cus,cul,or:or_,col:cl,sp,cu,yt,bio,tags:[],desc,analysisDetailed};
 
       
       if(!DATA[c])DATA[c]=[];
