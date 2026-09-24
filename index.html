@@ -2105,7 +2105,7 @@ body {
   gap: 10px;
   margin-top: 12px;
   padding: 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--bd1);
   border-radius: 8px;
   cursor: pointer;
 }
@@ -2481,14 +2481,19 @@ body {
     <div class="fl">Description</div>
     <textarea id="ad" placeholder="Notes pédagogiques, analyse détaillée…"></textarea>
     <div class="fl" style="margin-top:-6px;margin-bottom:8px;opacity:.75;">Mise en forme : **gras**, *italique* — sauts de ligne conservés, texte justifié à l'affichage.</div>
+    <label class="analysis-toggle">
+  <input type="checkbox" id="aanalysis">
+  <span>
+    <strong>Analyse détaillée disponible</strong>
+    <small>Affiche une pastille dédiée sur la fiche de l’œuvre.</small>
+  </span>
+</label>
+
     <div class="mfoot"><button class="bcnl" id="oacl">Annuler</button><button class="bsav" id="oasv"><svg class="btn-ic" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Ajouter</button></div>
   </div>
 </div>
 
-  <label class="analysis-toggle">
-  <input type="checkbox" id="aanalysis">
-  <span>Afficher le marque-page « analyse détaillée »</span>
-</label>
+  
 
   
 <!-- Modal filtre par tags -->
@@ -6672,12 +6677,16 @@ function populateFieldSuggestions(){
 
 function closeAddModal(){
   document.getElementById('oa').classList.remove('open');
-  ['at','ast','au','ae','ay','an','ag2','aes','aef','aac','avol','amet-custom','ayt','abio','ad','acucr','acus','acul'].forEach(id=>{
- document.getElementById("aanalysis").checked = false;
- const field=document.getElementById(id);
-  if(field)field.value='';
+['at','au','ay','ac','agenre','atype','avoices','ad','arl','adl'].forEach(id => {
+  const field = document.getElementById(id);
+  if (field) field.value = '';
 });
-;
+
+const analysisCheckbox = document.getElementById('aanalysis');
+if (analysisCheckbox) {
+  analysisCheckbox.checked = false;
+}
+
   document.getElementById('aor').value='portrait';
   loadMetricValue('');
   loadTonalityValue('');
@@ -6727,18 +6736,23 @@ function splitTonalityValues(value){
 }
 
 function syncTonalityControls() {
-  const kind = document.getElementById('aton-kind').value;
-  const rootEl = document.getElementById('aton-root');
-  const qualityEl = document.getElementById('aton-quality');
-  const modeEl = document.getElementById('aton-mode');
+  const kind = document.getElementById('atonalityKind')?.value || 'none';
+  const rootEl = document.getElementById('atonalityRoot');
+  const qualityEl = document.getElementById('atonalityQuality');
+  const modeEl = document.getElementById('atonalityMode');
+
+  if (!rootEl || !qualityEl || !modeEl) return;
 
   const needsRoot = kind === 'tonality' || kind === 'mode';
 
   rootEl.disabled = !needsRoot;
+  qualityEl.disabled = kind !== 'tonality';
+  modeEl.disabled = kind !== 'mode';
 
   qualityEl.style.display = kind === 'tonality' ? '' : 'none';
   modeEl.style.display = kind === 'mode' ? '' : 'none';
 }
+
 
 
 function getTonalityDraft() {
