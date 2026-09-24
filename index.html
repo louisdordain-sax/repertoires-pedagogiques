@@ -2136,8 +2136,9 @@ body {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
-
   
+<meta name="mobile-web-app-capable" content="yes">
+
 </style>
 </head>
 <body>
@@ -4747,8 +4748,9 @@ else {drawCover(coverEl, bk);}
       d.onclick=()=>goto(i);
       dotsEl.appendChild(d);
       
-    } catch (err) {
-      console.error(`Erreur lors de la création du livre:`, err);
+    } 
+          }catch (err) {
+      console.error("Erreur lors de la création du livre:", err);
     }
   });
 
