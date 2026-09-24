@@ -2124,6 +2124,19 @@ body {
   font-size: 14px;
 }
 
+  .real-cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  image-rendering: auto;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
   
 </style>
 </head>
@@ -4691,12 +4704,12 @@ function build(bklist){
         <div class="b3">
 <div class="bf${hasCover?' real-cover':''}" style="width:${dims.FW}px;height:${dims.BH}px">
 
-    <canvas
-      class="bc"
-      width="${dims.FW}"
-      height="${dims.BH}"
-      style="width:${dims.FW}px;height:${dims.BH}px"
-    ></canvas>
+    ${hasCover
+  ? `<img class="bc real-cover-img" alt="">`
+  : `<canvas class="bc" width="${dims.FW}" height="${dims.BH}"
+      style="position:absolute;inset:0;width:100%;height:100%"></canvas>`
+}
+
 
     <div class="bf-grain"></div>
     <div class="bf-shine"></div>
@@ -4714,12 +4727,11 @@ function build(bklist){
  </div>
 </div>`;
 
-      const cvs=el.querySelector('.bc');
+      const coverEl = el.querySelector('.bc');
 
-drawCover(cvs,bk);
+if (hasCover) {coverEl.src = bk.cu;coverEl.alt = `Couverture de ${bk.t}`; coverEl.decoding = 'async';coverEl.draggable = false;} 
+else {drawCover(coverEl, bk);}
 
-if(hasCover){
-  applyRealCoverImage(cvs,bk);
 }
 
       el.addEventListener('click',()=>{
