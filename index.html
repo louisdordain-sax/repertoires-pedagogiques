@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#090c16">
 <title>Répertoires Pédagogiques — Saxophone</title>
@@ -23,8 +22,7 @@ const FIREBASE_CONFIG={
 };
 </script>
 <script>(function(){try{if(localStorage.getItem('rp_theme')==='light')document.documentElement.classList.add('light');}catch(e){}})();</script>
-
-  <style>
+<style>
 /* ══ VARIABLES ══════════════════════════════════════ */
 :root{
   --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
@@ -2126,55 +2124,7 @@ body {
   font-size: 14px;
 }
 
-  .real-cover-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: contain;
-  object-position: center;
-  image-rendering: auto;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-   .real-cover-img {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  opacity: 1;
-  filter: none;
-  border-radius: inherit;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-/* Les effets ne doivent jamais bloquer les clics. */
-.bf-grain,
-.bf-shine,
-.bf-edge,
-.bg {
-  pointer-events: none;
-}
-
-/* Pas de voile artificiel sur les vraies couvertures. */
-.bf.real-cover .bf-grain,
-.bf.real-cover .bf-shine {
-  display: none;
-}
-
-/* La carte entière reste cliquable. */
-.ci {
-  pointer-events: auto;
-  cursor: pointer;
-}
- 
-    
+  
 </style>
 </head>
 <body>
@@ -4700,155 +4650,113 @@ function getR(n){
 }
 
 
-function build(bklist) {
-  ring.innerHTML = '';
-
-  const dotsEl = document.getElementById('dots');
-  if (dotsEl) dotsEl.innerHTML = '';
-
-  const n = bklist.length;
-  if (!n) {
-    updateInfo();
+function build(bklist){
+  ring.innerHTML='';
+  const dotsEl=document.getElementById('dots');
+  dotsEl.innerHTML='';
+  const em=document.getElementById('empty');
+  const cs=document.getElementById('cs');
+  
+  if(!bklist.length){
+    em.classList.add('on');
+    cs.style.visibility='hidden';
+    dotsEl.style.display='none';
+    updateInfo(null);
     return;
   }
+  
+  em.classList.remove('on');
+  cs.style.visibility='';
+  dotsEl.style.display='';
 
-  idx = Math.max(0, Math.min(idx, n - 1));
+  const n=bklist.length;
+  const step=360/n;
+  const R=getR(n);
 
-  const step = 360 / n;
-  const R = getR(n);
-  const dims = getBookDims(viewMode);
-  const offsets = getBookTransformOffsets(viewMode, dims);
-
-  bklist.forEach((bk, i) => {
+  bklist.forEach((bk,i)=>{
     try {
-      const el = document.createElement('div');
+      const el=document.createElement('div');
+      el.className='ci'+(i===idx?' act':'');
 
-      /* Important : le CSS attend bien la classe "act" */
-      el.className = 'ci' + (i === idx ? ' act' : '');
-      el.dataset.index = String(i);
+      const dims=getBookDims(bk);
+      const{tx,ty}=getBookTransformOffsets(dims);
 
-      el.style.width = `${dims.FW}px`;
-      el.style.height = `${dims.BH}px`;
-      el.style.marginLeft = `${offsets.marginLeft}px`;
-      el.style.marginTop = `${offsets.marginTop}px`;
-      el.style.transform =
-        `rotateY(${i * step}deg) translateZ(${R}px) ` +
-        `translateX(${offsets.translateX}px) ` +
-        `translateY(${offsets.translateY}px)`;
+      el.style.transform = n===1
+        ? `translateX(${tx}px) translateY(${ty}px)`
+        : `rotateY(${i*step}deg) translateZ(${R}px) translateX(${tx}px) translateY(${ty}px)`;
 
-      const hasCover = Boolean(bk.cu);
+      const hasCover=!!bk.cu;
+      el.innerHTML=`<div class="bw">
+        <div class="bg" style="left:${dims.FW/2}px"></div>
+        <div class="b3">
+<div class="bf${hasCover?' real-cover':''}" style="width:${dims.FW}px;height:${dims.BH}px">
 
-      const coverMarkup = hasCover
-        ? `
-          <img
-            class="bc real-cover-img"
-            alt=""
-            draggable="false"
-            decoding="async"
-          >
-        `
-        : `
-          <canvas
-            class="bc"
-            width="${dims.FW}"
-            height="${dims.BH}"
-            style="width:${dims.FW}px;height:${dims.BH}px"
-          ></canvas>
-        `;
+    <canvas
+      class="bc"
+      width="${dims.FW}"
+      height="${dims.BH}"
+      style="width:${dims.FW}px;height:${dims.BH}px"
+    ></canvas>
 
-      el.innerHTML = `
-        <div class="bw">
-          <div class="bg" style="left:${dims.FW / 2}px"></div>
+    <div class="bf-grain"></div>
+    <div class="bf-shine"></div>
 
-          <div class="b3">
-            <div
-              class="bf${hasCover ? ' real-cover' : ''}"
-              style="width:${dims.FW}px;height:${dims.BH}px"
-            >
-              ${coverMarkup}
+    <div
+      class="bf-edge"
+      style="width:${Math.max(1,Math.round(2*getCoverScale()))}px"
+      aria-hidden="true"
+    ></div>
 
-              <div class="bf-grain"></div>
-              <div class="bf-shine"></div>
+    ${hasDetailedAnalysis(bk)
+      ? `<div class="cover-badge" title="Analyse pédagogique détaillée">${analysisBadgeSvg()}</div>`
+      : ''}
+  </div>
+ </div>
+</div>`;
 
-              <div
-                class="bf-edge"
-                style="width:${dims.FW}px;height:${dims.BH}px"
-              ></div>
-            </div>
-          </div>
-        </div>
-      `;
+      const cvs=el.querySelector('.bc');
 
-      const coverEl = el.querySelector('.bc');
+drawCover(cvs,bk);
 
-      if (hasCover && coverEl instanceof HTMLImageElement) {
-        /*
-         * Pas de loading="lazy" dans un carrousel 3D :
-         * certains navigateurs considèrent les couvertures comme invisibles.
-         */
-        coverEl.src = bk.cu;
-        coverEl.style.width = `${dims.FW}px`;
-        coverEl.style.height = `${dims.BH}px`;
-        coverEl.style.pointerEvents = 'none';
+if(hasCover){
+  applyRealCoverImage(cvs,bk);
+}
 
-        coverEl.onerror = () => {
-          const fallback = document.createElement('canvas');
-
-          fallback.className = 'bc';
-          fallback.width = dims.FW;
-          fallback.height = dims.BH;
-          fallback.style.width = `${dims.FW}px`;
-          fallback.style.height = `${dims.BH}px`;
-          fallback.style.pointerEvents = 'none';
-
-          coverEl.replaceWith(fallback);
-          drawCover(fallback, bk);
-        };
-      } else if (coverEl instanceof HTMLCanvasElement) {
-        drawCover(coverEl, bk);
-      }
-
-      el.addEventListener('click', () => {
-        clearTimeout(st);
-
-        if (i === idx) {
-          openDetail(bklist[i]);
-        } else {
-          goto(i);
-        }
+      el.addEventListener('click',()=>{
+        clearTimeout(st); // voir le commentaire dans goto()
+        if(i===idx) openDetail(bklist[i]);
+        else goto(i);
       });
-
+      
       ring.appendChild(el);
 
-      if (dotsEl) {
-        const dot = document.createElement('button');
-
-        dot.type = 'button';
-        dot.className = 'dot' + (i === idx ? ' act' : '');
-        dot.setAttribute('aria-label', `Aller au livre ${i + 1}`);
-
-        dot.addEventListener('click', event => {
-          event.stopPropagation();
-          goto(i);
-        });
-
-        dotsEl.appendChild(dot);
-      }
-    } catch (error) {
-      console.error(`Erreur pendant la création du livre ${i}:`, error, bk);
+      const d=document.createElement('div');
+      d.className='dot'+(i===idx?' act':'');
+      d.onclick=()=>goto(i);
+      dotsEl.appendChild(d);
+      
+    } catch (err) {
+      console.error(`Erreur lors de la création du livre:`, err);
     }
   });
 
-  totalDeg = -idx * step;
-
-  ring.style.transition = 'none';
+  // Aligne la rotation sur l'élément marqué actif (idx), plutôt que de
+  // toujours revenir à 0 — sinon un rebuild (redimensionnement, ajout,
+  // etc.) survenant pendant que idx≠0 désynchronise le visuel de l'état.
+  //
+  // Le nombre de livres (donc l'angle par élément) change à chaque rebuild,
+  // même quand il s'agit "du même" livre actif (ex. recherche effacée) :
+  // sans précaution, le carrousel ferait une rotation animée pour rien.
+  // On désactive donc la transition le temps de ce repositionnement —
+  // il devient instantané — puis on la restaure pour les navigations
+  // manuelles suivantes (clic, flèche, swipe), qui doivent rester animées.
+  ring.style.transition='none';
+  totalDeg=-idx*step;
   rotate();
-
-  requestAnimationFrame(() => {
-    ring.style.transition = '';
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{ring.style.transition='';});
   });
-
-  updateInfo();
+  updateInfo(bklist[idx]);
 }
 
 function rotate(){
@@ -7419,24 +7327,14 @@ loadDataFromFirebase().then(()=>{
   if(currentUser){
     setTimeout(migrateLegacyCovers,800);
   }
-}).catch(err => {
-  dataReady = true;
-
-  const loadingEl = document.getElementById('initialLoading');
-
-  if (loadingEl) {
-    loadingEl.style.display = 'none';
-  }
-
-  console.error('Erreur complète du chargement initial :', err);
-  console.error(err.stack);
-
+}).catch(err=>{
+  dataReady=true;
+  document.getElementById('initialLoading').style.display='none';
   showFatalError(
-    'Chargement initial impossible : ' +
-    (err.stack || err.message || String(err))
+    'Chargement initial impossible : '+
+    (err&&err.message?err.message:String(err))
   );
 });
-
 
   document.addEventListener('gesturestart', e => {
   e.preventDefault();
