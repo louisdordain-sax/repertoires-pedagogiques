@@ -7306,6 +7306,132 @@ function initPrivacyButtons(){
 
 initPrivacyButtons();
 
+/* ===== BOUTON RETOUR MOBILE / TABLETTE ===== */
+const backOverlayIds = [
+  "od",
+  "tagFilterOv",
+  "helpOv",
+  "loginOv",
+  "oa",
+  "ot",
+  "metricOv",
+  "tagManageOv",
+  "youtubeConsentOv",
+  "legalOv"
+];
+
+const backOverlayStack = [];
+let closingFromBackButton = false;
+
+function overlayIsOpen(el) {
+  return el?.classList.contains("open");
+}
+
+/* Surveille automatiquement l’ouverture des fenêtres */
+backOverlayIds.forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  let wasOpen = overlayIsOpen(el);
+
+  new MutationObserver(() => {
+    const isOpen = overlayIsOpen(el);
+
+    if (isOpen && !wasOpen) {
+      backOverlayStack.push(id);
+
+      if (!closingFromBackButton) {
+        history.pushState(
+          { repertoireOverlay: id },
+          "",
+          location.href
+        );
+      }
+    }
+
+    if (!isOpen && wasOpen) {
+      const index = backOverlayStack.lastIndexOf(id);
+      if (index !== -1) backOverlayStack.splice(index, 1);
+    }
+
+    wasOpen = isOpen;
+  }).observe(el, {
+    attributes: true,
+    attributeFilter: ["class"]
+  });
+});
+
+function getLastOpenOverlay() {
+  while (backOverlayStack.length) {
+    const id = backOverlayStack[backOverlayStack.length - 1];
+    const el = document.getElementById(id);
+
+    if (overlayIsOpen(el)) return el;
+    backOverlayStack.pop();
+  }
+
+  /* Sécurité si la pile n’est pas encore synchronisée */
+  for (let i = backOverlayIds.length - 1; i >= 0; i--) {
+    const el = document.getElementById(backOverlayIds[i]);
+    if (overlayIsOpen(el)) return el;
+  }
+
+  return null;
+}
+
+function closeOverlayFromBackButton(el) {
+  if (!el) return false;
+
+  closingFromBackButton = true;
+
+  if (el.id === "od") {
+    stopDetailVideo();
+  }
+
+  el.classList.remove("open");
+
+  queueMicrotask(() => {
+    closingFromBackButton = false;
+  });
+
+  return true;
+}
+
+/*
+  Crée une entrée de sécurité afin que le premier appui sur
+  “Retour” ne quitte pas immédiatement le fichier HTML.
+*/
+history.replaceState(
+  { repertoireBase: true },
+  "",
+  location.href
+);
+
+history.pushState(
+  { repertoireGuard: true },
+  "",
+  location.href
+);
+
+window.addEventListener("popstate", () => {
+  const openOverlay = getLastOpenOverlay();
+
+  /* Ferme d’abord la fenêtre actuellement ouverte */
+  if (openOverlay) {
+    closeOverlayFromBackButton(openOverlay);
+    return;
+  }
+
+  /*
+    Aucune fenêtre ouverte : on reste dans l’application
+    au lieu de quitter le fichier HTML.
+  */
+  history.pushState(
+    { repertoireGuard: true },
+    "",
+    location.href
+  );
+});
 
 
 /* ════ INIT ══════════════════════════════════════════
