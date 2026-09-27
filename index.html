@@ -2124,6 +2124,58 @@ body {
   font-size: 14px;
 }
 
+  /* Épaisseur 3D des partitions dans le carrousel */
+.b3 {
+  position: relative;
+  transform-style: preserve-3d;
+  --book-depth: 10px; /* épaisseur de la partition */
+}
+
+/* Tranche réellement visible lorsque la partition est de côté */
+.b3::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 100%;
+
+  width: var(--book-depth);
+
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  backface-visibility: visible;
+
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(80, 65, 45, 0.12) 0,
+      rgba(80, 65, 45, 0.12) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    linear-gradient(
+      to right,
+      #d8d2c5 0%,
+      #f7f3e9 25%,
+      #e4ded1 75%,
+      #c8c0b1 100%
+    );
+
+  border-radius: 0 2px 2px 0;
+  box-shadow:
+    inset 1px 0 1px rgba(255, 255, 255, 0.6),
+    2px 0 4px rgba(0, 0, 0, 0.22);
+
+  pointer-events: none;
+}
+
+/* Une épaisseur légèrement plus faible sur mobile */
+@media (max-width: 620px) {
+  .b3 {
+    --book-depth: 7px;
+  }
+}
+
   
 </style>
 </head>
@@ -6548,7 +6600,13 @@ const METRIC_OPTIONS=[
   {value:'7/8',top:'7',bottom:'8'},
   {value:'8/8',top:'8',bottom:'8'},
   {value:'9/8',top:'9',bottom:'8'},
+  { value: '10/8', top: '10', bottom: '8' },
+  { value: '11/8', top: '11', bottom: '8' },
   {value:'12/8',top:'12',bottom:'8'},
+  { value: '13/8', top: '13', bottom: '8' },
+  { value: '15/8', top: '15', bottom: '8' },
+  { value: '16/8', top: '16', bottom: '8' },
+  { value: '18/8', top: '18', bottom: '8' },
   {value:'11/16',top:'11',bottom:'16'},
   {value:'15/16',top:'15',bottom:'16'},
   {value:'Mesures changeantes',top:null,bottom:null},
