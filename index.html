@@ -4984,6 +4984,15 @@ if (val.startsWith('form::')) {
     .map(s=>s.trim());
 
   return mets.includes(val);
+
+  if (value.startsWith('form::')) {
+  const searchedFormation = normalizeText(value.slice(6));
+
+  return splitFormations(book.ef).some(
+    formation => normalizeText(formation) === searchedFormation
+  );
+}
+
 }
 
 
@@ -5167,6 +5176,25 @@ function normalizeCompositionTypes(value){
   return Array.from(valuesByKey.values()).join(', ');
 }
 
+function splitFormations(value) {
+  return String(value || '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+function normalizeFormations(value) {
+  const unique = new Map();
+
+  splitFormations(value).forEach(item => {
+    const key = normalizeText(item);
+    if (!unique.has(key)) unique.set(key, item);
+  });
+
+  return [...unique.values()].join(', ');
+}
+
+  
 function splitAesthetics(value) {
   return String(value || '')
     .split(',')
@@ -5215,25 +5243,26 @@ function getAllEsthForCycle() {
   );
 }
 
-  function getAllFormationsForCycle() {
-  const values = new Map();
+  function getAllFormationsForCycle(cycle) {
+  const formations = new Map();
 
-  (DATA[cyc] || []).forEach(book => {
-    const formation = String(book.ef || '').trim();
+  Object.values(allbooks).forEach(book => {
+    if (cycle && book.c !== cycle) return;
 
-    if (!formation || formation === '—') return;
+    splitFormations(book.ef).forEach(formation => {
+      const key = normalizeText(formation);
 
-    const key = normalizeSearchText(formation);
-
-    if (key && !values.has(key)) {
-      values.set(key, formation);
-    }
+      if (key && key !== normalizeText('—') && !formations.has(key)) {
+        formations.set(key, formation);
+      }
+    });
   });
 
-  return [...values.values()].sort((a, b) =>
+  return [...formations.values()].sort((a, b) =>
     a.localeCompare(b, 'fr', { sensitivity: 'base' })
   );
 }
+
 
 
   function getAllTonalitiesForCycle(){
@@ -6696,7 +6725,7 @@ function populateFieldSuggestions(){
   { key: 'ed',  listId: 'ae-list' },
   { key: 'g',   listId: 'ag2-list', commaSeparated: true },
   { key: 'es',  listId: 'aes-list', commaSeparated: true },
-  { key: 'ef',  listId: 'aef-list' },
+  { key: 'ef',  listId: 'aef-list', commaSeparated: true },
   { key: 'vol', listId: 'avol-list' }
 ];
 
@@ -6995,7 +7024,7 @@ document.getElementById('oasv').onclick=async(e)=>{
   const nv=document.getElementById('an').value.trim()||'—';
   const g=normalizeCompositionTypes(document.getElementById('ag2').value)||'—';
   const es = normalizeAesthetics(document.getElementById('aes').value) || '—';
-  const ef=document.getElementById('aef').value.trim()||'—';
+  const ef = normalizeFormations(document.getElementById('aef').value) || '—';
   const acc=document.getElementById('aac').value.trim()||'—';
   const vol=document.getElementById('avol').value.trim()||null;
   const met=document.getElementById('amet').value.trim()||'—';
