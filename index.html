@@ -4954,7 +4954,8 @@ if (val.startsWith('esth::')) {
 
 if (val.startsWith('form::')) {
   const expected = normalizeSearchText(val.slice(6));
-  return normalizeSearchText(b.ef || '') === expected;
+  return splitFormations(b.ef).some(formation =>
+    normalizeSearchText(formation) === expectedFormation);
 }
 
   if(val.startsWith('ton::')){
@@ -4986,10 +4987,10 @@ if (val.startsWith('form::')) {
   return mets.includes(val);
 
   if (value.startsWith('form::')) {
-  const searchedFormation = normalizeText(value.slice(6));
+  const searchedFormation = normalizeSearchText(value.slice(6));
 
   return splitFormations(book.ef).some(
-    formation => normalizeText(formation) === searchedFormation
+    formation => normalizeSearchText(formation) === searchedFormation
   );
 }
 
@@ -5187,7 +5188,7 @@ function normalizeFormations(value) {
   const unique = new Map();
 
   splitFormations(value).forEach(item => {
-    const key = normalizeText(item);
+    const key = normalizeSearchText(item);
     if (!unique.has(key)) unique.set(key, item);
   });
 
@@ -5243,25 +5244,24 @@ function getAllEsthForCycle() {
   );
 }
 
-  function getAllFormationsForCycle(cycle) {
-  const formations = new Map();
+  function getAllFormationsForCycle() {
+  const formationsByKey = new Map();
 
-  Object.values(allbooks).forEach(book => {
-    if (cycle && book.c !== cycle) return;
-
+  (DATA[cyc] || []).forEach(book => {
     splitFormations(book.ef).forEach(formation => {
-      const key = normalizeText(formation);
+      const key = normalizeSearchText(formation);
 
-      if (key && key !== normalizeText('—') && !formations.has(key)) {
-        formations.set(key, formation);
+      if (key && !formationsByKey.has(key)) {
+        formationsByKey.set(key, formation);
       }
     });
   });
 
-  return [...formations.values()].sort((a, b) =>
-    a.localeCompare(b, 'fr', { sensitivity: 'base' })
+  return Array.from(formationsByKey.values()).sort((a, b) =>
+    a.localeCompare(b, "fr", { sensitivity: "base" })
   );
 }
+
 
 
 
