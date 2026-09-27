@@ -2214,7 +2214,7 @@ body {
           <circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="2"/>
           <line x1="14" y1="14" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        <input class="srch" id="srch" type="text" placeholder="Titre, auteur, éditeur, type de composition, caractéristiques…" autocomplete="off" spellcheck="false">
+        <input class="srch" id="srch" type="text" placeholder="Titre, auteur, éditeur, formation, esthétique, caractéristiques…" autocomplete="off" spellcheck="false">
         <button class="srch-clear" id="srch-clear"><svg class="btn-ic" style="margin-right:0;width:11px;height:11px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <button class="ibtn" id="tagFilterBtn" title="Filtrer par tags" style="position:relative;">
@@ -2349,7 +2349,7 @@ body {
     </div>
     <div class="ag">
       <div><div class="fl">Esthétique</div><input type="text" id="aes" placeholder="Romantique, impressionniste…" maxlength="80" list="aes-list"><datalist id="aes-list"></datalist></div>
-      <div><div class="fl">Effectif</div><input type="text" id="aef" placeholder="Solo, quatuor…" maxlength="100"></div>
+      <div><div class="fl">Formation</div><input type="text" id="aef" placeholder="Solo, quatuor, orchestre…" maxlength="100"list="aef-list"><datalist id="aef-list"></datalist></div>
     </div>
     <div class="ag">
       <div><div class="fl">Accompagnement</div><input type="text" id="aac" placeholder="Piano, orchestre…" maxlength="120"></div>
@@ -2499,8 +2499,8 @@ body {
 <!-- Modal filtre par tags -->
 <div class="ov" id="tagFilterOv">
   <div class="mb">
-    <div class="mh3">Filtrer par tags, métriques, type de composition, esthétique ou présence d'accompagnement</div>
-    <div class="tagfilter-hint">Sélectionne un ou plusieurs tags, types de compositions, esthétiques, accompagnements et/ou métriques — seules les partitions possédant TOUS les éléments cochés seront affichées.</div>
+    <div class="mh3">Filtrer par tags, métriques, type de composition, esthétique, formation ou présence d'accompagnement</div>
+    <div class="tagfilter-hint">Sélectionne un ou plusieurs tags, types de composition, esthétiques, formations, accompagnements et/ou métriques — seules les partitions possédant TOUS les éléments cochés seront affichées.</div>
     <div class="tagfilter-list" id="tagFilterList"></div>
     <div class="mfoot">
       <button class="bcnl" id="tagFilterClear">Réinitialiser</button>
@@ -4944,9 +4944,18 @@ function bookMatchesFilterValue(b,val){
 }
 
 
-  if(val.startsWith('esth::')){
-    return (b.es||'')===val.slice(6);
-  }
+if (val.startsWith('esth::')) {
+  const expected = normalizeSearchText(val.slice(6));
+
+  return splitAesthetics(b.es).some(aesthetic =>
+    normalizeSearchText(aesthetic) === expected
+  );
+}
+
+if (val.startsWith('form::')) {
+  const expected = normalizeSearchText(val.slice(6));
+  return normalizeSearchText(b.ef || '') === expected;
+}
 
   if(val.startsWith('ton::')){
   const expected=normalizeSearchText(val.slice(5));
@@ -4990,10 +4999,10 @@ function filter(forceIdx){
   // précis est explicitement demandé (ex. après ajout/édition d'une notice).
   const previousActiveId=books[idx]?books[idx].id:null;
   
-  let result=q
-    ? all.filter(b=>[b.t,b.a,b.ed,b.g,b.nv,b.ton||'',b.desc||'',b.bio||'',b.met||'', ...(b.tags||[])].some(s=>normalizeSearchText(s).includes(q)))
+let result = q
+  ? all.filter(b => [b.t,b.a,b.ed,b.g,b.nv,b.ton || '',b.es || '',b.ef || '',b.desc || '',b.bio || '',b.met || '',...(b.tags || [])].some(s => normalizeSearchText(s).includes(q)))
+  : all;
 
-    : all;
   
   // Filtre par tags/métriques actifs : la notice doit posséder TOUS les
   // éléments cochés dans le panneau de filtre (logique ET, plus précise
@@ -5157,6 +5166,18 @@ function normalizeCompositionTypes(value){
 
   return Array.from(valuesByKey.values()).join(', ');
 }
+
+function splitAesthetics(value) {
+  return String(value || '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+function normalizeAesthetics(value) {
+  return [...new Set(splitAesthetics(value))]
+    .join(', ');
+}
   
 function getAllGenresForCycle(){
   const valuesByKey=new Map();
@@ -5176,11 +5197,44 @@ function getAllGenresForCycle(){
   );
 }
 
-function getAllEsthForCycle(){
-  const set=new Set();
-  (DATA[cyc]||[]).forEach(b=>{if(b.es&&b.es.trim()&&b.es!=='—')set.add(b.es.trim());});
-  return Array.from(set).sort((a,b)=>a.localeCompare(b,'fr'));
+function getAllEsthForCycle() {
+  const values = new Map();
+
+  (DATA[cyc] || []).forEach(book => {
+    splitAesthetics(book.es).forEach(aesthetic => {
+      const key = normalizeSearchText(aesthetic);
+
+      if (key && !values.has(key)) {
+        values.set(key, aesthetic);
+      }
+    });
+  });
+
+  return [...values.values()].sort((a, b) =>
+    a.localeCompare(b, 'fr', { sensitivity: 'base' })
+  );
 }
+
+  function getAllFormationsForCycle() {
+  const values = new Map();
+
+  (DATA[cyc] || []).forEach(book => {
+    const formation = String(book.ef || '').trim();
+
+    if (!formation || formation === '—') return;
+
+    const key = normalizeSearchText(formation);
+
+    if (key && !values.has(key)) {
+      values.set(key, formation);
+    }
+  });
+
+  return [...values.values()].sort((a, b) =>
+    a.localeCompare(b, 'fr', { sensitivity: 'base' })
+  );
+}
+
 
   function getAllTonalitiesForCycle(){
   const valuesByKey=new Map();
@@ -5273,6 +5327,23 @@ renderPrefixedPillSection(
   25,
   55
 );
+
+  renderPrefixedPillSection(
+  listEl,
+  'Esthétique',
+  'esth::',
+  getAllEsthForCycle(),
+  'Aucune esthétique renseignée.'
+);
+
+renderPrefixedPillSection(
+  listEl,
+  'Formation',
+  'form::',
+  getAllFormationsForCycle(),
+  'Aucune formation renseignée.'
+);
+
 
 renderTonalityFilterSection(listEl);
 renderAccompagnementFilterSection(listEl);
@@ -5672,7 +5743,7 @@ const tonalityFieldHtml = tonalityValues.length
     <div class="mf"><div class="mfl">Type de composition</div><div class="mfv">${bk.g}</div></div>
     ${tonalityFieldHtml}
     <div class="mf"><div class="mfl">Esthétique</div><div class="mfv">${bk.es||'—'}</div></div>
-    <div class="mf"><div class="mfl">Effectif</div><div class="mfv">${bk.ef||'—'}</div></div>
+    <div class="mf"><div class="mfl">Formation</div><div class="mfv">${bk.ef||'—'}</div></div>
     <div class="mf" style="grid-column:1 / -1;"><div class="mfl">Métrique(s)</div><div class="mfv" id="mmet-display">—</div></div>
     <div class="mf" style="grid-column:1 / -1;"><div class="mfl">Accompagnement</div><div class="mfv">${bk.acc||'—'}</div></div>`;
   
@@ -6627,13 +6698,14 @@ document.getElementById('metricOv').onclick=(e)=>{
 };
 
 function populateFieldSuggestions(){
-  const fields=[
-    {key:'a',listId:'au-list'},
-    {key:'ed',listId:'ae-list'},
-    {key:'g',listId:'ag2-list',commaSeparated:true},
-    {key:'es',listId:'aes-list'},
-    {key:'vol',listId:'avol-list'}
-  ];
+  const fields = [
+  { key: 'a',   listId: 'au-list' },
+  { key: 'ed',  listId: 'ae-list' },
+  { key: 'g',   listId: 'ag2-list', commaSeparated: true },
+  { key: 'es',  listId: 'aes-list', commaSeparated: true },
+  { key: 'ef',  listId: 'aef-list' },
+  { key: 'vol', listId: 'avol-list' }
+];
 
   fields.forEach(({key,listId,commaSeparated})=>{
     const valuesByKey=new Map();
@@ -6929,7 +7001,7 @@ document.getElementById('oasv').onclick=async(e)=>{
   const y=parseInt(document.getElementById('ay').value)||new Date().getFullYear();
   const nv=document.getElementById('an').value.trim()||'—';
   const g=normalizeCompositionTypes(document.getElementById('ag2').value)||'—';
-  const es=document.getElementById('aes').value.trim()||'—';
+  const es = normalizeAesthetics(document.getElementById('aes').value) || '—';
   const ef=document.getElementById('aef').value.trim()||'—';
   const acc=document.getElementById('aac').value.trim()||'—';
   const vol=document.getElementById('avol').value.trim()||null;
