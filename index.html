@@ -2124,13 +2124,6 @@ body {
   font-size: 14px;
 }
 
-  /* Épaisseur 3D des partitions dans le carrousel */
-.b3 {
-  position: relative;
-  transform-style: preserve-3d;
-  --book-depth: 40px; /* épaisseur de la partition */
-}
-
   /* Autorise le scroll uniquement en mode liste */
 .mid.list-mode {
   overflow: hidden;
@@ -2148,99 +2141,7 @@ body {
   padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
 
-/* =========================================================
-   ÉPAISSEUR 3D DES PARTITIONS
-   ========================================================= */
 
-.bw,
-.b3 {
-  transform-style: preserve-3d;
-}
-
-.b3 {
-  position: relative;
-  transform-style: preserve-3d;
-
-  /* Épaisseur de la partition */
-  --book-depth: 10px;
-
-  /*
-   * Important : filter aplatisait la tranche 3D.
-   * L'ombre est désormais placée sur .bf avec box-shadow.
-   */
-  filter: none !important;
-}
-
-.ci.act .b3 {
-  filter: none !important;
-}
-
-/* Face avant */
-.bf {
-  position: relative;
-  z-index: 1;
-  transform: translateZ(0);
-  box-shadow: 6px 12px 28px rgba(0, 0, 0, 0.42);
-}
-
-.ci.act .bf {
-  box-shadow: 8px 16px 38px rgba(0, 0, 0, 0.55);
-}
-
-/* Tranche de la partition */
-.b3::after {
-  content: "";
-  position: absolute;
-
-  top: 1px;
-  left: calc(100% - 1px);
-
-  width: var(--book-depth);
-  height: calc(100% - 2px);
-
-  transform-origin: left center;
-  transform: rotateY(90deg);
-
-  backface-visibility: visible;
-  pointer-events: none;
-
-  border: 1px solid rgba(60, 45, 25, 0.45);
-  border-left: 0;
-
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      #f7f1df 0,
-      #f7f1df 2px,
-      #d8cdb5 3px,
-      #eee5d1 4px
-    );
-
-  box-shadow:
-    inset -5px 0 8px rgba(0, 0, 0, 0.22),
-    inset 2px 0 3px rgba(255, 255, 255, 0.5);
-
-  transition: opacity 0.25s ease;
-}
-
-/*
- * Ne pas mettre l'opacité sur .ci :
- * cela aplatit toute sa géométrie 3D.
- */
-.ci:not(.act) {
-  opacity: 1 !important;
-}
-
-/* On atténue séparément la couverture et sa tranche */
-.ci:not(.act) .bf,
-.ci:not(.act) .b3::after {
-  opacity: 0.32;
-}
-
-.ci.act .bf,
-.ci.act .b3::after {
-  opacity: 1;
-}
   
 </style>
 </head>
