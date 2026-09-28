@@ -6287,21 +6287,32 @@ document.getElementById('ot-tags').addEventListener(
 );
 
   
-document.getElementById('oedit').onclick=(e)=>{
+document.getElementById('oedit').onclick = (e) => {
   e.stopPropagation();
-  if(books[idx]){
-    currentBookForTags=books[idx];
-    document.getElementById('ot-title').textContent=`Éditer les tags : ${currentBookForTags.t}`;
-    document.getElementById('ot-tags').value=(currentBookForTags.tags||[]).join(', ');
-    renderStoredTags();
-    document.getElementById('ot').classList.add('open');
-  }
+
+  // On utilise en priorité la pièce réellement ouverte
+  const book = currentDetailBook || books[idx];
+
+  if (!book) return;
+
+  currentBookForTags = book;
+
+  document.getElementById('ot-title').textContent =
+    `Éditer les tags : ${book.t}`;
+
+  document.getElementById('ot-tags').value =
+    (book.tags || []).join(', ');
+
+  renderStoredTags();
+  document.getElementById('ot').classList.add('open');
 };
 
 document.getElementById('otcl').onclick=(e)=>{
   e.stopPropagation();
   document.getElementById('ot').classList.remove('open');
+  currentBookForTags = null;
 };
+
 
 /* -- Éditer la notice complète : ouvre le formulaire d'ajout/édition,
       pré-rempli avec les données de la partition sélectionnée -- */
@@ -6381,19 +6392,40 @@ document.getElementById('odelete').onclick=async(e)=>{
   );
 };
 
-document.getElementById('otsv').onclick=async(e)=>{
+document.getElementById('otsv').onclick = async (e) => {
   e.stopPropagation();
-  if(currentBookForTags){
-    currentBookForTags.tags=getTagsFromEditor();
-    document.getElementById('ot').classList.remove('open');
-    const result=await updateTagsInFirebase(cyc,currentBookForTags.id,currentBookForTags.tags);
-    if(result.ok){
-      toast('✓ Tags enregistrés !');
-    } else {
-      toast('⚠️ Tags NON sauvegardés :\n'+result.detail,7000);
-    }
+
+  if (!currentBookForTags) return;
+
+  const book = currentBookForTags;
+  const tags = getTagsFromEditor();
+
+  // Actualise immédiatement les données locales
+  book.tags = [...tags];
+
+  // Actualise également la pièce ouverte dans la fiche détaillée
+  if (currentDetailBook && currentDetailBook.id === book.id) {
+    currentDetailBook.tags = [...tags];
+    renderTagCloud(tags);
   }
+
+  document.getElementById('ot').classList.remove('open');
+
+  // Rafraîchit le carrousel/la liste
+  filter();
+
+  // Enregistre dans Firebase
+  const result = await updateTagsInFirebase(cyc, book.id, tags);
+
+  if (result.ok) {
+    toast('✓ Tags enregistrés !');
+  } else {
+    toast('⚠️ Tags NON sauvegardés :\n' + result.detail, 7000);
+  }
+
+  currentBookForTags = null;
 };
+
 
 // Même logique que le formulaire d'ajout/édition : ne se ferme pas au clic
 // extérieur, pour ne pas perdre une saisie de tags en cours.
