@@ -2128,7 +2128,7 @@ body {
 .b3 {
   position: relative;
   transform-style: preserve-3d;
-  --book-depth: 20px; /* épaisseur de la partition */
+  --book-depth: 40px; /* épaisseur de la partition */
 }
 
 /* Tranche réellement visible lorsque la partition est de côté */
@@ -2174,6 +2174,23 @@ body {
   .b3 {
     --book-depth: 10px;
   }
+}
+
+  /* Autorise le scroll uniquement en mode liste */
+.mid.list-mode {
+  overflow: hidden;
+  align-items: stretch;
+}
+
+.mid.list-mode .list-view.active {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
 
   
@@ -3269,6 +3286,10 @@ function getBookTransformOffsets(dims){
 document.getElementById('vbtn').onclick=(e)=>{
   e.stopPropagation();
   viewMode=viewMode==='carousel'?'list':'carousel';
+  document.querySelector('.mid')?.classList.toggle(
+  'list-mode',
+  viewMode === 'list'
+);
   document.getElementById('icarousel').style.display=viewMode==='list'?'':'none';
   document.getElementById('ilist').style.display=viewMode==='carousel'?'':'none';
   document.querySelector('.cw').style.display=viewMode==='carousel'?'':'none';
@@ -3279,6 +3300,10 @@ document.getElementById('vbtn').onclick=(e)=>{
   document.querySelector('.bot').style.display=viewMode==='carousel'?'':'none';
   filter();
 };
+document.querySelector('.mid')?.classList.toggle(
+  'list-mode',
+  viewMode === 'list'
+);
 
 /* ════ THÈME ════════════════════════════════════════ */
 let dark=!document.documentElement.classList.contains('light');
