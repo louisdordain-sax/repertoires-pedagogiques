@@ -3300,10 +3300,7 @@ document.getElementById('vbtn').onclick=(e)=>{
   document.querySelector('.bot').style.display=viewMode==='carousel'?'':'none';
   filter();
 };
-document.querySelector('.mid')?.classList.toggle(
-  'list-mode',
-  viewMode === 'list'
-);
+
 
 /* ════ THÈME ════════════════════════════════════════ */
 let dark=!document.documentElement.classList.contains('light');
@@ -4705,6 +4702,7 @@ function applyRealCoverAcrossSpineFace(
 /* ════ CARROUSEL ════════════════════════════════════ */
 const ring=document.getElementById('ring');
 let viewMode='carousel'; // 'carousel' ou 'list'
+  document.querySelector('.mid')?.classList.toggle('list-mode',viewMode === 'list');
 let cyc=1, idx=0, books=[];
 let totalDeg=0;
 // Filtre par tags : liste des tags cochés dans le panneau dédié.
